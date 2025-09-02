@@ -1,103 +1,104 @@
+"use client";
+
+import { useState } from "react";
 import Image from "next/image";
+import { db } from "@/lib/firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [email, setEmail] = useState("");
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      // Add email to Firestore
+      await addDoc(collection(db, "waitlist"), {
+        email: email,
+        timestamp: serverTimestamp(),
+        source: "grbt.website",
+      });
+
+      setIsSubmitted(true);
+      setEmail("");
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      // You could show an error message here
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-black flex p-8 flex-col items-center justify-between">
+      {/* Logo */}
+      <div className="items-center flex flex-col gap-2">
+        <div className="flex justify-center">
+          <Image
+            src="/grbt.svg"
+            alt="grbt."
+            width={400}
+            height={172}
+            className="w-auto h-20 sm:h-24 lg:h-28"
+            priority
+          />
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        <p className="text-lg  text-white font-light italic mb-2">
+          Burada yapancı, orada Almancı.
+        </p>
+      </div>
+      <div className="w-full max-w-lg text-center h-full flex flex-col justify-center items-center flex-1 ">
+        {/* Email Form */}
+        <div className=" flex flex-col items-center w-full">
+          {!isSubmitted ? (
+            <form onSubmit={handleSubmit} className="w-full">
+              <div className="max-w-md mx-auto w-full">
+                <div className="flex flex-col gap-1 w-full">
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Your email"
+                    required
+                    className="flex-1 px-4 py-2 bg-transparent border border-muted/30 text-white placeholder-muted/50 focus:outline-none focus:border-white transition-all duration-300 text-center w-full max-w-md"
+                  />
+                  <button
+                    type="submit"
+                    disabled={isLoading || !email}
+                    className="px-6 py-2 text-black font-medium tracking-wider uppercase text-sm transition-all duration-300 whitespace-nowrap !bg-white disabled:cursor-not-allowed w-full max-w-md"
+                  >
+                    {isLoading ? "Joining..." : "Join the waitlist"}
+                  </button>
+                </div>
+              </div>
+              <p className="text-md text-muted font-light mt-2">
+                hasretle bekleyenlerden biri misin?
+              </p>
+            </form>
+          ) : (
+            <div>
+              <p className="text-xl text-accent font-light">
+                Thanks. You&apos;re part of the story now.
+              </p>
+              <button
+                onClick={() => setIsSubmitted(false)}
+                className="text-muted/70 hover:text-white text-sm underline underline-offset-4 transition-colors duration-300"
+              >
+                Join another email
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+      {/* Footer */}
+      <div className="border-t border-muted/100 w-full text-center pt-2 max-w-md">
+        <p className="text-xs tracking-widest text-muted/100 uppercase">
+          grbt.studio
+        </p>
+      </div>
     </div>
   );
 }
