@@ -47,7 +47,7 @@ export default function Home() {
           />
         </div>
         <p className="text-lg  text-white font-light italic mb-2">
-          Burada yapancı, orada Almancı.
+          Burada yabancı, orada Almancı.
         </p>
       </div>
       <div className="w-full max-w-lg text-center h-full flex flex-col justify-center items-center flex-1 ">
