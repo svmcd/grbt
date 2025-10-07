@@ -40,6 +40,16 @@ export default function AdminDashboard() {
 
   const USERS_PER_PAGE = 10;
 
+  const dedupeByEmail = (users: WaitlistUser[]) => {
+    const seenEmails = new Set<string>();
+    return users.filter((u) => {
+      if (!u.email) return false;
+      if (seenEmails.has(u.email)) return false;
+      seenEmails.add(u.email);
+      return true;
+    });
+  };
+
   useEffect(() => {
     if (!loading && !user) {
       router.push("/admin");
@@ -62,8 +72,9 @@ export default function AdminDashboard() {
           } as WaitlistUser);
         });
 
-        setAllUsers(users);
-        setTotalUsers(users.length);
+        const deduped = dedupeByEmail(users);
+        setAllUsers(deduped);
+        setTotalUsers(deduped.length);
       } catch (error) {
         console.error("Error fetching all users:", error);
       }
@@ -117,7 +128,8 @@ export default function AdminDashboard() {
           } as WaitlistUser);
         });
 
-        setWaitlistUsers(users);
+        const dedupedPage = dedupeByEmail(users);
+        setWaitlistUsers(dedupedPage);
         setHasNextPage(hasMore);
         setHasPrevPage(currentPage > 1);
 
