@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase";
+import { Analytics } from "@vercel/analytics/next";
 
 export default function Login() {
   const [email, setEmail] = useState("");

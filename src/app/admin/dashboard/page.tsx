@@ -140,7 +140,7 @@ export default function AdminDashboard() {
     } else {
       console.log("No user authenticated");
     }
-  }, [user, currentPage, lastDoc]);
+  }, [user, currentPage]);
 
   // Filter users based on search term
   useEffect(() => {
@@ -298,11 +298,15 @@ export default function AdminDashboard() {
                           <td className="text-muted/70 py-3 px-4">
                             {user.source}
                           </td>
-                      <td className="text-muted/70 py-3 px-4">
-                        {user.timestamp && typeof user.timestamp === 'object' && 'toDate' in user.timestamp
-                          ? (user.timestamp as { toDate: () => Date }).toDate().toLocaleDateString()
-                          : "N/A"}
-                      </td>
+                          <td className="text-muted/70 py-3 px-4">
+                            {user.timestamp &&
+                            typeof user.timestamp === "object" &&
+                            "toDate" in user.timestamp
+                              ? (user.timestamp as { toDate: () => Date })
+                                  .toDate()
+                                  .toLocaleDateString()
+                              : "N/A"}
+                          </td>
                         </tr>
                       )
                     )}
