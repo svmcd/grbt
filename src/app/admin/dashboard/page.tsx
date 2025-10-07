@@ -33,7 +33,8 @@ export default function AdminDashboard() {
   const dedupeByEmail = (users: WaitlistUser[]) => {
     const seenEmails = new Set<string>();
     return users.filter((u) => {
-      const normalized = typeof u.email === "string" ? u.email.trim().toLowerCase() : "";
+      const normalized =
+        typeof u.email === "string" ? u.email.trim().toLowerCase() : "";
       if (!normalized) return false;
       if (seenEmails.has(normalized)) return false;
       seenEmails.add(normalized);
