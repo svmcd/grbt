@@ -4,15 +4,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import {
-  collection,
-  getDocs,
-  orderBy,
-  query,
-  limit,
-  startAfter,
-  DocumentSnapshot,
-} from "firebase/firestore";
+import { collection, getDocs, orderBy, query } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 interface WaitlistUser {
@@ -28,11 +20,9 @@ export default function AdminDashboard() {
   const [waitlistUsers, setWaitlistUsers] = useState<WaitlistUser[]>([]);
   const [usersLoading, setUsersLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const [lastDoc, setLastDoc] = useState<DocumentSnapshot | null>(null);
   const [hasNextPage, setHasNextPage] = useState(false);
   const [hasPrevPage, setHasPrevPage] = useState(false);
   const [totalUsers, setTotalUsers] = useState(0);
-  const [pageHistory, setPageHistory] = useState<DocumentSnapshot[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredUsers, setFilteredUsers] = useState<WaitlistUser[]>([]);
   const [allUsers, setAllUsers] = useState<WaitlistUser[]>([]);
@@ -60,6 +50,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchAllUsers = async () => {
       try {
+        setUsersLoading(true);
         const waitlistRef = collection(db, "waitlist");
         const q = query(waitlistRef, orderBy("timestamp", "desc"));
         const querySnapshot = await getDocs(q);
@@ -77,6 +68,8 @@ export default function AdminDashboard() {
         setTotalUsers(deduped.length);
       } catch (error) {
         console.error("Error fetching all users:", error);
+      } finally {
+        setUsersLoading(false);
       }
     };
 
@@ -85,74 +78,16 @@ export default function AdminDashboard() {
     }
   }, [user]);
 
-  // Fetch users when page changes
+  // Derive current page users from deduped allUsers
   useEffect(() => {
-    const fetchWaitlistUsers = async () => {
-      try {
-        setUsersLoading(true);
-        console.log(`Fetching waitlist users for page ${currentPage}...`);
-
-        const waitlistRef = collection(db, "waitlist");
-        let q = query(
-          waitlistRef,
-          orderBy("timestamp", "desc"),
-          limit(USERS_PER_PAGE + 1) // +1 to check if there's a next page
-        );
-
-        // If not first page, start after the last document
-        if (currentPage > 1 && lastDoc) {
-          q = query(
-            waitlistRef,
-            orderBy("timestamp", "desc"),
-            startAfter(lastDoc),
-            limit(USERS_PER_PAGE + 1)
-          );
-        }
-
-        const querySnapshot = await getDocs(q);
-        console.log("Number of docs:", querySnapshot.docs.length);
-
-        const users: WaitlistUser[] = [];
-        const docs = querySnapshot.docs;
-
-        // Check if there's a next page
-        const hasMore = docs.length > USERS_PER_PAGE;
-        if (hasMore) {
-          docs.pop(); // Remove the extra doc used for checking
-        }
-
-        docs.forEach((doc) => {
-          users.push({
-            id: doc.id,
-            ...doc.data(),
-          } as WaitlistUser);
-        });
-
-        const dedupedPage = dedupeByEmail(users);
-        setWaitlistUsers(dedupedPage);
-        setHasNextPage(hasMore);
-        setHasPrevPage(currentPage > 1);
-
-        // Store the last document for next page
-        if (docs.length > 0) {
-          setLastDoc(docs[docs.length - 1]);
-        }
-
-        console.log("Users array:", users);
-      } catch (error) {
-        console.error("Error fetching waitlist users:", error);
-      } finally {
-        setUsersLoading(false);
-      }
-    };
-
-    if (user) {
-      console.log("User authenticated, fetching users...");
-      fetchWaitlistUsers();
-    } else {
-      console.log("No user authenticated");
-    }
-  }, [user, currentPage]);
+    if (!user) return;
+    const startIndex = (currentPage - 1) * USERS_PER_PAGE;
+    const endIndex = startIndex + USERS_PER_PAGE;
+    const pageSlice = allUsers.slice(startIndex, endIndex);
+    setWaitlistUsers(pageSlice);
+    setHasNextPage(endIndex < totalUsers);
+    setHasPrevPage(currentPage > 1);
+  }, [user, allUsers, currentPage, totalUsers]);
 
   // Filter users based on search term
   useEffect(() => {
@@ -170,9 +105,8 @@ export default function AdminDashboard() {
 
   const handleNextPage = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (hasNextPage && lastDoc) {
+    if (hasNextPage) {
       const scrollPosition = window.scrollY;
-      setPageHistory((prev) => [...prev, lastDoc!]);
       setCurrentPage((prev) => prev + 1);
       // Restore scroll position after state update
       setTimeout(() => {
@@ -185,10 +119,6 @@ export default function AdminDashboard() {
     e.preventDefault();
     if (hasPrevPage) {
       const scrollPosition = window.scrollY;
-      const newHistory = [...pageHistory];
-      newHistory.pop();
-      setPageHistory(newHistory);
-      setLastDoc(newHistory[newHistory.length - 1] || null);
       setCurrentPage((prev) => prev - 1);
       // Restore scroll position after state update
       setTimeout(() => {
