@@ -14,22 +14,22 @@ export async function POST(request: Request) {
                 { status: 500 }
             );
         }
-        const { items, shippingCountry } = await request.json();
+        const { items, shippingCountry, itemsTotal, shippingCost } = await request.json();
 
         if (!items || items.length === 0) {
             return Response.json({ error: "No items provided" }, { status: 400 });
         }
 
-        // Calculate total items cost
-        const itemsTotal = items.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0);
-
-        // Calculate shipping cost
+        // Get shipping countries for display name
         const shippingCountries = getAllShippingCountries();
         const selectedShipping = shippingCountries.find(c => c.code === shippingCountry);
-        const baseShippingCost = getShippingPrice(shippingCountry);
 
-        // Apply free shipping for orders over €100
-        const shippingCost = itemsTotal >= 100 ? 0 : baseShippingCost;
+        console.log("Checkout request:", {
+            itemsCount: items.length,
+            itemsTotal: itemsTotal,
+            shippingCost: shippingCost,
+            shippingCountry: shippingCountry
+        });
 
         // Create Stripe checkout session
         const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL || "").replace(/\/$/, "");
@@ -40,34 +40,19 @@ export async function POST(request: Request) {
                 "bancontact",
                 "ideal"
             ],
-            line_items: items.map((item: any) => {
-                const image = typeof item.image === "string" ? item.image : "";
-                const imageUrl = image.startsWith("http")
-                    ? image
-                    : baseUrl && image
-                        ? `${baseUrl}${image.startsWith("/") ? image : `/${image}`}`
-                        : undefined;
-                const baseDescription = `${item.color} • ${item.size} • ${item.city} Tişört`;
-                const personalizationDesc = item.personalization
-                    ? ` • ${item.personalization.method === "printed" ? "Baskı" : "İşleme"} • "${item.personalization.text}" • ${item.personalization.placement} • Font: ${item.personalization.font} • Renk: ${item.personalization.color}`
-                    : "";
-                const giftPackageDesc = item.giftPackage
-                    ? ` • Hediye Paketi${item.giftPackage.message ? ` • Mesaj: "${item.giftPackage.message}"` : ""}`
-                    : "";
-
-                return ({
+            line_items: [
+                {
                     price_data: {
                         currency: "eur",
                         product_data: {
-                            name: `${item.city} Tee`,
-                            description: baseDescription + personalizationDesc + giftPackageDesc,
-                            ...(imageUrl ? { images: [imageUrl] } : {}),
+                            name: "GRBT Order",
+                            description: `Items: ${items.map((item: any) => `${item.city} Tişört (${item.color}, ${item.size})`).join(', ')}`,
                         },
-                        unit_amount: item.price * 100, // Convert to cents
+                        unit_amount: Math.round(itemsTotal * 100), // Convert to cents
                     },
-                    quantity: typeof item.quantity === "number" && item.quantity > 0 ? item.quantity : 1,
-                })
-            }),
+                    quantity: 1,
+                }
+            ],
             shipping_options: [{
                 shipping_rate_data: {
                     type: 'fixed_amount',
@@ -93,6 +78,8 @@ export async function POST(request: Request) {
             mode: "payment",
             // Collect customer email
             customer_creation: "always",
+            // Enable coupon codes in Stripe checkout
+            allow_promotion_codes: true,
             // Pre-select the country to prevent shipping manipulation
             shipping_address_collection: {
                 allowed_countries: shippingCountry ? [shippingCountry] : ['NL', 'DE', 'FR', 'CH', 'AT', 'GB', 'US', 'BE'],
@@ -101,11 +88,12 @@ export async function POST(request: Request) {
             cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/checkout`,
         });
 
+        console.log("Stripe session created successfully:", session.id);
         return Response.json({ url: session.url });
     } catch (error) {
-        console.error("Stripe error:", error);
+        console.error("Stripe error details:", error);
         return Response.json(
-            { error: "Payment processing failed" },
+            { error: `Payment processing failed: ${error}` },
             { status: 500 }
         );
     }

@@ -338,6 +338,8 @@ export function CartDrawer() {
                           body: JSON.stringify({
                             items: state.items,
                             shippingCountry: selectedCountry,
+                            itemsTotal: itemsTotal - getMemleketSavings(),
+                            shippingCost: itemsTotal >= 100 ? 0 : shippingCost,
                           }),
                         });
                         const contentType =
