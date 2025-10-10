@@ -3,7 +3,7 @@ import { getAllShippingCountries, getShippingPrice } from "@/lib/shipping";
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const stripe = STRIPE_SECRET_KEY
-    ? new Stripe(STRIPE_SECRET_KEY, { apiVersion: "2024-12-18.acacia" })
+    ? new Stripe(STRIPE_SECRET_KEY, { apiVersion: "2025-09-30.clover" })
     : (null as any);
 
 export async function POST(request: Request) {

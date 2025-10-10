@@ -3,13 +3,13 @@ import { headers } from "next/headers";
 import nodemailer from "nodemailer";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    apiVersion: "2024-12-18.acacia",
+    apiVersion: "2025-09-30.clover",
 });
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
 // Email configuration
-const transporter = nodemailer.createTransporter({
+const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: parseInt(process.env.SMTP_PORT || "587"),
     secure: process.env.SMTP_SECURE === "true",
@@ -21,7 +21,7 @@ const transporter = nodemailer.createTransporter({
 
 export async function POST(request: Request) {
     const body = await request.text();
-    const signature = headers().get("stripe-signature")!;
+    const signature = (await headers()).get("stripe-signature")!;
 
     let event: Stripe.Event;
 
@@ -96,9 +96,9 @@ export async function POST(request: Request) {
                     const sizeMatch = desc.match(/(S|M|L|XL|XXL)/);
                     const personalizationMatch = desc.match(/• (Baskı|İşleme) • "([^"]+)" • ([^•]+) • Font: ([^•]+) • Renk: ([^•]+)/);
                     const giftPackageMatch = desc.match(/• Hediye Paketi(?: • Mesaj: "([^"]+)")?/);
-                    const productName = item.price_data?.product_data?.name || 'Ürün';
+                    const productName = (item as any).price_data?.product_data?.name || 'Ürün';
                     const quantity = item.quantity || 1;
-                    const unitPrice = (item.price_data?.unit_amount || item.amount || 0) / 100;
+                    const unitPrice = ((item as any).price_data?.unit_amount || (item as any).amount || 0) / 100;
 
                     return `
                                             <div class="product-item">
@@ -128,13 +128,13 @@ export async function POST(request: Request) {
 
                                 <div class="shipping-details">
                                     <h3>Teslimat Bilgileri</h3>
-                                    ${session.shipping_details ? `
-                                        <p><strong>Ad Soyad:</strong> ${session.shipping_details.name}</p>
-                                        <p><strong>Adres:</strong> ${session.shipping_details.address?.line1 || ''}</p>
-                                        ${session.shipping_details.address?.line2 ? `<p><strong>Adres 2:</strong> ${session.shipping_details.address.line2}</p>` : ''}
-                                        <p><strong>Şehir:</strong> ${session.shipping_details.address?.city || ''}</p>
-                                        <p><strong>Posta Kodu:</strong> ${session.shipping_details.address?.postal_code || ''}</p>
-                                        <p><strong>Ülke:</strong> ${session.shipping_details.address?.country || ''}</p>
+                                    ${(session as any).shipping_details ? `
+                                        <p><strong>Ad Soyad:</strong> ${(session as any).shipping_details.name}</p>
+                                        <p><strong>Adres:</strong> ${(session as any).shipping_details.address?.line1 || ''}</p>
+                                        ${(session as any).shipping_details.address?.line2 ? `<p><strong>Adres 2:</strong> ${(session as any).shipping_details.address.line2}</p>` : ''}
+                                        <p><strong>Şehir:</strong> ${(session as any).shipping_details.address?.city || ''}</p>
+                                        <p><strong>Posta Kodu:</strong> ${(session as any).shipping_details.address?.postal_code || ''}</p>
+                                        <p><strong>Ülke:</strong> ${(session as any).shipping_details.address?.country || ''}</p>
                                     ` : '<p>Teslimat bilgileri bulunamadı.</p>'}
                                 </div>
 

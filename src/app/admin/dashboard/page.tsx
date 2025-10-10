@@ -449,14 +449,15 @@ export default function AdminDashboard() {
                                     // Also check if description contains "•" separator
                                     const parts = desc
                                       .split("•")
-                                      .map((p) => p.trim());
-                                    const colorFromParts = parts.find((p) =>
-                                      /(beyaz|siyah|mavi|kırmızı|yeşil|sarı|mor|pembe|turuncu|gri|white|black|blue|red|green|yellow|purple|pink|orange|gray)/i.test(
-                                        p
-                                      )
+                                      .map((p: string) => p.trim());
+                                    const colorFromParts = parts.find(
+                                      (p: string) =>
+                                        /(beyaz|siyah|mavi|kırmızı|yeşil|sarı|mor|pembe|turuncu|gri|white|black|blue|red|green|yellow|purple|pink|orange|gray)/i.test(
+                                          p
+                                        )
                                     );
-                                    const sizeFromParts = parts.find((p) =>
-                                      /(S|M|L|XL|XXL)/.test(p)
+                                    const sizeFromParts = parts.find(
+                                      (p: string) => /(S|M|L|XL|XXL)/.test(p)
                                     );
 
                                     const finalColor =

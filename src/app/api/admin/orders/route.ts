@@ -2,7 +2,7 @@ import Stripe from "stripe";
 import { NextRequest } from "next/server";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    apiVersion: "2024-12-18.acacia",
+    apiVersion: "2025-09-30.clover",
 });
 
 export async function GET(request: NextRequest) {
@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
             customer_email: session.customer_email || session.customer_details?.email || 'No email',
             payment_status: session.payment_status,
             created: session.created,
-            shipping_details: session.shipping_details,
+            shipping_details: (session as any).shipping_details,
             line_items: session.line_items?.data || [],
             // Add shipping status (you can manage this in your database later)
             shipped: false, // Default to not shipped

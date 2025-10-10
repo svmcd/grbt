@@ -24,13 +24,16 @@ import { FamilyOffer } from "@/app/components/FamilyOffer";
 export default function ProductPage() {
   const { slug } = useParams<{ slug: string }>();
   const product = slug ? getProductBySlug(slug) : undefined;
-  if (!product) return null;
-  const basePrice = getPriceForSlug(product.slug);
+  const basePrice = product ? getPriceForSlug(product.slug) : 0;
   const { addItem } = useCart();
 
-  // State declarations
-  const [selectedColor, setSelectedColor] = useState<string>(product.colors[0]);
-  const [selectedSize, setSelectedSize] = useState<string>(product.sizes[0]);
+  // State declarations - moved before early return
+  const [selectedColor, setSelectedColor] = useState<string>(
+    product?.colors[0] || ""
+  );
+  const [selectedSize, setSelectedSize] = useState<string>(
+    product?.sizes[0] || ""
+  );
   const [quantity, setQuantity] = useState<number>(1);
   const [personalizationText, setPersonalizationText] = useState<string>("");
   const [personalizationPlacement, setPersonalizationPlacement] =
@@ -44,31 +47,10 @@ export default function ProductPage() {
     useState<string>("#000000");
   const [giftPackage, setGiftPackage] = useState<boolean>(false);
   const [giftMessage, setGiftMessage] = useState<string>("");
-
-  // Calculate personalization cost
-  const personalizationCost =
-    personalizationMethod === "printed"
-      ? 7.5
-      : personalizationMethod === "embroidered"
-      ? 10
-      : 0;
-
-  // Calculate gift package cost
-  const giftPackageCost = giftPackage ? 5 : 0;
-
-  const totalPrice = getTestPrice(
-    basePrice + personalizationCost + giftPackageCost
-  );
   const [showStickyButton, setShowStickyButton] = useState(false);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
   const [randomProducts, setRandomProducts] = useState<any[]>([]);
   const buttonRef = useRef<HTMLButtonElement>(null);
-
-  // Determine collection name
-  const isHasretCollection = hasretSlugs.includes(product.slug);
-  const collectionName = isHasretCollection
-    ? "Hasret Koleksiyonu"
-    : "Memleket Koleksiyonu";
 
   // Check if original button is out of view and scroll position
   useEffect(() => {
@@ -89,20 +71,45 @@ export default function ProductPage() {
   // Generate random products on client side only
   useEffect(() => {
     const allSlugs = [...memleketSlugs, ...hasretSlugs].filter(
-      (s) => s !== product.slug
+      (s) => s !== slug
     );
     // Shuffle and take 3 random products
     const shuffled = allSlugs.sort(() => 0.5 - Math.random());
     const randomSlugs = shuffled.slice(0, 3);
 
-    const products = randomSlugs
-      .map((slug) => getProductBySlug(slug))
-      .filter(
-        (p): p is NonNullable<ReturnType<typeof getProductBySlug>> => !!p
-      );
+    const randomProductsData = randomSlugs
+      .map((slug) => {
+        const product = getProductBySlug(slug);
+        return product ? { ...product, slug } : null;
+      })
+      .filter(Boolean);
 
-    setRandomProducts(products);
-  }, [product.slug]);
+    setRandomProducts(randomProductsData);
+  }, [slug]);
+
+  // Early return after all hooks
+  if (!product) return null;
+
+  // Calculate personalization cost
+  const personalizationCost =
+    personalizationMethod === "printed"
+      ? 7.5
+      : personalizationMethod === "embroidered"
+      ? 10
+      : 0;
+
+  // Calculate gift package cost
+  const giftPackageCost = giftPackage ? 5 : 0;
+
+  const totalPrice = getTestPrice(
+    basePrice + personalizationCost + giftPackageCost
+  );
+
+  // Determine collection name
+  const isHasretCollection = hasretSlugs.includes(product.slug);
+  const collectionName = isHasretCollection
+    ? "Hasret Koleksiyonu"
+    : "Memleket Koleksiyonu";
 
   return (
     <div className="min-h-screen bg-black">
