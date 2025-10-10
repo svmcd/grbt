@@ -1,10 +1,60 @@
 @import "tailwindcss";
 
+/* Prevent zooming */
+html {
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  -webkit-touch-callout: none;
+}
+
+body {
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+* {
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+}
+
+/* Prevent iOS input zoom */
+input[type="text"],
+input[type="email"],
+input[type="search"],
+textarea,
+select {
+  font-size: 16px !important;
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+}
+
+@media screen and (max-width: 768px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="search"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
 :root {
-  --background: #000000;
-  --foreground: #ffffff;
+  /* Light Mode (Default) */
+  --background: #ffffff;
+  --foreground: #000000;
   --accent: #d4af37;
-  --muted: #888888;
+  --muted: #666666;
+  --white: #000000;
+  --black: #ffffff;
+  --white-10: rgba(0, 0, 0, 0.1);
+  --white-20: rgba(0, 0, 0, 0.2);
+  --white-70: rgba(0, 0, 0, 0.7);
+  --white-80: rgba(0, 0, 0, 0.8);
+  --white-90: rgba(0, 0, 0, 0.9);
+  --white-05: rgba(0, 0, 0, 0.05);
+  --white-02: rgba(0, 0, 0, 0.02);
 }
 
 @theme inline {
@@ -12,7 +62,17 @@
   --color-foreground: var(--foreground);
   --color-accent: var(--accent);
   --color-muted: var(--muted);
+  --color-white: var(--white);
+  --color-black: var(--black);
+  --color-white-10: var(--white-10);
+  --color-white-20: var(--white-20);
+  --color-white-70: var(--white-70);
+  --color-white-80: var(--white-80);
+  --color-white-90: var(--white-90);
+  --color-white-05: var(--white-05);
+  --color-white-02: var(--white-02);
   --font-sans: var(--font-inter);
+  --font-serif: var(--font-playfair);
 }
 
 * {
@@ -25,8 +85,8 @@ body {
   overflow-x: hidden;
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), -apple-system, BlinkMacSystemFont, "Segoe UI",
-    Roboto, sans-serif;
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, sans-serif;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -41,23 +101,26 @@ body {
 a {
   color: inherit;
   text-decoration: none;
+  cursor: pointer;
 }
 
 input,
-button {
-  font-family: inherit;
+button,
+select,
+textarea {
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, sans-serif;
   outline: none;
 }
 
 input::placeholder {
-  color: #9ca3af;
+  color: var(--muted);
   opacity: 1;
 }
 
 button {
   cursor: pointer;
   border: none;
-  background: none;
 }
 
 button:disabled {

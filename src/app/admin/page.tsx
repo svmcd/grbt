@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase";
-import { Analytics } from "@vercel/analytics/next";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -24,7 +23,7 @@ export default function Login() {
       router.push("/admin/dashboard");
     } catch (error: unknown) {
       console.error("Login error:", error);
-      setError("Invalid email or password");
+      setError("Geçersiz e-posta veya şifre");
     } finally {
       setIsLoading(false);
     }
@@ -45,7 +44,7 @@ export default function Login() {
           />
         </div>
         <p className="text-lg text-white font-light italic mb-2">
-          Admin Access
+          Yönetici Erişimi
         </p>
       </div>
 
@@ -57,7 +56,7 @@ export default function Login() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email"
+              placeholder="E-posta"
               required
               className="px-4 py-3 bg-transparent border border-muted/30 text-white placeholder-muted/50 focus:outline-none focus:border-white transition-all duration-300 text-center w-full"
             />
@@ -65,7 +64,7 @@ export default function Login() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Password"
+              placeholder="Şifre"
               required
               className="px-4 py-3 bg-transparent border border-muted/30 text-white placeholder-muted/50 focus:outline-none focus:border-white transition-all duration-300 text-center w-full"
             />
@@ -77,18 +76,13 @@ export default function Login() {
               disabled={isLoading || !email || !password}
               className="px-6 py-3 text-black font-medium tracking-wider uppercase text-sm transition-all duration-300 whitespace-nowrap !bg-white disabled:cursor-not-allowed w-full"
             >
-              {isLoading ? "Signing in..." : "Sign In"}
+              {isLoading ? "Giriş yapılıyor..." : "Giriş Yap"}
             </button>
           </div>
         </form>
       </div>
 
-      {/* Footer */}
-      <div className="border-t border-muted/100 w-full text-center pt-2 max-w-md mt-8">
-        <p className="text-xs tracking-widest text-muted/100 uppercase">
-          grbt.studio
-        </p>
-      </div>
+      {/* Footer removed - global Footer handles this */}
     </div>
   );
 }
