@@ -68,7 +68,7 @@ export default function CheckoutPage() {
         <h1 className="text-3xl font-light mb-8">Checkout</h1>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Order Summary */}
+          {/* Order Summary s*/}
           <div>
             <h2 className="text-xl font-light mb-4">Order Summary</h2>
             <div className="space-y-4">
