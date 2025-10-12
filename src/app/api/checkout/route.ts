@@ -53,8 +53,8 @@ export async function POST(request: Request) {
                 price_data: {
                     currency: "eur",
                     product_data: {
-                        name: `${item.city} Tişört`,
-                        description: `${item.color}, ${item.size}${item.personalization ? ` - ${item.personalization.method === 'printed' ? 'Baskı' : 'İşleme'}: "${item.personalization.text}"` : ''}${item.giftPackage?.included ? ' - Hediye Paketi' : ''}`,
+                        name: `${item.city} Tişört - ${item.color}, ${item.size}${item.personalization ? ` - ${item.personalization.method === 'printed' ? 'Baskı' : 'İşleme'}: "${item.personalization.text}" - ${item.personalization.placement} - Font: ${item.personalization.font} - Renk: ${item.personalization.color}` : ''}${item.giftPackage?.included ? ' - Hediye Paketi' : ''}`,
+                        description: `${item.color}, ${item.size}${item.personalization ? ` - ${item.personalization.method === 'printed' ? 'Baskı' : 'İşleme'}: "${item.personalization.text}" - ${item.personalization.placement} - Font: ${item.personalization.font} - Renk: ${item.personalization.color}` : ''}${item.giftPackage?.included ? ' - Hediye Paketi' : ''}`,
                     },
                     unit_amount: Math.round(item.price * 100), // Item price already includes personalization and gift package
                 },

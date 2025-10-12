@@ -112,6 +112,22 @@ export default function AdminDashboard() {
         const response = await fetch("/api/admin/orders");
         if (response.ok) {
           const ordersData = await response.json();
+          console.log("=== ADMIN DASHBOARD RECEIVED DATA ===");
+          console.log("Orders count:", ordersData.length);
+          ordersData.forEach((order, index) => {
+            console.log(`\n--- ORDER ${index + 1} ---`);
+            console.log("Order ID:", order.id);
+            console.log("Customer Email:", order.customer_email);
+            console.log("Amount Total:", order.amount_total);
+            console.log("Shipping Details:", order.shipping_details);
+            console.log("Line Items Count:", order.line_items?.length || 0);
+            if (order.line_items) {
+              order.line_items.forEach((item, itemIndex) => {
+                console.log(`\n  --- LINE ITEM ${itemIndex + 1} ---`);
+                console.log("  Item:", JSON.stringify(item, null, 2));
+              });
+            }
+          });
           setOrders(ordersData);
         }
       } catch (error) {
@@ -423,60 +439,93 @@ export default function AdminDashboard() {
                                 className="mb-2 p-2 bg-white/5 rounded"
                               >
                                 <div className="font-medium">
-                                  {item.description ||
-                                    item.price_data?.product_data?.name ||
-                                    "Ürün"}
+                                  {item.description || "Ürün"}
                                 </div>
                                 <div className="text-white/60 text-xs mt-1">
                                   {item.quantity}x €
-                                  {(item.price_data?.unit_amount ||
-                                    item.amount ||
-                                    0) / 100}
+                                  {(item.amount_total / 100).toFixed(2)}
                                 </div>
-                                {/* Extract color and size from description */}
+                                {/* Parse detailed product information like Stripe */}
                                 <div className="text-white/50 text-xs mt-1">
                                   {(() => {
                                     const desc = item.description || "";
                                     console.log("Item description:", desc); // Debug log
 
-                                    // Look for color and size patterns - more comprehensive
-                                    const colorMatch = desc.match(
-                                      /(beyaz|siyah|mavi|kırmızı|yeşil|sarı|mor|pembe|turuncu|gri|white|black|blue|red|green|yellow|purple|pink|orange|gray)/i
-                                    );
-                                    const sizeMatch =
-                                      desc.match(/(S|M|L|XL|XXL)/);
+                                    // Parse the description to extract all details like Stripe shows
+                                    const parts = desc.split(" - ");
+                                    const productName = parts[0] || "";
 
-                                    // Also check if description contains "•" separator
-                                    const parts = desc
-                                      .split("•")
-                                      .map((p: string) => p.trim());
-                                    const colorFromParts = parts.find(
-                                      (p: string) =>
-                                        /(beyaz|siyah|mavi|kırmızı|yeşil|sarı|mor|pembe|turuncu|gri|white|black|blue|red|green|yellow|purple|pink|orange|gray)/i.test(
-                                          p
-                                        )
-                                    );
-                                    const sizeFromParts = parts.find(
-                                      (p: string) => /(S|M|L|XL|XXL)/.test(p)
-                                    );
+                                    const details = [];
 
-                                    const finalColor =
-                                      colorMatch?.[1] ||
-                                      colorFromParts ||
-                                      "N/A";
-                                    const finalSize =
-                                      sizeMatch?.[1] || sizeFromParts || "N/A";
+                                    // Extract color and size from the first part after product name
+                                    if (parts[1]) {
+                                      const colorSizePart = parts[1];
+                                      const colorMatch = colorSizePart.match(
+                                        /(beyaz|siyah|mavi|kırmızı|yeşil|sarı|mor|pembe|turuncu|gri|white|black|blue|red|green|yellow|purple|pink|orange|gray)/i
+                                      );
+                                      const sizeMatch =
+                                        colorSizePart.match(/(S|M|L|XL|XXL)/);
 
-                                    return (
-                                      <div className="flex gap-2">
-                                        <span className="px-1 py-0.5 bg-white/10 rounded text-[10px] font-bold uppercase">
-                                          {finalColor}
+                                      if (colorMatch) {
+                                        details.push(
+                                          <span key="color">
+                                            <strong>Renk:</strong>{" "}
+                                            {colorMatch[1].toUpperCase()}
+                                          </span>
+                                        );
+                                      }
+                                      if (sizeMatch) {
+                                        details.push(
+                                          <span key="size">
+                                            {details.length > 0 ? " • " : ""}
+                                            <strong>Beden:</strong>{" "}
+                                            {sizeMatch[1]}
+                                          </span>
+                                        );
+                                      }
+                                    }
+
+                                    // Extract personalization details
+                                    const personalizationMatch = desc.match(
+                                      /Baskı: "([^"]+)" - ([^•]+) - Font: ([^•]+) - Renk: ([^•]+)|İşleme: "([^"]+)" - ([^•]+) - Font: ([^•]+) - Renk: ([^•]+)/
+                                    );
+                                    if (personalizationMatch) {
+                                      const method = desc.includes("Baskı")
+                                        ? "Baskı"
+                                        : "İşleme";
+                                      const text =
+                                        personalizationMatch[1] ||
+                                        personalizationMatch[5];
+                                      const placement =
+                                        personalizationMatch[2] ||
+                                        personalizationMatch[6];
+                                      const font =
+                                        personalizationMatch[3] ||
+                                        personalizationMatch[7];
+                                      const color =
+                                        personalizationMatch[4] ||
+                                        personalizationMatch[8];
+                                      details.push(
+                                        <span key="personalization">
+                                          {details.length > 0 ? " • " : ""}
+                                          <strong>{method}:</strong> "{text}" -{" "}
+                                          {placement} - Font: {font} - Renk:{" "}
+                                          {color}
                                         </span>
-                                        <span className="px-1 py-0.5 bg-white/10 rounded text-[10px] font-bold">
-                                          {finalSize}
+                                      );
+                                    }
+
+                                    // Extract gift package
+                                    if (desc.includes("Hediye Paketi")) {
+                                      details.push(
+                                        <span key="gift">
+                                          {details.length > 0 ? " • " : ""}
+                                          <strong>Hediye Paketi</strong>
                                         </span>
-                                      </div>
-                                    );
+                                      );
+                                    }
+
+                                    return details.length > 0 ? details : "N/A";
                                   })()}
                                 </div>
                               </div>
@@ -512,7 +561,13 @@ export default function AdminDashboard() {
                               </div>
                             </div>
                           ) : (
-                            "N/A"
+                            <div className="text-xs text-red-400">
+                              No shipping details
+                              <br />
+                              <span className="text-[10px] opacity-50">
+                                Debug: {JSON.stringify(order.shipping_details)}
+                              </span>
+                            </div>
                           )}
                         </td>
                         <td className="py-3 px-4">
@@ -534,7 +589,15 @@ export default function AdminDashboard() {
                         <td className="py-3 px-4 text-xs text-white/30">
                           {order.line_items.map((item, index) => (
                             <div key={index} className="mb-1">
-                              {item.description || "No description"}
+                              <div>
+                                Desc: {item.description || "No description"}
+                              </div>
+                              <div>
+                                Amount Total: {item.amount_total || "No amount"}
+                              </div>
+                              <div>
+                                Quantity: {item.quantity || "No quantity"}
+                              </div>
                             </div>
                           ))}
                         </td>
