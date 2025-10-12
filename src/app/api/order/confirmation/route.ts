@@ -47,42 +47,284 @@ export async function POST(request: Request) {
             <html>
             <head>
                 <meta charset="utf-8">
-                <title>Sipariş Onayı - GRBT</title>
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Sipariş Onayı - grbt.</title>
                 <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: #000; color: #fff; padding: 20px; text-align: center; }
-                    .content { background: #f9f9f9; padding: 20px; }
-                    .order-details { background: #fff; padding: 20px; margin: 20px 0; border: 1px solid #ddd; }
-                    .shipping-details { background: #fff; padding: 20px; margin: 20px 0; border: 1px solid #ddd; }
-                    .footer { background: #000; color: #fff; padding: 20px; text-align: center; font-size: 12px; }
-                    .total { font-weight: bold; font-size: 18px; }
-                    .product-item { padding: 10px; margin: 10px 0; background: #f8f8f8; border-left: 3px solid #000; }
-                    .product-name { font-weight: bold; font-size: 16px; }
-                    .product-details { color: #666; font-size: 14px; margin: 5px 0; }
-                    .product-price { color: #000; font-weight: bold; }
+                    * { margin: 0; padding: 0; box-sizing: border-box; }
+                    body { 
+                        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; 
+                        line-height: 1.6; 
+                        color: #1a1a1a; 
+                        background-color: #f8f9fa;
+                    }
+                    .email-container { 
+                        max-width: 600px; 
+                        margin: 0 auto; 
+                        background-color: #ffffff;
+                        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+                    }
+        .header { 
+            background: #000000; 
+            color: #ffffff; 
+            padding: 40px 30px; 
+            text-align: center;
+            position: relative;
+        }
+        .logo { 
+            font-size: 32px; 
+            font-weight: 700; 
+            letter-spacing: -1px;
+            margin-bottom: 8px;
+            font-family: 'Times New Roman', serif;
+        }
+                    .header-subtitle { 
+                        font-size: 16px; 
+                        opacity: 0.8; 
+                        font-weight: 400;
+                    }
+                    .content { 
+                        padding: 40px 30px; 
+                    }
+                    .greeting {
+                        font-size: 18px;
+                        margin-bottom: 20px;
+                        color: #2c3e50;
+                    }
+                    .order-status {
+                        background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+                        color: white;
+                        padding: 20px;
+                        border-radius: 12px;
+                        text-align: center;
+                        margin-bottom: 30px;
+                        box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+                    }
+                    .status-icon {
+                        font-size: 24px;
+                        margin-bottom: 8px;
+                    }
+                    .status-text {
+                        font-size: 16px;
+                        font-weight: 600;
+                    }
+                    .section { 
+                        background: #ffffff; 
+                        padding: 25px; 
+                        margin: 25px 0; 
+                        border-radius: 12px;
+                        border: 1px solid #e9ecef;
+                        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+                    }
+                    .section-title { 
+                        font-size: 18px; 
+                        font-weight: 700; 
+                        color: #2c3e50; 
+                        margin-bottom: 20px;
+                        padding-bottom: 10px;
+                        border-bottom: 2px solid #f8f9fa;
+                    }
+                    .order-info {
+                        display: grid;
+                        grid-template-columns: 1fr 1fr;
+                        gap: 15px;
+                        margin-bottom: 20px;
+                    }
+                    .info-item {
+                        background: #f8f9fa;
+                        padding: 15px;
+                        border-radius: 8px;
+                        border-left: 4px solid #000000;
+                    }
+                    .info-label {
+                        font-size: 12px;
+                        color: #6c757d;
+                        text-transform: uppercase;
+                        font-weight: 600;
+                        letter-spacing: 0.5px;
+                        margin-bottom: 4px;
+                    }
+                    .info-value {
+                        font-size: 14px;
+                        color: #2c3e50;
+                        font-weight: 500;
+                    }
+                    .product-item { 
+                        background: #f8f9fa; 
+                        padding: 20px; 
+                        margin: 15px 0; 
+                        border-radius: 10px;
+                        border-left: 4px solid #000000;
+                        transition: all 0.3s ease;
+                    }
+                    .product-item:hover {
+                        transform: translateY(-2px);
+                        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+                    }
+                    .product-name { 
+                        font-weight: 700; 
+                        font-size: 18px; 
+                        color: #2c3e50;
+                        margin-bottom: 8px;
+                    }
+                    .product-details { 
+                        color: #6c757d; 
+                        font-size: 14px; 
+                        margin: 6px 0;
+                        line-height: 1.5;
+                    }
+                    .product-price { 
+                        color: #000000; 
+                        font-weight: 700; 
+                        font-size: 16px;
+                        margin-top: 10px;
+                        padding-top: 10px;
+                        border-top: 1px solid #dee2e6;
+                    }
+                    .personalization-badge {
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        color: white;
+                        padding: 6px 12px;
+                        border-radius: 20px;
+                        font-size: 12px;
+                        font-weight: 600;
+                        display: inline-block;
+                        margin: 5px 5px 5px 0;
+                    }
+                    .gift-badge {
+                        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+                        color: white;
+                        padding: 6px 12px;
+                        border-radius: 20px;
+                        font-size: 12px;
+                        font-weight: 600;
+                        display: inline-block;
+                        margin: 5px 5px 5px 0;
+                    }
+                    .shipping-address {
+                        background: #f8f9fa;
+                        padding: 20px;
+                        border-radius: 8px;
+                        border: 1px solid #e9ecef;
+                    }
+                    .address-line {
+                        margin: 5px 0;
+                        font-size: 14px;
+                        color: #495057;
+                    }
+                    .total-section {
+                        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+                        color: white;
+                        padding: 25px;
+                        border-radius: 12px;
+                        margin: 25px 0;
+                    }
+                    .total-row {
+                        display: flex;
+                        justify-content: space-between;
+                        margin: 8px 0;
+                        font-size: 14px;
+                    }
+                    .total-final {
+                        font-size: 20px;
+                        font-weight: 700;
+                        border-top: 2px solid rgba(255, 255, 255, 0.2);
+                        padding-top: 10px;
+                        margin-top: 15px;
+                    }
+                    .important-info {
+                        background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+                        color: white;
+                        padding: 25px;
+                        border-radius: 12px;
+                        margin: 30px 0;
+                        box-shadow: 0 4px 15px rgba(116, 185, 255, 0.3);
+                    }
+                    .important-title {
+                        font-size: 16px;
+                        font-weight: 700;
+                        margin-bottom: 15px;
+                        display: flex;
+                        align-items: center;
+                    }
+                    .important-icon {
+                        margin-right: 8px;
+                        font-size: 18px;
+                    }
+                    .important-text {
+                        font-size: 14px;
+                        line-height: 1.6;
+                        margin: 8px 0;
+                    }
+                    .footer { 
+                        background: #000000; 
+                        color: #ffffff; 
+                        padding: 30px; 
+                        text-align: center; 
+                        font-size: 13px;
+                        line-height: 1.6;
+                    }
+        .footer-brand {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            font-family: 'Times New Roman', serif;
+        }
+                    .footer-tagline {
+                        opacity: 0.8;
+                        margin-bottom: 15px;
+                    }
+                    .footer-contact {
+                        opacity: 0.7;
+                        font-size: 12px;
+                    }
+                    @media (max-width: 600px) {
+                        .email-container { margin: 0; }
+                        .header, .content, .footer { padding: 20px; }
+                        .order-info { grid-template-columns: 1fr; }
+                        .total-row { font-size: 13px; }
+                    }
                 </style>
             </head>
             <body>
-                <div class="container">
+                <div class="email-container">
                     <div class="header">
-                        <h1>GRBT</h1>
-                        <h2>Sipariş Onayı</h2>
+                        <div class="logo">grbt.</div>
+                        <div class="header-subtitle">Memleketinizi Tişörtlerde Taşıyın</div>
                     </div>
                     
                     <div class="content">
-                        <p>Merhaba,</p>
-                        <p>Siparişiniz başarıyla alındı ve işleme konuldu. Teşekkür ederiz!</p>
+                        <div class="greeting">Merhaba!</div>
                         
-                        <div class="order-details">
-                            <h3>Sipariş Detayları</h3>
-                            <p><strong>Sipariş ID:</strong> ${session.id}</p>
-                            <p><strong>Sipariş Tarihi:</strong> ${new Date(session.created * 1000).toLocaleDateString('tr-TR')}</p>
-                            <p><strong>Durum:</strong> ${session.payment_status === 'paid' ? 'Ödendi' : 'Beklemede'}</p>
+                        <div class="order-status">
+                            <div class="status-text">Siparişiniz Başarıyla Alındı!</div>
+                        </div>
+                        
+                        <div style="text-align: center; margin: 30px 0; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+                            <p style="font-size: 16px; color: #2c3e50; margin-bottom: 10px; font-weight: 500;">
+                                Siparişiniz için teşekkür ederiz!
+                            </p>
+                            <p style="font-size: 14px; color: #6c757d; line-height: 1.6;">
+                                Memleket gururunuzu bizimle paylaştığınız için çok mutluyuz. 
+                                Ürünlerinizi özenle hazırlayıp en kısa sürede size ulaştıracağız.
+                            </p>
+                        </div>
+                        
+                        <div class="section">
+                            <div class="section-title">📋 Sipariş Bilgileri</div>
+                            <div class="order-info">
+                                <div class="info-item">
+                                    <div class="info-label">Sipariş Tarihi</div>
+                                    <div class="info-value">${new Date(session.created * 1000).toLocaleDateString('tr-TR')}</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Toplam Tutar</div>
+                                    <div class="info-value">€${orderTotal.toFixed(2)}</div>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="order-details">
-                            <h3>Sipariş Edilen Ürünler</h3>
+                        <div class="section">
+                            <div class="section-title">🛍️ Sipariş Edilen Ürünler</div>
                             ${lineItems.map(item => {
             const desc = item.description || '';
             const colorMatch = desc.match(/(beyaz|siyah|mavi|kırmızı|yeşil|sarı|mor|pembe|turuncu|gri)/i);
@@ -102,12 +344,16 @@ export async function POST(request: Request) {
                                         </div>
                                         ${personalizationMatch ? `
                                         <div class="product-details">
-                                            <strong>Kişiselleştirme:</strong> ${personalizationMatch[1]} • "${personalizationMatch[2]}" • ${personalizationMatch[3]} • Font: ${personalizationMatch[4]} • Renk: ${personalizationMatch[5]}
+                                            <span class="personalization-badge">${personalizationMatch[1]}</span>
+                                            <strong>Metin:</strong> "${personalizationMatch[2]}"<br>
+                                            <strong>Yerleşim:</strong> ${personalizationMatch[3]}<br>
+                                            <strong>Font:</strong> ${personalizationMatch[4]} • <strong>Renk:</strong> ${personalizationMatch[5]}
                                         </div>
                                         ` : ''}
                                         ${giftPackageMatch ? `
                                         <div class="product-details">
-                                            <strong>Hediye Paketi:</strong> Dahil${giftPackageMatch[1] ? ` • Mesaj: "${giftPackageMatch[1]}"` : ''}
+                                            <span class="gift-badge">🎁 Hediye Paketi</span>
+                                            ${giftPackageMatch[1] ? `<br><strong>Mesaj:</strong> "${giftPackageMatch[1]}"` : ''}
                                         </div>
                                         ` : ''}
                                         <div class="product-details">
@@ -119,36 +365,57 @@ export async function POST(request: Request) {
         }).join('')}
                         </div>
 
-                        <div class="shipping-details">
-                            <h3>Teslimat Bilgileri</h3>
-                            ${(session as any).shipping_details ? `
-                                <p><strong>Ad Soyad:</strong> ${(session as any).shipping_details.name}</p>
-                                <p><strong>Adres:</strong> ${(session as any).shipping_details.address?.line1 || ''}</p>
-                                ${(session as any).shipping_details.address?.line2 ? `<p><strong>Adres 2:</strong> ${(session as any).shipping_details.address.line2}</p>` : ''}
-                                <p><strong>Şehir:</strong> ${(session as any).shipping_details.address?.city || ''}</p>
-                                <p><strong>Posta Kodu:</strong> ${(session as any).shipping_details.address?.postal_code || ''}</p>
-                                <p><strong>Ülke:</strong> ${(session as any).shipping_details.address?.country || ''}</p>
-                            ` : '<p>Teslimat bilgileri bulunamadı.</p>'}
+                        <div class="section">
+                            <div class="section-title">🚚 Teslimat Bilgileri</div>
+                            <div class="shipping-address">
+                                ${(session as any).shipping_details ? `
+                                    <div class="address-line"><strong>Ad Soyad:</strong> ${(session as any).shipping_details.name}</div>
+                                    <div class="address-line"><strong>Adres:</strong> ${(session as any).shipping_details.address?.line1 || ''}</div>
+                                    ${(session as any).shipping_details.address?.line2 ? `<div class="address-line"><strong>Adres 2:</strong> ${(session as any).shipping_details.address.line2}</div>` : ''}
+                                    <div class="address-line"><strong>Şehir:</strong> ${(session as any).shipping_details.address?.city || ''}</div>
+                                    <div class="address-line"><strong>Posta Kodu:</strong> ${(session as any).shipping_details.address?.postal_code || ''}</div>
+                                    <div class="address-line"><strong>Ülke:</strong> ${(session as any).shipping_details.address?.country || ''}</div>
+                                ` : '<div class="address-line">Teslimat bilgileri bulunamadı.</div>'}
+                            </div>
                         </div>
 
-                        <div class="order-details">
-                            <h3>Ödeme Bilgileri</h3>
-                            <p><strong>Ürünler Toplamı:</strong> €${itemsTotal.toFixed(2)}</p>
-                            <p><strong>Kargo:</strong> €${shippingCost.toFixed(2)}</p>
-                            <p class="total"><strong>Toplam:</strong> €${orderTotal.toFixed(2)}</p>
+                        <div class="total-section">
+                            <div class="section-title" style="color: white; border-bottom: 1px solid rgba(255,255,255,0.2);">💰 Ödeme Özeti</div>
+                            <div class="total-row">
+                                <span>Ürünler Toplamı:</span>
+                                <span>€${itemsTotal.toFixed(2)}</span>
+                            </div>
+                            <div class="total-row">
+                                <span>Kargo:</span>
+                                <span>€${shippingCost.toFixed(2)}</span>
+                            </div>
+                            <div class="total-row total-final">
+                                <span>Toplam:</span>
+                                <span>€${orderTotal.toFixed(2)}</span>
+                            </div>
                         </div>
 
-                        <div style="margin-top: 30px; padding: 20px; background: #e8f4fd; border-left: 4px solid #0066cc;">
-                            <h3>Önemli Bilgiler</h3>
-                            <p><strong>Ön Sipariş:</strong> Siparişiniz ${new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toLocaleDateString('tr-TR')} tarihinde kargoya verilecektir.</p>
-                            <p><strong>Takip:</strong> Kargo bilgileriniz e-posta ile gönderilecektir.</p>
-                            <p><strong>Sorularınız:</strong> info@grbt.studio adresinden bizimle iletişime geçebilirsiniz.</p>
+                        <div class="important-info">
+                            <div class="important-title">
+                                <span class="important-icon">ℹ️</span>
+                                Önemli Bilgiler
+                            </div>
+                            <div class="important-text">
+                                <strong>Takip:</strong> Kargo bilgileriniz e-posta ile gönderilecektir.
+                            </div>
+                            <div class="important-text">
+                                <strong>Sorularınız:</strong> studio@grbt.studio adresinden bizimle iletişime geçebilirsiniz.
+                            </div>
                         </div>
                     </div>
                     
                     <div class="footer">
-                        <p>GRBT - Memleketinizi Tişörtlerde Taşıyın</p>
-                        <p>Bu e-posta otomatik olarak gönderilmiştir.</p>
+                        <div class="footer-brand">grbt.</div>
+                        <div class="footer-tagline">Memleketinizi Tişörtlerde Taşıyın</div>
+                        <div class="footer-contact">
+                            Bu e-posta otomatik olarak gönderilmiştir.<br>
+                            © 2025 grbt. Tüm hakları saklıdır.
+                        </div>
                     </div>
                 </div>
             </body>
@@ -159,7 +426,7 @@ export async function POST(request: Request) {
         await transporter.sendMail({
             from: process.env.SMTP_USER,
             to: session.customer_email,
-            subject: `Sipariş Onayı - ${session.id}`,
+            subject: `🎉 Siparişiniz Onaylandı - grbt.`,
             html: emailHtml,
         });
 

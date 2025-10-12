@@ -28,7 +28,16 @@ export async function POST(request: Request) {
             itemsCount: items.length,
             itemsTotal: itemsTotal,
             shippingCost: shippingCost,
-            shippingCountry: shippingCountry
+            shippingCountry: shippingCountry,
+            items: items.map((item: any) => ({
+                city: item.city,
+                color: item.color,
+                size: item.size,
+                price: item.price,
+                quantity: item.quantity,
+                personalization: item.personalization,
+                giftPackage: item.giftPackage
+            }))
         });
 
         // Create Stripe checkout session
@@ -40,19 +49,17 @@ export async function POST(request: Request) {
                 "bancontact",
                 "ideal"
             ],
-            line_items: [
-                {
-                    price_data: {
-                        currency: "eur",
-                        product_data: {
-                            name: "GRBT Order",
-                            description: `Items: ${items.map((item: any) => `${item.city} Tişört (${item.color}, ${item.size})`).join(', ')}`,
-                        },
-                        unit_amount: Math.round(itemsTotal * 100), // Convert to cents
+            line_items: items.map((item: any) => ({
+                price_data: {
+                    currency: "eur",
+                    product_data: {
+                        name: `${item.city} Tişört`,
+                        description: `${item.color}, ${item.size}${item.personalization ? ` - ${item.personalization.method === 'printed' ? 'Baskı' : 'İşleme'}: "${item.personalization.text}"` : ''}${item.giftPackage?.included ? ' - Hediye Paketi' : ''}`,
                     },
-                    quantity: 1,
-                }
-            ],
+                    unit_amount: Math.round(item.price * 100), // Item price already includes personalization and gift package
+                },
+                quantity: item.quantity,
+            })),
             shipping_options: [{
                 shipping_rate_data: {
                     type: 'fixed_amount',
