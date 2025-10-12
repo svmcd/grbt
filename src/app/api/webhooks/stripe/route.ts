@@ -149,7 +149,7 @@ export async function POST(request: Request) {
                                     <h3>Önemli Bilgiler</h3>
                                     <p><strong>Ön Sipariş:</strong> Siparişiniz ${new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toLocaleDateString('tr-TR')} tarihinde kargoya verilecektir.</p>
                                     <p><strong>Takip:</strong> Kargo bilgileriniz e-posta ile gönderilecektir.</p>
-                                    <p><strong>Sorularınız:</strong> info@grbt.com adresinden bizimle iletişime geçebilirsiniz.</p>
+                                    <p><strong>Sorularınız:</strong> info@grbt.studio adresinden bizimle iletişime geçebilirsiniz.</p>
                                 </div>
                             </div>
                             

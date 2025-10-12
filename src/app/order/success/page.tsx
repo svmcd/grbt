@@ -99,7 +99,8 @@ function OrderSuccessContent() {
               </p>
               <div className="mt-3 space-y-1">
                 <p className="text-white/80">
-                  <span className="text-white/70">E-posta:</span> info@grbt.com
+                  <span className="text-white/70">E-posta:</span>{" "}
+                  info@grbt.studio
                 </p>
                 <p className="text-white/80">
                   <span className="text-white/70">Sipariş Referansı:</span>{" "}
