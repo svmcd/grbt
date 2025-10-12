@@ -20,7 +20,7 @@ export function Gallery({ images, city }: { images: string[]; city: string }) {
           if (response.ok) {
             existingImages.push(imageSrc);
           }
-        } catch (error) {
+        } catch {
           // Image doesn't exist, skip it
         }
       }

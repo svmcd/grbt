@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { collection, getDocs, orderBy, query } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import Stripe from "stripe";
 
 interface WaitlistUser {
   id: string;
@@ -114,7 +113,7 @@ export default function AdminDashboard() {
           const ordersData = await response.json();
           console.log("=== ADMIN DASHBOARD RECEIVED DATA ===");
           console.log("Orders count:", ordersData.length);
-          ordersData.forEach((order, index) => {
+          ordersData.forEach((order: any, index: number) => {
             console.log(`\n--- ORDER ${index + 1} ---`);
             console.log("Order ID:", order.id);
             console.log("Customer Email:", order.customer_email);
@@ -122,7 +121,7 @@ export default function AdminDashboard() {
             console.log("Shipping Details:", order.shipping_details);
             console.log("Line Items Count:", order.line_items?.length || 0);
             if (order.line_items) {
-              order.line_items.forEach((item, itemIndex) => {
+              order.line_items.forEach((item: any, itemIndex: number) => {
                 console.log(`\n  --- LINE ITEM ${itemIndex + 1} ---`);
                 console.log("  Item:", JSON.stringify(item, null, 2));
               });
@@ -453,7 +452,6 @@ export default function AdminDashboard() {
 
                                     // Parse the description to extract all details like Stripe shows
                                     const parts = desc.split(" - ");
-                                    const productName = parts[0] || "";
 
                                     const details = [];
 

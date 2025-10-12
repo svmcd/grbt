@@ -51,8 +51,8 @@ export async function GET(request: NextRequest) {
                     console.log(`\n  --- LINE ITEM ${itemIndex + 1} ---`);
                     console.log('  Description:', item.description);
                     console.log('  Quantity:', item.quantity);
-                    console.log('  Amount:', item.amount);
-                    console.log('  Price Data:', item.price_data);
+                    console.log('  Amount Total:', (item as any).amount_total);
+                    console.log('  Price Data:', (item as any).price_data);
                     console.log('  Full Item Object:', JSON.stringify(item, null, 2));
                 });
             }
@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
             console.log(`\n--- SUCCESSFUL SESSION ${index + 1} ---`);
             console.log('Session ID:', session.id);
             console.log('Customer Email:', session.customer_email);
-            console.log('Shipping Details:', JSON.stringify(session.shipping_details, null, 2));
+            console.log('Shipping Details:', JSON.stringify((session as any).shipping_details, null, 2));
             console.log('Customer Details:', JSON.stringify(session.customer_details, null, 2));
         });
 

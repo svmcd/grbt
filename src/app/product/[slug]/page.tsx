@@ -34,7 +34,6 @@ export default function ProductPage() {
   const [selectedSize, setSelectedSize] = useState<string>(
     product?.sizes[0] || ""
   );
-  const [quantity, setQuantity] = useState<number>(1);
   const [personalizationText, setPersonalizationText] = useState<string>("");
   const [personalizationPlacement, setPersonalizationPlacement] =
     useState<string>("");
