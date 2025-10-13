@@ -1,6 +1,14 @@
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-export function middleware() {
+export function middleware(request: NextRequest) {
+    // Protect admin routes
+    if (request.nextUrl.pathname.startsWith('/admin')) {
+        // Check if user is authenticated (you'll need to implement this)
+        // For now, we'll rely on client-side authentication
+        // In production, you should verify the Firebase token here
+    }
+
     const response = NextResponse.next();
 
     // Security headers

@@ -312,7 +312,7 @@ export function getProductBySlug(slug: string): Product | undefined {
         image,
         images,
         colors: getAvailableColors(),
-        sizes: ["S", "M", "L", "XL"],
+        sizes: ["S", "M", "L", "XL", "XXL"],
         description: data.description,
         donation: data.donation,
         designOrigin: data.designOrigin,

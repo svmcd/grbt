@@ -9,6 +9,12 @@ service cloud.firestore {
       allow update, delete: if false;
     }
     
+    // Allow webhook to create orders, allow any authenticated user to read/update orders
+    match /orders/{document} {
+      allow create: if true; // Webhook can create orders
+      allow read, update, delete: if request.auth != null; // Only authenticated users can manage orders
+    }
+    
     // Deny all other access
     match /{document=**} {
       allow read, write: if false;

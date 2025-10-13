@@ -17,7 +17,7 @@ export default function ReturnsPage() {
         <h2 className="text-xl mt-6">İadeler</h2>
         <p className="text-muted/80">
           Onaylandıktan sonra, iadeler orijinal ödeme yöntemine iade edilen
-          ürünlerin alınmasından itibaren 14 gün içinde yapılır.
+          ürünlerin alınmasından itibaren 60 gün içinde yapılır.
         </p>
         <h2 className="text-xl mt-6">İstisnalar</h2>
         <p className="text-muted/80">
