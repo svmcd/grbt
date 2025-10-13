@@ -1,6 +1,7 @@
 import Stripe from "stripe";
 import { headers } from "next/headers";
 import nodemailer from "nodemailer";
+import { adminDb } from "@/lib/firebase-admin";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
     apiVersion: "2025-09-30.clover",
@@ -18,24 +19,36 @@ const transporter = nodemailer.createTransport({
 });
 
 export async function POST(req: Request) {
+    console.log("🔔 CHECKOUT-SESSION-COMPLETED WEBHOOK CALLED - Starting processing...");
+
     const rawBody = await req.text();
     const sig = (await headers()).get("stripe-signature");
     const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
+    console.log("📝 Webhook body length:", rawBody.length);
+    console.log("🔐 Webhook signature present:", !!sig);
+    console.log("🔑 Webhook secret present:", !!endpointSecret);
+
     if (!sig || !endpointSecret) {
+        console.error("❌ Missing signature or secret");
         return new Response("Missing signature or secret", { status: 400 });
     }
 
     let event: Stripe.Event;
     try {
         event = stripe.webhooks.constructEvent(rawBody, sig, endpointSecret);
+        console.log("✅ Webhook signature verified successfully");
+        console.log("📋 Event type:", event.type);
     } catch (err: any) {
-        console.error("Webhook signature verification failed.", err.message);
+        console.error("❌ Webhook signature verification failed:", err.message);
         return new Response(`Webhook Error: ${err.message}`, { status: 400 });
     }
 
     if (event.type === "checkout.session.completed") {
         const session = event.data.object as Stripe.Checkout.Session;
+        console.log("💳 CHECKOUT SESSION COMPLETED - Processing order:", session.id);
+        console.log("📧 Customer email:", session.customer_details?.email);
+        console.log("💰 Amount total:", session.amount_total);
         try {
             const customerEmail = (session.customer_details && session.customer_details.email) || "";
             if (customerEmail) {
@@ -430,12 +443,54 @@ export async function POST(req: Request) {
                     subject: `🎉 Siparişiniz Onaylandı - grbt.`,
                     html: emailHtml,
                 });
+
+                console.log(`✅ Confirmation email sent to ${customerEmail}`);
+
+                // Store order in Firebase using Admin SDK
+                console.log("🔥 FIREBASE STORAGE - Starting Firebase write...");
+                try {
+                    console.log("🔧 Firebase Admin SDK - Checking environment variables...");
+                    console.log("FIREBASE_PROJECT_ID:", process.env.FIREBASE_PROJECT_ID ? "✅ SET" : "❌ MISSING");
+                    console.log("FIREBASE_CLIENT_EMAIL:", process.env.FIREBASE_CLIENT_EMAIL ? "✅ SET" : "❌ MISSING");
+                    console.log("FIREBASE_PRIVATE_KEY:", process.env.FIREBASE_PRIVATE_KEY ? "✅ SET" : "❌ MISSING");
+
+                    const orderData = {
+                        stripe_id: session.id,
+                        amount_total: session.amount_total || 0,
+                        customer_email: customerEmail,
+                        payment_status: session.payment_status || "paid",
+                        status: session.status || "complete",
+                        created: session.created || Math.floor(Date.now() / 1000),
+                        shipping_details: (detailedSession as any).shipping_details || null,
+                        line_items: lineItems,
+                        shipped: false,
+                        custom_flag: "",
+                        notes: "",
+                        deleted: false,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString(),
+                    };
+
+                    console.log("📝 Order data prepared:", JSON.stringify(orderData, null, 2));
+
+                    const orderRef = adminDb.collection('orders').doc(session.id);
+                    console.log("🔥 Attempting Firebase write to collection 'orders', document:", session.id);
+
+                    await orderRef.set(orderData);
+                    console.log(`✅ SUCCESS: Order ${session.id} stored in Firebase`);
+                } catch (firebaseError) {
+                    console.error("❌ FIREBASE ERROR:", firebaseError);
+                    console.error("❌ Error details:", JSON.stringify(firebaseError, null, 2));
+                }
             }
         } catch (e) {
-            console.error("Failed to send confirmation email", e);
+            console.error("❌ GENERAL ERROR in webhook processing:", e);
         }
+    } else {
+        console.log("ℹ️ Event type not handled:", event.type);
     }
 
+    console.log("🏁 CHECKOUT-SESSION-COMPLETED WEBHOOK PROCESSING COMPLETE");
     return new Response(JSON.stringify({ received: true }), { status: 200 });
 }
 
