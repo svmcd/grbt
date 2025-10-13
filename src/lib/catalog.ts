@@ -20,15 +20,25 @@ export type Product = {
 
 export const memleketSlugs: string[] = [
     "afyon",
+    "agri",
     "aksaray",
+    "ankara",
     "ardahan",
+    "aydin",
+    "corum",
     "gaziantep",
+    "gumushane",
     "karaman",
     "kayseri",
+    "kirsehir",
     "konya",
     "nevsehir",
+    "nigde",
+    "rize",
+    "sakarya",
     "sivas",
     "trabzon",
+    "usak",
     "yozgat",
 ];
 
@@ -44,15 +54,25 @@ export function titleCaseCity(slug: string): string {
     // Turkish city name mappings
     const cityNames: Record<string, string> = {
         "afyon": "Afyon",
+        "agri": "Ağrı",
         "aksaray": "Aksaray",
+        "ankara": "Ankara",
         "ardahan": "Ardahan",
+        "aydin": "Aydın",
+        "corum": "Çorum",
         "gaziantep": "Gaziantep",
+        "gumushane": "Gümüşhane",
         "karaman": "Karaman",
         "kayseri": "Kayseri",
+        "kirsehir": "Kırşehir",
         "konya": "Konya",
         "nevsehir": "Nevşehir",
+        "nigde": "Niğde",
+        "rize": "Rize",
+        "sakarya": "Sakarya",
         "sivas": "Sivas",
         "trabzon": "Trabzon",
+        "usak": "Uşak",
         "yozgat": "Yozgat",
         // Hasret collection
         "gurbetten-memlekete": "Gurbetten Memlekete",
@@ -195,18 +215,6 @@ const productData: Record<string, {
             culture: "Karaman halkı, geleneksel Türk kültürüne bağlılığı ve dini değerlere saygısıyla bilinir. Şehrin kültürel yaşamı, tasavvuf geleneği ve modern yaşamın harmanlanmasıyla şekillenmiştir. Yunus Emre'nin felsefesi hala şehrin sosyal dokusunda yaşatılmaktadır."
         }
     },
-    yozgat: {
-        description: "Yozgat'ın iç Anadolu'nun kalbi olan sakin atmosferini taşıyan tasarım. Geleneksel mimari ve doğal güzellikler.",
-        donation: {
-            percentage: 5,
-            organization: "Bu tişörtten elde edilen kârın %5'i Yozgat'taki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
-        },
-        designOrigin: "Yozgat Çamlığı ve tarihi evler",
-        cityInfo: {
-            general: "Yozgat, İç Anadolu Bölgesi'nin kalbinde yer alan sakin ve huzurlu bir şehirdir. Çamlık Milli Parkı ve tarihi evleriyle tanınan şehir, doğal güzellikleri ve geleneksel mimarisiyle ziyaretçilerini büyüler. Şehir, tarım ve hayvancılık sektörlerinde önemli bir yere sahiptir.",
-            culture: "Yozgat halkı, sakin ve huzurlu yaşam tarzıyla bilinir. Şehrin kültürel dokusu, geleneksel değerler ve modern yaşamın uyumlu birleşimiyle şekillenmiştir. Misafirperverliği ve doğal yaşamla uyumuyla tanınır."
-        }
-    },
     kayseri: {
         description: "Kayseri'nin ticaret merkezi olan dinamik atmosferini yansıtan tasarım. Erciyes Dağı ve geleneksel ticaret kültürü.",
         donation: {
@@ -265,6 +273,138 @@ const productData: Record<string, {
         cityInfo: {
             general: "Trabzon, Karadeniz'in incisi olarak bilinen yeşil doğasıyla ünlü bir şehirdir. Uzungöl ve tarihi Trabzon Kalesi ile tanınan şehir, doğal güzellikleri ve geleneksel Karadeniz kültürüyle ziyaretçilerini büyüler. Şehir, deniz ve dağ manzarasının muhteşem birleşimini sunar.",
             culture: "Trabzon halkı, Karadeniz'in karakteristik özelliklerini taşır. Şehrin kültürel yaşamı, geleneksel horon dansları ve yerel müzik kültürüyle şekillenmiştir. Misafirperverliği ve doğal yaşamla uyumuyla tanınır."
+        }
+    },
+    yozgat: {
+        description: "Yozgat'ın tarihi dokusu ve geleneksel mimarisini yansıtan tasarım. İç Anadolu'nun kültürel zenginliği.",
+        donation: {
+            percentage: 5,
+            organization: "Bu tişörtten elde edilen kârın %5'i Yozgat'taki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+        },
+        designOrigin: "Yozgat Kalesi ve geleneksel mimari",
+        cityInfo: {
+            general: "Yozgat, İç Anadolu Bölgesi'nin önemli şehirlerinden biridir. Tarihi dokusu ve geleneksel mimarisiyle tanınan şehir, tarım ve hayvancılık sektörlerinde önemli bir yere sahiptir. Şehir, kültürel mirası ve doğal güzellikleriyle ziyaretçilerini etkiler.",
+            culture: "Yozgat halkı, geleneksel değerlere bağlılığı ve misafirperverliği ile bilinir. Şehrin kültürel yaşamı, yerel festivaller ve geleneksel el sanatlarıyla şekillenmiştir. Tarım ve hayvancılık kültürü şehrin sosyal dokusunu oluşturur."
+        }
+    },
+    ankara: {
+        description: "Ankara'nın modern başkent kimliği ile tarihi dokusunu birleştiren tasarım. Atatürk'ün şehri ve Türkiye'nin kalbi.",
+        donation: {
+            percentage: 5,
+            organization: "Bu tişörtten elde edilen kârın %5'i Ankara'daki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+        },
+        designOrigin: "Anıtkabir ve Ankara Kalesi",
+        cityInfo: {
+            general: "Ankara, Türkiye'nin başkenti ve en büyük ikinci şehridir. Modern yapısıyla tarihi dokusunu harmanlayan şehir, siyasi merkez olmasının yanı sıra kültürel ve sosyal yaşamın da kalbidir. Anıtkabir, Ankara Kalesi ve modern mimarisiyle tanınır.",
+            culture: "Ankara halkı, çeşitli kültürlerden gelen insanların oluşturduğu dinamik bir toplumdur. Şehir, modern yaşam tarzı ile geleneksel değerlerin buluştuğu bir merkezdir. Eğitim, sanat ve kültür alanlarında önemli bir rol oynar."
+        }
+    },
+    aydin: {
+        description: "Aydın'ın Ege'nin bereketli topraklarını ve antik tarihini yansıtan tasarım. Zeytin ve incir diyarı.",
+        donation: {
+            percentage: 5,
+            organization: "Bu tişörtten elde edilen kârın %5'i Aydın'daki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+        },
+        designOrigin: "Efes Antik Kenti ve Ege doğası",
+        cityInfo: {
+            general: "Aydın, Ege Bölgesi'nin bereketli topraklarında yer alan tarihi bir şehirdir. Antik Efes kenti ve zengin tarım alanlarıyla tanınan şehir, turizm ve tarım sektörlerinde önemli bir yere sahiptir. Ege'nin sıcak iklimi ve doğal güzellikleri şehri çekici kılar.",
+            culture: "Aydın halkı, Ege'nin sıcakkanlı ve misafirperver karakterini taşır. Şehrin kültürel yaşamı, antik tarih mirası ve modern yaşam tarzının harmanlanmasıyla şekillenmiştir. Zeytin, incir ve üzüm kültürü şehrin sosyal dokusunu oluşturur."
+        }
+    },
+    gumushane: {
+        description: "Gümüşhane'nin dağlık doğasını ve tarihi gümüş madenlerini yansıtan tasarım. Karadeniz'in yükseklerindeki gizli hazine.",
+        donation: {
+            percentage: 5,
+            organization: "Bu tişörtten elde edilen kârın %5'i Gümüşhane'deki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+        },
+        designOrigin: "Gümüş madenleri ve dağlık doğa",
+        cityInfo: {
+            general: "Gümüşhane, Karadeniz Bölgesi'nin dağlık kesiminde yer alan tarihi bir şehirdir. Tarihi gümüş madenleri ve doğal güzellikleriyle tanınan şehir, yüksek rakımlı konumuyla benzersiz bir coğrafyaya sahiptir. Şehir, maden tarihi ve doğal zenginlikleriyle ziyaretçilerini etkiler.",
+            culture: "Gümüşhane halkı, dağlık yaşamın zorluklarına alışkın, dayanıklı ve çalışkan bir toplumdur. Şehrin kültürel yaşamı, maden işçiliği geleneği ve doğal yaşamla uyum içinde şekillenmiştir. Geleneksel el sanatları ve yerel müzik kültürü önemli yer tutar."
+        }
+    },
+    nigde: {
+        description: "Niğde'nin Kapadokya'nın eşsiz doğasını ve tarihi dokusunu yansıtan tasarım. Peri bacaları ve antik tarih.",
+        donation: {
+            percentage: 5,
+            organization: "Bu tişörtten elde edilen kârın %5'i Niğde'deki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+        },
+        designOrigin: "Kapadokya peri bacaları ve Niğde Kalesi",
+        cityInfo: {
+            general: "Niğde, Kapadokya bölgesinin önemli şehirlerinden biridir. Peri bacaları ve antik tarihiyle ünlü olan şehir, turizm ve tarım sektörlerinde önemli bir yere sahiptir. Kapadokya'nın eşsiz doğal oluşumları ve tarihi dokusu şehri çekici kılar.",
+            culture: "Niğde halkı, Kapadokya'nın tarihi mirasına sahip çıkan, kültürel değerlere bağlı bir toplumdur. Şehrin kültürel yaşamı, antik tarih mirası ve modern yaşam tarzının harmanlanmasıyla şekillenmiştir. Turizm kültürü ve geleneksel el sanatları önemli yer tutar."
+        }
+    },
+    rize: {
+        description: "Rize'nin çay bahçelerini ve Karadeniz'in yeşil doğasını yansıtan tasarım. Çayın anavatanı ve doğal güzellikler.",
+        donation: {
+            percentage: 5,
+            organization: "Bu tişörtten elde edilen kârın %5'i Rize'deki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+        },
+        designOrigin: "Çay bahçeleri ve Karadeniz doğası",
+        cityInfo: {
+            general: "Rize, Karadeniz Bölgesi'nin çay üretim merkezi olarak bilinen yeşil doğasıyla ünlü bir şehirdir. Çay bahçeleri ve dağlık coğrafyasıyla tanınan şehir, tarım ve turizm sektörlerinde önemli bir yere sahiptir. Karadeniz'in nemli iklimi ve bereketli toprakları şehri çekici kılar.",
+            culture: "Rize halkı, çay kültürü ve Karadeniz'in karakteristik özelliklerini taşır. Şehrin kültürel yaşamı, çay üretimi geleneği ve doğal yaşamla uyum içinde şekillenmiştir. Geleneksel horon dansları ve yerel müzik kültürü önemli yer tutar."
+        }
+    },
+    corum: {
+        description: "Çorum'un Hitit medeniyetinin kalbi olan tarihi dokusunu yansıtan tasarım. Antik tarih ve geleneksel kültür.",
+        donation: {
+            percentage: 5,
+            organization: "Bu tişörtten elde edilen kârın %5'i Çorum'daki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+        },
+        designOrigin: "Hattuşaş ve Hitit medeniyeti",
+        cityInfo: {
+            general: "Çorum, Hitit medeniyetinin başkenti Hattuşaş'ın bulunduğu tarihi bir şehirdir. Antik tarih ve arkeolojik zenginlikleriyle tanınan şehir, UNESCO Dünya Mirası listesinde yer alan önemli bir kültürel merkezdir. Şehir, Hitit medeniyetinin izlerini taşıyan tarihi dokusuyla ziyaretçilerini büyüler.",
+            culture: "Çorum halkı, tarihi mirasa sahip çıkan ve kültürel değerlere bağlı bir toplumdur. Şehrin kültürel yaşamı, Hitit medeniyetinin izleri ve modern yaşamın harmanlanmasıyla şekillenmiştir. Arkeolojik turizm ve geleneksel el sanatları önemli yer tutar."
+        }
+    },
+    usak: {
+        description: "Uşak'ın Ege'nin iç kesimlerindeki sakin atmosferini yansıtan tasarım. Geleneksel halı dokumacılığı ve doğal güzellikler.",
+        donation: {
+            percentage: 5,
+            organization: "Bu tişörtten elde edilen kârın %5'i Uşak'taki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+        },
+        designOrigin: "Uşak halıları ve geleneksel dokumacılık",
+        cityInfo: {
+            general: "Uşak, Ege Bölgesi'nin iç kesimlerinde yer alan ve geleneksel halı dokumacılığıyla ünlü bir şehirdir. Uşak halıları dünya çapında tanınan el sanatı ürünleridir. Şehir, doğal güzellikleri ve geleneksel kültürüyle ziyaretçilerini etkiler.",
+            culture: "Uşak halkı, geleneksel el sanatlarına olan ilgisi ve halı dokumacılığındaki ustalığıyla bilinir. Şehrin kültürel yaşamı, geleneksel dokumacılık kültürü ve modern yaşamın uyumlu birleşimiyle şekillenmiştir. El sanatları ve yerel müzik kültürü önemli yer tutar."
+        }
+    },
+    kirsehir: {
+        description: "Kırşehir'in Ahi Evran'ın şehri olan tasavvuf kültürünü yansıtan tasarım. Ahilik geleneği ve manevi değerler.",
+        donation: {
+            percentage: 5,
+            organization: "Bu tişörtten elde edilen kârın %5'i Kırşehir'deki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+        },
+        designOrigin: "Ahi Evran ve Ahilik geleneği",
+        cityInfo: {
+            general: "Kırşehir, Ahi Evran'ın şehri olarak bilinen ve Ahilik geleneğinin merkezi olan tarihi bir şehirdir. Tasavvuf kültürü ve manevi değerlerle tanınan şehir, geleneksel Türk kültürünün önemli merkezlerinden biridir. Şehir, manevi atmosferi ve kültürel mirasıyla ziyaretçilerini etkiler.",
+            culture: "Kırşehir halkı, tasavvuf kültürüne olan bağlılığı ve manevi değerlere saygısıyla bilinir. Şehrin kültürel yaşamı, Ahilik geleneği ve modern yaşamın harmanlanmasıyla şekillenmiştir. Geleneksel müzik ve folklor kültürü hala yaşatılmaktadır."
+        }
+    },
+    sakarya: {
+        description: "Sakarya'nın Marmara'nın bereketli topraklarını ve doğal güzelliklerini yansıtan tasarım. Sapanca Gölü ve yeşil doğa.",
+        donation: {
+            percentage: 5,
+            organization: "Bu tişörtten elde edilen kârın %5'i Sakarya'daki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+        },
+        designOrigin: "Sapanca Gölü ve Sakarya Nehri",
+        cityInfo: {
+            general: "Sakarya, Marmara Bölgesi'nin doğal güzellikleriyle ünlü şehirlerinden biridir. Sapanca Gölü ve Sakarya Nehri ile tanınan şehir, tarım ve sanayi sektörlerinde önemli bir yere sahiptir. Şehir, doğal güzellikleri ve modern yaşam tarzının harmanlanmasıyla çekici kılar.",
+            culture: "Sakarya halkı, doğal yaşamla uyumu ve modern yaşam tarzını benimsemesiyle bilinir. Şehrin kültürel yaşamı, doğal güzellikler ve şehir yaşamının uyumlu birleşimiyle şekillenmiştir. Su sporları ve doğa turizmi kültürü önemli yer tutar."
+        }
+    },
+    agri: {
+        description: "Ağrı'nın Türkiye'nin en yüksek dağı olan Ağrı Dağı'nın görkemini yansıtan tasarım. Doğu Anadolu'nun doğal güzellikleri.",
+        donation: {
+            percentage: 5,
+            organization: "Bu tişörtten elde edilen kârın %5'i Ağrı'daki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+        },
+        designOrigin: "Ağrı Dağı ve Doğu Anadolu doğası",
+        cityInfo: {
+            general: "Ağrı, Türkiye'nin en yüksek dağı olan Ağrı Dağı'nın eteklerinde kurulmuş olan ve doğal güzellikleriyle ünlü bir şehirdir. Doğu Anadolu'nun karakteristik özelliklerini taşıyan şehir, dağcılık ve doğa sporları için önemli bir merkezdir. Şehir, görkemli doğal manzarasıyla ziyaretçilerini büyüler.",
+            culture: "Ağrı halkı, dağlık yaşamın zorluklarına alışkın, dayanıklı ve çalışkan bir toplumdur. Şehrin kültürel yaşamı, doğal yaşamla uyum içinde şekillenmiştir. Dağcılık kültürü ve geleneksel el sanatları önemli yer tutar."
         }
     },
     // Hasret Collection
