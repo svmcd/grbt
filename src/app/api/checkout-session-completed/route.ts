@@ -454,6 +454,13 @@ export async function POST(req: Request) {
                     console.log("FIREBASE_CLIENT_EMAIL:", process.env.FIREBASE_CLIENT_EMAIL ? "✅ SET" : "❌ MISSING");
                     console.log("FIREBASE_PRIVATE_KEY:", process.env.FIREBASE_PRIVATE_KEY ? "✅ SET" : "❌ MISSING");
 
+                    console.log("🚚 SHIPPING DEBUG - Available shipping data:");
+                    console.log("collected_information:", JSON.stringify(detailedSession.collected_information, null, 2));
+                    console.log("customer_details:", JSON.stringify(detailedSession.customer_details, null, 2));
+
+                    const shippingDetails = detailedSession.collected_information?.shipping_details || detailedSession.customer_details?.address || null;
+                    console.log("🚚 Final shipping_details:", JSON.stringify(shippingDetails, null, 2));
+
                     const orderData = {
                         stripe_id: session.id,
                         amount_total: session.amount_total || 0,
@@ -461,7 +468,7 @@ export async function POST(req: Request) {
                         payment_status: session.payment_status || "paid",
                         status: session.status || "complete",
                         created: session.created || Math.floor(Date.now() / 1000),
-                        shipping_details: (detailedSession as any).shipping_details || null,
+                        shipping_details: shippingDetails,
                         line_items: lineItems,
                         shipped: false,
                         custom_flag: "",
