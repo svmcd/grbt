@@ -56,7 +56,7 @@ export default function Home() {
                 <div className="grid grid-cols-2 gap-6">
                   <div className="text-center">
                     <div className="text-3xl font-light text-black mb-2">
-                      11
+                      21
                     </div>
                     <div className="text-black/60 text-sm uppercase tracking-wider">
                       Şehir
