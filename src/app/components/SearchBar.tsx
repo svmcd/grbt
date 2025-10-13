@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { memleketSlugs, getProductBySlug } from "@/lib/catalog";
-import { getPriceForSlug } from "@/lib/pricing";
 import Link from "next/link";
 import Image from "next/image";
 

@@ -449,7 +449,7 @@ export default function AdminDashboard() {
 
         const firebaseOrders = await response.json();
         setOrders(firebaseOrders);
-      } catch (error) {
+      } catch {
         setOrders([]);
       } finally {
         setOrdersLoading(false);

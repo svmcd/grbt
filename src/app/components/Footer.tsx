@@ -3,7 +3,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import { NewsletterSignup } from "./NewsletterSignup";
-import { TrustSignals } from "./TrustSignals";
 
 export function Footer() {
   return (

@@ -5,9 +5,9 @@ import { getAuth } from 'firebase-admin/auth';
 // Initialize Firebase Admin SDK
 const firebaseAdminConfig = {
     credential: cert({
-        project_id: process.env.FIREBASE_PROJECT_ID,
-        client_email: process.env.FIREBASE_CLIENT_EMAIL,
-        private_key: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
     }),
     projectId: process.env.FIREBASE_PROJECT_ID,
 };
