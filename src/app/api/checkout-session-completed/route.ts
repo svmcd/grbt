@@ -19,36 +19,24 @@ const transporter = nodemailer.createTransport({
 });
 
 export async function POST(req: Request) {
-    console.log("🔔 CHECKOUT-SESSION-COMPLETED WEBHOOK CALLED - Starting processing...");
-
     const rawBody = await req.text();
     const sig = (await headers()).get("stripe-signature");
     const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-    console.log("📝 Webhook body length:", rawBody.length);
-    console.log("🔐 Webhook signature present:", !!sig);
-    console.log("🔑 Webhook secret present:", !!endpointSecret);
-
     if (!sig || !endpointSecret) {
-        console.error("❌ Missing signature or secret");
         return new Response("Missing signature or secret", { status: 400 });
     }
 
     let event: Stripe.Event;
     try {
         event = stripe.webhooks.constructEvent(rawBody, sig, endpointSecret);
-        console.log("✅ Webhook signature verified successfully");
-        console.log("📋 Event type:", event.type);
     } catch (err: any) {
-        console.error("❌ Webhook signature verification failed:", err.message);
+        console.error("Webhook signature verification failed.", err.message);
         return new Response(`Webhook Error: ${err.message}`, { status: 400 });
     }
 
     if (event.type === "checkout.session.completed") {
         const session = event.data.object as Stripe.Checkout.Session;
-        console.log("💳 CHECKOUT SESSION COMPLETED - Processing order:", session.id);
-        console.log("📧 Customer email:", session.customer_details?.email);
-        console.log("💰 Amount total:", session.amount_total);
         try {
             const customerEmail = (session.customer_details && session.customer_details.email) || "";
             if (customerEmail) {
@@ -65,7 +53,7 @@ export async function POST(req: Request) {
                 // Get line items for product details
                 const lineItems = detailedSession.line_items?.data || [];
 
-                // Create detailed email content
+                // Create clean email content
                 const emailHtml = `
                     <!DOCTYPE html>
                     <html>
@@ -76,16 +64,15 @@ export async function POST(req: Request) {
                         <style>
                             * { margin: 0; padding: 0; box-sizing: border-box; }
                             body { 
-                                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; 
+                                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
                                 line-height: 1.6; 
-                                color: #1a1a1a; 
-                                background-color: #f8f9fa;
+                                color: #000000; 
+                                background-color: #ffffff;
                             }
                             .email-container { 
                                 max-width: 600px; 
                                 margin: 0 auto; 
                                 background-color: #ffffff;
-                                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
                             }
                             .header { 
                                 background: #000000; 
@@ -95,7 +82,7 @@ export async function POST(req: Request) {
                             }
                             .logo { 
                                 font-size: 32px; 
-                                font-weight: 700; 
+                                font-weight: 400; 
                                 letter-spacing: -1px;
                                 margin-bottom: 8px;
                                 font-family: 'Times New Roman', serif;
@@ -103,133 +90,101 @@ export async function POST(req: Request) {
                             .header-subtitle { 
                                 font-size: 16px; 
                                 opacity: 0.8; 
-                                font-weight: 400;
+                                font-weight: 300;
                             }
                             .content { 
                                 padding: 40px 30px; 
                             }
                             .greeting {
                                 font-size: 18px;
-                                margin-bottom: 20px;
-                                color: #2c3e50;
+                                margin-bottom: 30px;
+                                color: #000000;
+                                font-weight: 300;
                             }
                             .order-status {
-                                background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
-                                color: white;
+                                background: #000000;
+                                color: #ffffff;
                                 padding: 20px;
-                                border-radius: 12px;
                                 text-align: center;
                                 margin-bottom: 30px;
-                                box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
                             }
                             .status-text {
                                 font-size: 16px;
-                                font-weight: 600;
+                                font-weight: 400;
                             }
                             .section { 
                                 background: #ffffff; 
-                                padding: 25px; 
+                                padding: 25px 0; 
                                 margin: 25px 0; 
-                                border-radius: 12px;
-                                border: 1px solid #e9ecef;
-                                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+                                border-bottom: 1px solid #e5e5e5;
                             }
                             .section-title { 
                                 font-size: 18px; 
-                                font-weight: 700; 
-                                color: #2c3e50; 
+                                font-weight: 400; 
+                                color: #000000; 
                                 margin-bottom: 20px;
-                                padding-bottom: 10px;
-                                border-bottom: 2px solid #f8f9fa;
+                                text-transform: uppercase;
+                                letter-spacing: 1px;
                             }
                             .order-info {
                                 display: grid;
                                 grid-template-columns: 1fr 1fr;
-                                gap: 15px;
+                                gap: 20px;
                                 margin-bottom: 20px;
                             }
                             .info-item {
-                                background: #f8f9fa;
-                                padding: 15px;
-                                border-radius: 8px;
-                                border-left: 4px solid #000000;
+                                padding: 15px 0;
+                                border-bottom: 1px solid #f0f0f0;
                             }
                             .info-label {
                                 font-size: 12px;
-                                color: #6c757d;
+                                color: #666666;
                                 text-transform: uppercase;
-                                font-weight: 600;
-                                letter-spacing: 0.5px;
-                                margin-bottom: 4px;
+                                font-weight: 400;
+                                letter-spacing: 1px;
+                                margin-bottom: 5px;
                             }
                             .info-value {
                                 font-size: 16px;
-                                font-weight: 600;
-                                color: #2c3e50;
+                                font-weight: 400;
+                                color: #000000;
                             }
                             .product-item {
-                                background: #f8f9fa;
-                                padding: 20px;
-                                border-radius: 8px;
-                                margin: 15px 0;
-                                border: 1px solid #e9ecef;
+                                padding: 20px 0;
+                                border-bottom: 1px solid #f0f0f0;
                             }
                             .product-name {
                                 font-size: 18px;
-                                font-weight: 700;
-                                color: #2c3e50;
+                                font-weight: 400;
+                                color: #000000;
                                 margin-bottom: 10px;
                             }
                             .product-details {
                                 font-size: 14px;
-                                color: #495057;
+                                color: #666666;
                                 margin: 5px 0;
                                 line-height: 1.5;
                             }
                             .product-price {
                                 font-size: 16px;
-                                font-weight: 700;
+                                font-weight: 400;
                                 color: #000000;
                                 margin-top: 10px;
                                 padding-top: 10px;
-                                border-top: 1px solid #dee2e6;
-                            }
-                            .personalization-badge {
-                                background: #007bff;
-                                color: white;
-                                padding: 4px 8px;
-                                border-radius: 4px;
-                                font-size: 12px;
-                                font-weight: 600;
-                                display: inline-block;
-                                margin: 5px 5px 5px 0;
-                            }
-                            .gift-badge {
-                                background: #28a745;
-                                color: white;
-                                padding: 4px 8px;
-                                border-radius: 4px;
-                                font-size: 12px;
-                                font-weight: 600;
-                                display: inline-block;
-                                margin: 5px 5px 5px 0;
+                                border-top: 1px solid #f0f0f0;
                             }
                             .shipping-address {
-                                background: #f8f9fa;
-                                padding: 20px;
-                                border-radius: 8px;
-                                border: 1px solid #e9ecef;
+                                padding: 20px 0;
                             }
                             .address-line {
                                 margin: 5px 0;
                                 font-size: 14px;
-                                color: #495057;
+                                color: #000000;
                             }
                             .total-section {
-                                background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-                                color: white;
+                                background: #000000;
+                                color: #ffffff;
                                 padding: 25px;
-                                border-radius: 12px;
                                 margin: 25px 0;
                             }
                             .total-row {
@@ -239,35 +194,28 @@ export async function POST(req: Request) {
                                 font-size: 14px;
                             }
                             .total-final {
-                                font-size: 20px;
-                                font-weight: 700;
-                                border-top: 2px solid rgba(255, 255, 255, 0.2);
+                                font-size: 18px;
+                                font-weight: 400;
+                                border-top: 1px solid rgba(255, 255, 255, 0.2);
                                 padding-top: 10px;
                                 margin-top: 15px;
                             }
                             .important-info {
-                                background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
-                                color: white;
+                                background: #f8f8f8;
                                 padding: 25px;
-                                border-radius: 12px;
                                 margin: 30px 0;
-                                box-shadow: 0 4px 15px rgba(116, 185, 255, 0.3);
                             }
                             .important-title {
                                 font-size: 16px;
-                                font-weight: 700;
+                                font-weight: 400;
                                 margin-bottom: 15px;
-                                display: flex;
-                                align-items: center;
-                            }
-                            .important-icon {
-                                margin-right: 8px;
-                                font-size: 18px;
+                                color: #000000;
                             }
                             .important-text {
                                 font-size: 14px;
                                 line-height: 1.6;
                                 margin: 8px 0;
+                                color: #666666;
                             }
                             .footer { 
                                 background: #000000; 
@@ -279,7 +227,7 @@ export async function POST(req: Request) {
                             }
                             .footer-brand {
                                 font-size: 18px;
-                                font-weight: 700;
+                                font-weight: 400;
                                 margin-bottom: 10px;
                                 font-family: 'Times New Roman', serif;
                             }
@@ -307,17 +255,17 @@ export async function POST(req: Request) {
                             </div>
                             
                             <div class="content">
-                                <div class="greeting">Merhaba!</div>
+                                <div class="greeting">Merhaba,</div>
                                 
                                 <div class="order-status">
-                                    <div class="status-text">Siparişiniz Başarıyla Alındı!</div>
+                                    <div class="status-text">Siparişiniz Onaylandı</div>
                                 </div>
                                 
-                                <div style="text-align: center; margin: 30px 0; padding: 20px; background: #f8f9fa; border-radius: 8px;">
-                                    <p style="font-size: 16px; color: #2c3e50; margin-bottom: 10px; font-weight: 500;">
-                                        Siparişiniz için teşekkür ederiz!
+                                <div style="text-align: center; margin: 30px 0; padding: 20px;">
+                                    <p style="font-size: 16px; color: #000000; margin-bottom: 10px; font-weight: 300;">
+                                        Siparişiniz için teşekkür ederiz.
                                     </p>
-                                    <p style="font-size: 14px; color: #6c757d; line-height: 1.6;">
+                                    <p style="font-size: 14px; color: #666666; line-height: 1.6;">
                                         Memleket gururunuzu bizimle paylaştığınız için çok mutluyuz. 
                                         Ürünlerinizi özenle hazırlayıp en kısa sürede size ulaştıracağız.
                                     </p>
@@ -358,15 +306,14 @@ export async function POST(req: Request) {
                                             </div>
                                             ${personalizationMatch ? `
                                             <div class="product-details">
-                                                <span class="personalization-badge">${personalizationMatch[1]}</span>
-                                                <strong>Metin:</strong> "${personalizationMatch[2]}"<br>
+                                                <strong>${personalizationMatch[1]}:</strong> "${personalizationMatch[2]}"<br>
                                                 <strong>Yerleşim:</strong> ${personalizationMatch[3]}<br>
                                                 <strong>Font:</strong> ${personalizationMatch[4]} • <strong>Renk:</strong> ${personalizationMatch[5]}
                                             </div>
                                             ` : ''}
                                             ${giftPackageMatch ? `
                                             <div class="product-details">
-                                                <span class="gift-badge">Hediye Paketi</span>
+                                                <strong>Hediye Paketi</strong>
                                                 ${giftPackageMatch[1] ? `<br><strong>Mesaj:</strong> "${giftPackageMatch[1]}"` : ''}
                                             </div>
                                             ` : ''}
@@ -382,13 +329,13 @@ export async function POST(req: Request) {
                                 <div class="section">
                                     <div class="section-title">Teslimat Bilgileri</div>
                                     <div class="shipping-address">
-                                        ${(detailedSession as any).shipping_details ? `
-                                            <div class="address-line"><strong>Ad Soyad:</strong> ${(detailedSession as any).shipping_details.name}</div>
-                                            <div class="address-line"><strong>Adres:</strong> ${(detailedSession as any).shipping_details.address?.line1 || ''}</div>
-                                            ${(detailedSession as any).shipping_details.address?.line2 ? `<div class="address-line"><strong>Adres 2:</strong> ${(detailedSession as any).shipping_details.address.line2}</div>` : ''}
-                                            <div class="address-line"><strong>Şehir:</strong> ${(detailedSession as any).shipping_details.address?.city || ''}</div>
-                                            <div class="address-line"><strong>Posta Kodu:</strong> ${(detailedSession as any).shipping_details.address?.postal_code || ''}</div>
-                                            <div class="address-line"><strong>Ülke:</strong> ${(detailedSession as any).shipping_details.address?.country || ''}</div>
+                                        ${detailedSession.collected_information?.shipping_details ? `
+                                            <div class="address-line"><strong>Ad Soyad:</strong> ${detailedSession.collected_information.shipping_details.name}</div>
+                                            <div class="address-line"><strong>Adres:</strong> ${detailedSession.collected_information.shipping_details.address?.line1 || ''}</div>
+                                            ${detailedSession.collected_information.shipping_details.address?.line2 ? `<div class="address-line"><strong>Adres 2:</strong> ${detailedSession.collected_information.shipping_details.address.line2}</div>` : ''}
+                                            <div class="address-line"><strong>Şehir:</strong> ${detailedSession.collected_information.shipping_details.address?.city || ''}</div>
+                                            <div class="address-line"><strong>Posta Kodu:</strong> ${detailedSession.collected_information.shipping_details.address?.postal_code || ''}</div>
+                                            <div class="address-line"><strong>Ülke:</strong> ${detailedSession.collected_information.shipping_details.address?.country || ''}</div>
                                         ` : '<div class="address-line">Teslimat bilgileri bulunamadı.</div>'}
                                     </div>
                                 </div>
@@ -410,15 +357,12 @@ export async function POST(req: Request) {
                                 </div>
 
                                 <div class="important-info">
-                                    <div class="important-title">
-                                        <span class="important-icon">ℹ️</span>
-                                        Önemli Bilgiler
-                                    </div>
+                                    <div class="important-title">Önemli Bilgiler</div>
                                     <div class="important-text">
                                         <strong>Takip:</strong> Kargo bilgileriniz e-posta ile gönderilecektir.
                                     </div>
                                     <div class="important-text">
-                                        <strong>Sorularınız:</strong> studio@grbt.studio adresinden bizimle iletişime geçebilirsiniz.
+                                        <strong>Sorularınız:</strong> info@grbt.studio adresinden bizimle iletişime geçebilirsiniz.
                                     </div>
                                 </div>
                             </div>
@@ -444,22 +388,9 @@ export async function POST(req: Request) {
                     html: emailHtml,
                 });
 
-                console.log(`✅ Confirmation email sent to ${customerEmail}`);
-
                 // Store order in Firebase using Admin SDK
-                console.log("🔥 FIREBASE STORAGE - Starting Firebase write...");
                 try {
-                    console.log("🔧 Firebase Admin SDK - Checking environment variables...");
-                    console.log("FIREBASE_PROJECT_ID:", process.env.FIREBASE_PROJECT_ID ? "✅ SET" : "❌ MISSING");
-                    console.log("FIREBASE_CLIENT_EMAIL:", process.env.FIREBASE_CLIENT_EMAIL ? "✅ SET" : "❌ MISSING");
-                    console.log("FIREBASE_PRIVATE_KEY:", process.env.FIREBASE_PRIVATE_KEY ? "✅ SET" : "❌ MISSING");
-
-                    console.log("🚚 SHIPPING DEBUG - Available shipping data:");
-                    console.log("collected_information:", JSON.stringify(detailedSession.collected_information, null, 2));
-                    console.log("customer_details:", JSON.stringify(detailedSession.customer_details, null, 2));
-
                     const shippingDetails = detailedSession.collected_information?.shipping_details || detailedSession.customer_details?.address || null;
-                    console.log("🚚 Final shipping_details:", JSON.stringify(shippingDetails, null, 2));
 
                     const orderData = {
                         stripe_id: session.id,
@@ -478,26 +409,17 @@ export async function POST(req: Request) {
                         updated_at: new Date().toISOString(),
                     };
 
-                    console.log("📝 Order data prepared:", JSON.stringify(orderData, null, 2));
-
                     const orderRef = adminDb.collection('orders').doc(session.id);
-                    console.log("🔥 Attempting Firebase write to collection 'orders', document:", session.id);
-
                     await orderRef.set(orderData);
-                    console.log(`✅ SUCCESS: Order ${session.id} stored in Firebase`);
                 } catch (firebaseError) {
-                    console.error("❌ FIREBASE ERROR:", firebaseError);
-                    console.error("❌ Error details:", JSON.stringify(firebaseError, null, 2));
+                    console.error("Error storing order in Firebase:", firebaseError);
                 }
             }
         } catch (e) {
-            console.error("❌ GENERAL ERROR in webhook processing:", e);
+            console.error("Failed to send confirmation email", e);
         }
-    } else {
-        console.log("ℹ️ Event type not handled:", event.type);
     }
 
-    console.log("🏁 CHECKOUT-SESSION-COMPLETED WEBHOOK PROCESSING COMPLETE");
     return new Response(JSON.stringify({ received: true }), { status: 200 });
 }
 
