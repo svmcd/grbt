@@ -49,6 +49,10 @@ interface Order {
   notes?: string;
   customer_name?: string;
   customer_phone?: string;
+  label_created?: boolean;
+  shipped_out?: boolean;
+  tracking_provider?: "DHL" | "PostNL" | null;
+  tracking_code?: string | null;
 }
 
 interface EditingField {
@@ -356,6 +360,12 @@ export default function AdminDashboard() {
   );
   const [editOrderData, setEditOrderData] = useState<Partial<Order>>({});
   const [currentOrderPage, setCurrentOrderPage] = useState(1);
+  const [showLabelModal, setShowLabelModal] = useState<string | null>(null);
+  const [showShippedModal, setShowShippedModal] = useState<string | null>(null);
+  const [trackingProvider, setTrackingProvider] = useState<
+    "DHL" | "PostNL" | ""
+  >("");
+  const [trackingCode, setTrackingCode] = useState("");
 
   const USERS_PER_PAGE = 10;
   const ORDERS_PER_PAGE = 10;
@@ -740,6 +750,136 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleLabelCreated = async () => {
+    if (!showLabelModal) return;
+
+    const order = orders.find((o) => o.id === showLabelModal);
+    if (!order) return;
+
+    try {
+      // Update Firebase
+      const response = await makeAuthenticatedRequest(
+        "/api/admin/firebase-orders",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            action: "update",
+            orderId: showLabelModal,
+            data: {
+              label_created: true,
+            },
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          `Failed to update label status for order ${showLabelModal}`
+        );
+      }
+
+      // Send email
+      await makeAuthenticatedRequest("/api/admin/send-status-email", {
+        method: "POST",
+        body: JSON.stringify({
+          orderId: showLabelModal,
+          status: "label_created",
+          email: order.customer_email,
+        }),
+      });
+
+      // Update local state
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.id === showLabelModal ? { ...o, label_created: true } : o
+        )
+      );
+
+      setShowLabelModal(null);
+      console.log(`Marked order ${showLabelModal} as label created`);
+    } catch (error) {
+      console.error("Error updating label status:", error);
+    }
+  };
+
+  const handleShippedOut = async () => {
+    if (!showShippedModal) return;
+
+    if (!trackingProvider || !trackingCode) {
+      alert("Please provide both tracking provider and tracking code");
+      return;
+    }
+
+    const order = orders.find((o) => o.id === showShippedModal);
+    if (!order) return;
+
+    try {
+      // Update Firebase
+      const response = await makeAuthenticatedRequest(
+        "/api/admin/firebase-orders",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            action: "update",
+            orderId: showShippedModal,
+            data: {
+              shipped_out: true,
+              tracking_provider: trackingProvider as "DHL" | "PostNL",
+              tracking_code: trackingCode,
+            },
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          `Failed to update shipped status for order ${showShippedModal}`
+        );
+      }
+
+      // Send email
+      await makeAuthenticatedRequest("/api/admin/send-status-email", {
+        method: "POST",
+        body: JSON.stringify({
+          orderId: showShippedModal,
+          status: "shipped_out",
+          email: order.customer_email,
+          trackingProvider,
+          trackingCode,
+          postalCode:
+            order.shipping_details?.postal_code ||
+            order.shipping_details?.address?.postal_code ||
+            "",
+          country:
+            order.shipping_details?.country ||
+            order.shipping_details?.address?.country ||
+            "NL",
+        }),
+      });
+
+      // Update local state
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.id === showShippedModal
+            ? {
+                ...o,
+                shipped_out: true,
+                tracking_provider: trackingProvider as "DHL" | "PostNL",
+                tracking_code: trackingCode,
+              }
+            : o
+        )
+      );
+
+      setShowShippedModal(null);
+      setTrackingProvider("");
+      setTrackingCode("");
+      console.log(`Marked order ${showShippedModal} as shipped out`);
+    } catch (error) {
+      console.error("Error updating shipped status:", error);
+    }
+  };
+
   // Manual order management functions
   const createManualOrder = async (orderData: Partial<Order>) => {
     try {
@@ -1097,48 +1237,57 @@ export default function AdminDashboard() {
                         className="border-b border-white/5 hover:bg-white/5"
                       >
                         <td className="text-white py-2 px-4">
-                          <div className="text-xs">
-                            {editingField?.orderId === order.id &&
-                            editingField.field === "customer_email" ? (
-                              <div className="flex gap-1">
-                                <input
-                                  type="email"
-                                  value={editingField.value}
-                                  onChange={(e) =>
-                                    setEditingField({
-                                      ...editingField,
-                                      value: e.target.value,
-                                    })
-                                  }
-                                  className="px-2 py-1 bg-white/10 border border-white/30 text-white text-xs rounded"
-                                />
-                                <button
-                                  onClick={saveEdit}
-                                  className="text-green-400 text-xs"
-                                >
-                                  ✓
-                                </button>
-                                <button
-                                  onClick={cancelEdit}
-                                  className="text-red-400 text-xs"
-                                >
-                                  ✗
-                                </button>
-                              </div>
+                          <div className="flex items-center gap-2">
+                            {order.shipped_out ? (
+                              <span className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0" />
+                            ) : order.label_created ? (
+                              <span className="w-2 h-2 rounded-full bg-yellow-500 flex-shrink-0" />
                             ) : (
-                              <span
-                                onClick={() =>
-                                  startEditing(
-                                    order.id,
-                                    "customer_email",
-                                    order.customer_email || ""
-                                  )
-                                }
-                                className="cursor-pointer hover:bg-white/10 px-1 py-1 rounded text-xs"
-                              >
-                                {order.customer_email || "N/A"}
-                              </span>
+                              <span className="w-2 h-2 rounded-full bg-gray-500 flex-shrink-0" />
                             )}
+                            <div className="text-xs">
+                              {editingField?.orderId === order.id &&
+                              editingField.field === "customer_email" ? (
+                                <div className="flex gap-1">
+                                  <input
+                                    type="email"
+                                    value={editingField.value}
+                                    onChange={(e) =>
+                                      setEditingField({
+                                        ...editingField,
+                                        value: e.target.value,
+                                      })
+                                    }
+                                    className="px-2 py-1 bg-white/10 border border-white/30 text-white text-xs rounded"
+                                  />
+                                  <button
+                                    onClick={saveEdit}
+                                    className="text-green-400 text-xs"
+                                  >
+                                    ✓
+                                  </button>
+                                  <button
+                                    onClick={cancelEdit}
+                                    className="text-red-400 text-xs"
+                                  >
+                                    ✗
+                                  </button>
+                                </div>
+                              ) : (
+                                <span
+                                  onClick={() =>
+                                    startEditing(
+                                      order.id,
+                                      "customer_email",
+                                      order.customer_email || ""
+                                    )
+                                  }
+                                  className="cursor-pointer hover:bg-white/10 px-1 py-1 rounded text-xs"
+                                >
+                                  {order.customer_email || "N/A"}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </td>
                         <td className="text-white py-2 px-4">
@@ -1279,6 +1428,32 @@ export default function AdminDashboard() {
                         </td>
                         <td className="py-2 px-4">
                           <div className="flex flex-col gap-1">
+                            <div className="flex gap-1">
+                              {!order.label_created && (
+                                <button
+                                  onClick={() => setShowLabelModal(order.id)}
+                                  className="flex-1 px-2 py-1 bg-purple-600 text-white rounded text-xs hover:bg-purple-700 transition-colors"
+                                  title="Label Created"
+                                >
+                                  Label
+                                </button>
+                              )}
+                              {!order.shipped_out && order.label_created && (
+                                <button
+                                  onClick={() => setShowShippedModal(order.id)}
+                                  className="flex-1 px-2 py-1 bg-orange-600 text-white rounded text-xs hover:bg-orange-700 transition-colors"
+                                  title="Shipped Out"
+                                >
+                                  Ship
+                                </button>
+                              )}
+                              {order.shipped_out && order.tracking_code && (
+                                <div className="text-xs px-2 py-1 bg-green-600 text-white rounded">
+                                  {order.tracking_provider}:{" "}
+                                  {order.tracking_code}
+                                </div>
+                              )}
+                            </div>
                             <button
                               onClick={() => setShowOrderModal(order.id)}
                               className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-xs hover:bg-blue-500/30 transition-colors"
@@ -1286,22 +1461,8 @@ export default function AdminDashboard() {
                               Detaylar
                             </button>
                             <button
-                              onClick={() => {
-                                const notes = prompt(
-                                  "Not ekle:",
-                                  order.notes || ""
-                                );
-                                if (notes !== null) {
-                                  updateOrderNotes(order.id, notes);
-                                }
-                              }}
-                              className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs hover:bg-green-500/30 transition-colors"
-                            >
-                              Not Ekle
-                            </button>
-                            <button
                               onClick={() => openEditOrderModal(order)}
-                              className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-xs hover:bg-blue-500/30 transition-colors mb-1"
+                              className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-xs hover:bg-blue-500/30 transition-colors"
                             >
                               Düzenle
                             </button>
@@ -1993,6 +2154,160 @@ export default function AdminDashboard() {
                   className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
                 >
                   Kaydet
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Label Created Confirmation Modal */}
+      {showLabelModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-black border border-white/20 rounded-lg p-6 max-w-md w-full">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl text-white font-light">
+                Mark Label as Created
+              </h3>
+              <button
+                onClick={() => setShowLabelModal(null)}
+                className="text-white/70 hover:text-white text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <p className="text-white/70">
+                An email will be sent to the customer informing them that their
+                order is being packed.
+              </p>
+
+              {(() => {
+                const order = orders.find((o) => o.id === showLabelModal);
+                if (!order) return null;
+
+                return (
+                  <div className="bg-white/5 p-4 rounded">
+                    <div className="text-white font-medium mb-2">
+                      Order: ...{order.id.slice(-8)}
+                    </div>
+                    <div className="text-white/70 text-sm">
+                      <div>Email: {order.customer_email}</div>
+                      <div>
+                        Amount: €{(order.amount_total / 100).toFixed(2)}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setShowLabelModal(null)}
+                  className="flex-1 px-4 py-2 text-white border border-white/30 rounded hover:bg-white/10 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleLabelCreated}
+                  className="flex-1 px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors"
+                >
+                  Confirm
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Shipped Out Confirmation Modal */}
+      {showShippedModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-black border border-white/20 rounded-lg p-6 max-w-md w-full">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl text-white font-light">Mark as Shipped</h3>
+              <button
+                onClick={() => setShowShippedModal(null)}
+                className="text-white/70 hover:text-white text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <p className="text-white/70">
+                Provide tracking information. An email will be sent to the
+                customer with tracking details.
+              </p>
+
+              <div>
+                <label className="block text-white/70 text-sm mb-2">
+                  Shipping Provider
+                </label>
+                <select
+                  value={trackingProvider}
+                  onChange={(e) =>
+                    setTrackingProvider(e.target.value as "DHL" | "PostNL" | "")
+                  }
+                  className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded text-white focus:outline-none focus:border-white/50"
+                  required
+                >
+                  <option value="">Select provider...</option>
+                  <option value="DHL">DHL</option>
+                  <option value="PostNL">PostNL</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-white/70 text-sm mb-2">
+                  Tracking Code
+                </label>
+                <input
+                  type="text"
+                  value={trackingCode}
+                  onChange={(e) => setTrackingCode(e.target.value)}
+                  placeholder="Enter tracking code..."
+                  className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded text-white placeholder-white/50 focus:outline-none focus:border-white/50"
+                  required
+                />
+              </div>
+
+              {(() => {
+                const order = orders.find((o) => o.id === showShippedModal);
+                if (!order) return null;
+
+                return (
+                  <div className="bg-white/5 p-4 rounded">
+                    <div className="text-white font-medium mb-2">
+                      Order: ...{order.id.slice(-8)}
+                    </div>
+                    <div className="text-white/70 text-sm">
+                      <div>Email: {order.customer_email}</div>
+                      <div>
+                        Amount: €{(order.amount_total / 100).toFixed(2)}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              <div className="flex gap-4">
+                <button
+                  onClick={() => {
+                    setShowShippedModal(null);
+                    setTrackingProvider("");
+                    setTrackingCode("");
+                  }}
+                  className="flex-1 px-4 py-2 text-white border border-white/30 rounded hover:bg-white/10 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleShippedOut}
+                  className="flex-1 px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 transition-colors"
+                >
+                  Confirm
                 </button>
               </div>
             </div>
