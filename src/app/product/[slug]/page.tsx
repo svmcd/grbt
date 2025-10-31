@@ -617,7 +617,7 @@ export default function ProductPage() {
 
             {/* Production & Shipping Notice */}
             <p className="text-white/60 text-xs text-center">
-              Şimdi sipariş ver, 2 gün içinde üretilir ve kargoya verilir
+              Şimdi sipariş ver, 3 gün içinde üretilir ve kargoya verilir
             </p>
 
             {/* Product Specifications */}

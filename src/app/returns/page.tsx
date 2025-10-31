@@ -5,7 +5,7 @@ export default function ReturnsPage() {
         <h1 className="text-3xl font-light">İade Politikası</h1>
         <h2 className="text-xl mt-6">Geri çekme hakkı (AB)</h2>
         <p className="text-muted/80">
-          Teslimattan itibaren 14 gün içinde sebep göstermeden geri çekme
+          Teslimattan itibaren 60 gün içinde sebep göstermeden geri çekme
           hakkınız vardır. Ürünler giyilmemiş, yıkanmamış ve etiketleriyle
           birlikte orijinal durumda olmalıdır.
         </p>

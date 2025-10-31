@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useReducer, ReactNode } from "react";
+import { createContext, useContext, useReducer, useEffect, ReactNode } from "react";
 import { memleketSlugs } from "./catalog";
 
 export type CartItem = {
@@ -60,11 +60,28 @@ type CartAction =
   | { type: "CLOSE_CART" }
   | { type: "ADD_ITEM_SUCCESS"; payload: CartItem };
 
-const initialState: CartState = {
-  items: [],
-  isOpen: false,
-  justAdded: null,
+// Load cart from localStorage on initialization
+const loadCartFromStorage = (): CartState => {
+  if (typeof window === "undefined") {
+    return { items: [], isOpen: false, justAdded: null };
+  }
+  try {
+    const stored = localStorage.getItem("cart");
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      return {
+        items: parsed.items || [],
+        isOpen: false,
+        justAdded: null,
+      };
+    }
+  } catch (error) {
+    console.error("Error loading cart from localStorage:", error);
+  }
+  return { items: [], isOpen: false, justAdded: null };
 };
+
+const initialState: CartState = loadCartFromStorage();
 
 function cartReducer(state: CartState, action: CartAction): CartState {
   switch (action.type) {
@@ -195,6 +212,17 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(cartReducer, initialState);
+
+  // Save cart to localStorage whenever items change
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("cart", JSON.stringify({ items: state.items }));
+      } catch (error) {
+        console.error("Error saving cart to localStorage:", error);
+      }
+    }
+  }, [state.items]);
 
   const addItem = (item: CartItem) =>
     dispatch({ type: "ADD_ITEM", payload: item });

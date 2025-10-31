@@ -1,10 +1,16 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { SearchBar } from "./SearchBar";
 import { useCart } from "@/lib/cart-context";
 
 export function MobileFloatingElements() {
+  const [isMounted, setIsMounted] = useState(false);
   const { toggleCart, getItemCount } = useCart();
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   return (
     <div className="sm:hidden fixed bottom-3 left-4 right-4 z-40 flex items-center gap-3">
@@ -29,7 +35,7 @@ export function MobileFloatingElements() {
         >
           <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4zM3 6h18M16 10a4 4 0 11-8 0" />
         </svg>
-        {getItemCount() > 0 && (
+        {isMounted && getItemCount() > 0 && (
           <span
             className="absolute -top-2 -right-2 bg-black/90 backdrop-blur-sm border border-white text-white text-xs rounded-none w-5 h-5 flex items-center justify-center"
             style={{

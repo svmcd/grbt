@@ -1,5 +1,5 @@
 import Stripe from "stripe";
-import { getAllShippingCountries, getShippingPrice } from "@/lib/shipping";
+import { getAllShippingCountries } from "@/lib/shipping";
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const stripe = STRIPE_SECRET_KEY
@@ -14,7 +14,7 @@ export async function POST(request: Request) {
                 { status: 500 }
             );
         }
-        const { items, shippingCountry, itemsTotal, shippingCost } = await request.json();
+        const { items, shippingCountry, itemsTotal, itemsSubtotal, discount, shippingCost } = await request.json();
 
         if (!items || items.length === 0) {
             return Response.json({ error: "No items provided" }, { status: 400 });
@@ -24,24 +24,50 @@ export async function POST(request: Request) {
         const shippingCountries = getAllShippingCountries();
         const selectedShipping = shippingCountries.find(c => c.code === shippingCountry);
 
+        // Calculate total from all items (before discount)
+        const calculatedSubtotal = items.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0);
+        const discountAmount = discount || 0;
+        const expectedTotal = calculatedSubtotal - discountAmount;
+
         console.log("Checkout request:", {
             itemsCount: items.length,
             itemsTotal: itemsTotal,
+            itemsSubtotal: itemsSubtotal,
+            calculatedSubtotal: calculatedSubtotal,
+            discount: discountAmount,
+            expectedTotal: expectedTotal,
             shippingCost: shippingCost,
             shippingCountry: shippingCountry,
-            items: items.map((item: any) => ({
-                city: item.city,
-                color: item.color,
-                size: item.size,
-                price: item.price,
-                quantity: item.quantity,
-                personalization: item.personalization,
-                giftPackage: item.giftPackage
-            }))
         });
 
         // Create Stripe checkout session
-        const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL || "").replace(/\/$/, "");
+        // Apply discount to last item to keep clean prices on others
+        const remainingDiscount = discountAmount || 0;
+        const lineItems = items.map((item: any, index: number) => {
+            let finalPrice = item.price;
+
+            // Apply all discount to the last item to keep other prices clean
+            if (index === items.length - 1 && remainingDiscount > 0) {
+                // Apply discount per unit to last item
+                const discountPerUnit = remainingDiscount / item.quantity;
+                finalPrice = item.price - discountPerUnit;
+                // Round to 2 decimals
+                finalPrice = Math.round(finalPrice * 100) / 100;
+            }
+
+            return {
+                price_data: {
+                    currency: "eur",
+                    product_data: {
+                        name: `${item.city} Tişört - ${item.color}, ${item.size}${item.personalization ? ` - ${item.personalization.method === 'printed' ? 'Baskı' : 'İşleme'}: "${item.personalization.text}" - ${item.personalization.placement} - Font: ${item.personalization.font} - Renk: ${item.personalization.color}` : ''}${item.giftPackage?.included ? ' - Hediye Paketi' : ''}`,
+                        description: `${item.color}, ${item.size}${item.personalization ? ` - ${item.personalization.method === 'printed' ? 'Baskı' : 'İşleme'}: "${item.personalization.text}" - ${item.personalization.placement} - Font: ${item.personalization.font} - Renk: ${item.personalization.color}` : ''}${item.giftPackage?.included ? ' - Hediye Paketi' : ''}`,
+                    },
+                    unit_amount: Math.round(finalPrice * 100),
+                },
+                quantity: item.quantity,
+            };
+        });
+
         const session = await stripe.checkout.sessions.create({
             payment_method_types: [
                 "card",
@@ -49,17 +75,7 @@ export async function POST(request: Request) {
                 "bancontact",
                 "ideal"
             ],
-            line_items: items.map((item: any) => ({
-                price_data: {
-                    currency: "eur",
-                    product_data: {
-                        name: `${item.city} Tişört - ${item.color}, ${item.size}${item.personalization ? ` - ${item.personalization.method === 'printed' ? 'Baskı' : 'İşleme'}: "${item.personalization.text}" - ${item.personalization.placement} - Font: ${item.personalization.font} - Renk: ${item.personalization.color}` : ''}${item.giftPackage?.included ? ' - Hediye Paketi' : ''}`,
-                        description: `${item.color}, ${item.size}${item.personalization ? ` - ${item.personalization.method === 'printed' ? 'Baskı' : 'İşleme'}: "${item.personalization.text}" - ${item.personalization.placement} - Font: ${item.personalization.font} - Renk: ${item.personalization.color}` : ''}${item.giftPackage?.included ? ' - Hediye Paketi' : ''}`,
-                    },
-                    unit_amount: Math.round(item.price * 100), // Item price already includes personalization and gift package
-                },
-                quantity: item.quantity,
-            })),
+            line_items: lineItems,
             shipping_options: [{
                 shipping_rate_data: {
                     type: 'fixed_amount',
@@ -92,7 +108,7 @@ export async function POST(request: Request) {
                 allowed_countries: shippingCountry ? [shippingCountry] : ['NL', 'DE', 'FR', 'CH', 'AT', 'GB', 'US', 'BE'],
             },
             success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/order/success?session_id={CHECKOUT_SESSION_ID}`,
-            cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/checkout`,
+            cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/`,
         });
 
         console.log("Stripe session created successfully:", session.id);

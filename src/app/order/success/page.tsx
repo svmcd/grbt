@@ -3,12 +3,14 @@
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { useCart } from "@/lib/cart-context";
 
 function OrderSuccessContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
   const [orderDetails, setOrderDetails] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const { clearCart } = useCart();
 
   useEffect(() => {
     if (sessionId) {
@@ -17,12 +19,16 @@ function OrderSuccessContent() {
         .then((data) => {
           setOrderDetails(data);
           setLoading(false);
+          // Clear cart only after payment is confirmed
+          if (data && data.payment_status === "paid") {
+            clearCart();
+          }
         })
         .catch(() => setLoading(false));
     } else {
       setLoading(false);
     }
-  }, [sessionId]);
+  }, [sessionId, clearCart]);
 
   if (loading) {
     return (

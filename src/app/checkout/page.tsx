@@ -7,7 +7,7 @@ import { getPriceForSlug } from "@/lib/pricing";
 import { useRouter } from "next/navigation";
 
 export default function CheckoutPage() {
-  const { state, clearCart } = useCart();
+  const { state } = useCart();
   const router = useRouter();
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -31,7 +31,8 @@ export default function CheckoutPage() {
         throw new Error(error);
       }
       if (url) {
-        clearCart();
+        // Don't clear cart here - keep it in localStorage
+        // Cart will be cleared only after successful payment on success page
         window.location.href = url;
       }
     } catch (error) {

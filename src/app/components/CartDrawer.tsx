@@ -18,10 +18,9 @@ export function CartDrawer() {
     getItemCount,
     getMemleketSavings,
     clearJustAdded,
-    clearCart,
   } = useCart();
   const [isProcessing, setIsProcessing] = useState(false);
-  const [selectedCountry, setSelectedCountry] = useState("NL");
+  const [selectedCountry, setSelectedCountry] = useState("");
   const shippingCountries = getAllShippingCountries();
 
   // Prevent body scroll when cart is open
@@ -58,10 +57,10 @@ export function CartDrawer() {
   }, [state.isOpen]);
 
   // Calculate shipping cost
-  const selectedShippingCountry = shippingCountries.find(
-    (c) => c.code === selectedCountry
-  );
-  const shippingCost = getShippingPrice(selectedCountry);
+  const selectedShippingCountry = selectedCountry
+    ? shippingCountries.find((c) => c.code === selectedCountry)
+    : undefined;
+  const shippingCost = selectedCountry ? getShippingPrice(selectedCountry) : 0;
   const itemsTotal = getSubtotal();
 
   // Calculate estimated delivery dates based on selected country
@@ -262,6 +261,13 @@ export function CartDrawer() {
                       paddingRight: "2.5rem",
                     }}
                   >
+                    <option
+                      value=""
+                      disabled
+                      className="bg-black text-white/50 py-2"
+                    >
+                      Kargo ülkesi seçin
+                    </option>
                     {shippingCountries.map((country) => (
                       <option
                         key={country.code}
@@ -292,10 +298,16 @@ export function CartDrawer() {
                   <div className="flex justify-between items-center">
                     <span className="text-white/80 text-sm">Kargo</span>
                     <span className="text-white">
-                      {itemsTotal >= 100 ? (
-                        <span className="text-white">Ücretsiz</span>
+                      {selectedCountry ? (
+                        itemsTotal >= 100 ? (
+                          <span className="text-white">Ücretsiz</span>
+                        ) : (
+                          `€${shippingCost.toFixed(2)}`
+                        )
                       ) : (
-                        `€${shippingCost.toFixed(2)}`
+                        <span className="text-white/50 text-xs">
+                          Ülke seçin
+                        </span>
                       )}
                     </span>
                   </div>
@@ -322,6 +334,10 @@ export function CartDrawer() {
                   <button
                     onClick={async () => {
                       if (state.items.length === 0 || isProcessing) return;
+                      if (!selectedCountry) {
+                        alert("Lütfen kargo ülkesi seçin");
+                        return;
+                      }
                       setIsProcessing(true);
                       try {
                         const resp = await fetch("/api/checkout", {
@@ -331,6 +347,8 @@ export function CartDrawer() {
                             items: state.items,
                             shippingCountry: selectedCountry,
                             itemsTotal: itemsTotal - getMemleketSavings(),
+                            itemsSubtotal: itemsTotal,
+                            discount: getMemleketSavings(),
                             shippingCost: itemsTotal >= 100 ? 0 : shippingCost,
                           }),
                         });
@@ -343,7 +361,8 @@ export function CartDrawer() {
                         const { url, error } = await resp.json();
                         if (error) throw new Error(error);
                         if (url) {
-                          clearCart();
+                          // Don't clear cart here - keep it in localStorage
+                          // Cart will be cleared only after successful payment on success page
                           window.location.href = url;
                         }
                       } catch (e) {
@@ -353,7 +372,7 @@ export function CartDrawer() {
                         setIsProcessing(false);
                       }
                     }}
-                    disabled={isProcessing}
+                    disabled={isProcessing || !selectedCountry}
                     className="flex-1 py-3 bg-white text-black font-medium tracking-wider uppercase text-sm transition-all duration-300 hover:bg-white/90 rounded-none disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isProcessing ? "İşleniyor..." : "Ödeme"}
@@ -365,9 +384,11 @@ export function CartDrawer() {
                     ✕
                   </button>
                 </div>
-                <p className="text-white/60 text-xs text-center mt-4">
-                  Şimdi sipariş ver, 3 gün içinde üretilir ve kargoya verilir
-                </p>
+                {selectedCountry && (
+                  <p className="text-white/60 text-xs text-center mt-2">
+                    Şimdi sipariş ver, {minDateStr}-{maxDateStr} arası teslim al
+                  </p>
+                )}
               </div>
             )}
           </motion.div>
