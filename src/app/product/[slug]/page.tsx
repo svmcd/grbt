@@ -557,33 +557,6 @@ export default function ProductPage() {
               </div>
             </div>
 
-            {/* Pre-order Notice */}
-            <div className="bg-white/5 border border-white/10 rounded-none p-4 mb-4">
-              <div className="text-center">
-                <div className="text-white/60 text-xs mb-2 uppercase tracking-wider font-bold">
-                  ÖN SİPARİŞ | PRE ORDER
-                </div>
-                <div className="text-white/80 text-sm">
-                  Şimdi sipariş verirseniz,{" "}
-                  <span className="text-white font-medium">
-                    {new Date(
-                      Date.now() + 14 * 24 * 60 * 60 * 1000
-                    ).toLocaleDateString("tr-TR", {
-                      day: "2-digit",
-                      month: "2-digit",
-                      year: "numeric",
-                    })}
-                  </span>{" "}
-                  tarihinde kargoya verilir.
-                </div>
-                {memleketSlugs.includes(product.slug) && (
-                  <div className="text-white text-xs mt-2 font-medium">
-                    Her renkte sadece 10 adet üretilecek • Sınırlı sayıda üretim
-                  </div>
-                )}
-              </div>
-            </div>
-
             {/* Add to Cart Button */}
             <button
               ref={buttonRef}
@@ -641,6 +614,11 @@ export default function ProductPage() {
             >
               Sepete Ekle
             </button>
+
+            {/* Production & Shipping Notice */}
+            <p className="text-white/60 text-xs text-center">
+              Şimdi sipariş ver, 2 gün içinde üretilir ve kargoya verilir
+            </p>
 
             {/* Product Specifications */}
             <div className="space-y-4 py-6 border-t border-white/10">

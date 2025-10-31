@@ -64,6 +64,20 @@ export function CartDrawer() {
   const shippingCost = getShippingPrice(selectedCountry);
   const itemsTotal = getSubtotal();
 
+  // Calculate estimated delivery dates based on selected country
+  const estimatedDays = selectedShippingCountry?.estimatedDays || "5 days";
+  const days = parseInt(estimatedDays) || 5;
+  const minDate = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000); // 3 days production
+  const maxDate = new Date(Date.now() + (3 + days) * 24 * 60 * 60 * 1000); // 3 days + shipping
+  const minDateStr = minDate.toLocaleDateString("tr-TR", {
+    day: "2-digit",
+    month: "2-digit",
+  });
+  const maxDateStr = maxDate.toLocaleDateString("tr-TR", {
+    day: "2-digit",
+    month: "2-digit",
+  });
+
   useEffect(() => {
     if (state.justAdded) {
       const timer = setTimeout(() => clearJustAdded(), 3000);
@@ -94,28 +108,6 @@ export function CartDrawer() {
           >
             <div className="p-6 border-b border-white/10">
               <h2 className="text-xl font-light">Sepet ({getItemCount()})</h2>
-
-              {/* Pre-order Notice */}
-              <div className="bg-white/5 border border-white/10 rounded-none p-3 mt-4">
-                <div className="text-center">
-                  <div className="text-white/60 text-xs mb-1 uppercase tracking-wider font-bold">
-                    ÖN SİPARİŞ | PRE ORDER
-                  </div>
-                  <div className="text-white/80 text-xs">
-                    Siparişleriniz{" "}
-                    <span className="text-white font-medium">
-                      {new Date(
-                        Date.now() + 14 * 24 * 60 * 60 * 1000
-                      ).toLocaleDateString("tr-TR", {
-                        day: "2-digit",
-                        month: "2-digit",
-                        year: "numeric",
-                      })}
-                    </span>{" "}
-                    tarihinde kargoya verilir.
-                  </div>
-                </div>
-              </div>
             </div>
 
             <div className="flex-1 overflow-y-auto p-6">
@@ -373,6 +365,9 @@ export function CartDrawer() {
                     ✕
                   </button>
                 </div>
+                <p className="text-white/60 text-xs text-center mt-4">
+                  Şimdi sipariş ver, 3 gün içinde üretilir ve kargoya verilir
+                </p>
               </div>
             )}
           </motion.div>
