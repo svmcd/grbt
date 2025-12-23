@@ -59,8 +59,8 @@ export async function POST(request: Request) {
                 price_data: {
                     currency: "eur",
                     product_data: {
-                        name: `${item.city} Tişört - ${item.color}, ${item.size}${item.personalization ? ` - ${item.personalization.method === 'printed' ? 'Baskı' : 'İşleme'}: "${item.personalization.text}" - ${item.personalization.placement} - Font: ${item.personalization.font} - Renk: ${item.personalization.color}` : ''}${item.giftPackage?.included ? ' - Hediye Paketi' : ''}`,
-                        description: `${item.color}, ${item.size}${item.personalization ? ` - ${item.personalization.method === 'printed' ? 'Baskı' : 'İşleme'}: "${item.personalization.text}" - ${item.personalization.placement} - Font: ${item.personalization.font} - Renk: ${item.personalization.color}` : ''}${item.giftPackage?.included ? ' - Hediye Paketi' : ''}`,
+                        name: `${item.city} ${item.productType === "hoodie" ? "Hoodie" : item.productType === "sweater" ? "Sweater" : "Tişört"} - ${item.color}, ${item.size}${item.personalization ? ` - ${item.personalization.method === 'printed' ? 'Baskı' : 'İşleme'}: "${item.personalization.text}" - ${item.personalization.placement} - Font: ${item.personalization.font} - Renk: ${item.personalization.color}` : ''}${item.giftPackage?.included ? ' - Hediye Paketi' : ''}`,
+                        description: `${item.productType === "hoodie" ? "Hoodie" : item.productType === "sweater" ? "Sweater" : "Tişört"}, ${item.color}, ${item.size}${item.personalization ? ` - ${item.personalization.method === 'printed' ? 'Baskı' : 'İşleme'}: "${item.personalization.text}" - ${item.personalization.placement} - Font: ${item.personalization.font} - Renk: ${item.personalization.color}` : ''}${item.giftPackage?.included ? ' - Hediye Paketi' : ''}`,
                     },
                     unit_amount: Math.round(finalPrice * 100),
                 },

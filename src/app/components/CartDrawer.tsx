@@ -131,11 +131,12 @@ export function CartDrawer() {
                 <div className="space-y-3">
                   {state.items.map((item, index) => (
                     <div
-                      key={`${item.slug}-${item.color}-${item.size}-${index}`}
+                      key={`${item.slug}-${item.color}-${item.size}-${item.productType}-${index}`}
                       className={`flex gap-3 border-b border-white/10 pb-3 transition-all duration-500 ${
                         state.justAdded?.slug === item.slug &&
                         state.justAdded?.color === item.color &&
-                        state.justAdded?.size === item.size
+                        state.justAdded?.size === item.size &&
+                        state.justAdded?.productType === item.productType
                           ? "rounded-none p-2 -m-2"
                           : ""
                       }`}
@@ -153,6 +154,9 @@ export function CartDrawer() {
                           {item.city}
                         </h3>
                         <div className="flex gap-1 mt-1">
+                          <span className="px-1.5 py-0.5 bg-white/10 text-white text-[9px] sm:text-[10px] font-bold rounded">
+                            {item.productType === "hoodie" ? "Hoodie" : item.productType === "sweater" ? "Sweater" : "Tişört"}
+                          </span>
                           <span className="px-1.5 py-0.5 bg-white/10 text-white text-[9px] sm:text-[10px] font-bold uppercase tracking-wider rounded">
                             {item.color}
                           </span>
@@ -198,6 +202,7 @@ export function CartDrawer() {
                                     item.slug,
                                     item.color,
                                     item.size,
+                                    item.productType,
                                     item.quantity - 1,
                                     item.personalization,
                                     item.giftPackage
@@ -207,6 +212,7 @@ export function CartDrawer() {
                                     item.slug,
                                     item.color,
                                     item.size,
+                                    item.productType,
                                     item.personalization,
                                     item.giftPackage
                                   );
@@ -225,6 +231,7 @@ export function CartDrawer() {
                                   item.slug,
                                   item.color,
                                   item.size,
+                                  item.productType,
                                   item.quantity + 1,
                                   item.personalization,
                                   item.giftPackage

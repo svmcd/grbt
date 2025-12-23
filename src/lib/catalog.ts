@@ -97,9 +97,21 @@ export function getPrimaryImageForSlug(slug: string): string {
     return `${base}/back.png`;
 }
 
-export function getImagesForSlug(slug: string, color: string = "siyah"): string[] {
+export function getImagesForSlug(slug: string, color: string = "siyah", productType: "tshirt" | "hoodie" | "sweater" = "tshirt"): string[] {
     // Determine collection based on slug
     const collection = hasretSlugs.includes(slug) ? "hasret" : "memleket";
+    
+    // Handle hoodie and sweater - use examples folder
+    if (productType === "hoodie" || productType === "sweater") {
+        const colorKey = color === "beyaz" ? "white" : "black";
+        const productKey = productType === "hoodie" ? "hoodie" : "sweater";
+        return [
+            `/products/collections/memleket/examples/${productKey}_${colorKey}_front.png`,
+            `/products/collections/memleket/examples/${productKey}_${colorKey}_back.png`,
+        ];
+    }
+    
+    // T-shirt images
     const base = `/products/collections/${collection}/${slug}/${color}`;
     const commonBase = `/products/collections/${collection}/${slug}/siyah`;
 

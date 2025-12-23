@@ -28,6 +28,9 @@ export default function ProductPage() {
   const { addItem } = useCart();
 
   // State declarations - moved before early return
+  const [selectedProductType, setSelectedProductType] = useState<
+    "tshirt" | "hoodie" | "sweater"
+  >("tshirt");
   const [selectedColor, setSelectedColor] = useState<string>(
     product?.colors[0] || ""
   );
@@ -100,8 +103,14 @@ export default function ProductPage() {
   // Calculate gift package cost
   const giftPackageCost = giftPackage ? 5 : 0;
 
+  // Calculate product type cost (hoodie and sweater add €20)
+  const productTypeCost =
+    selectedProductType === "hoodie" || selectedProductType === "sweater"
+      ? 20
+      : 0;
+
   const totalPrice = getTestPrice(
-    basePrice + personalizationCost + giftPackageCost
+    basePrice + productTypeCost + personalizationCost + giftPackageCost
   );
 
   // Determine collection name
@@ -136,13 +145,17 @@ export default function ProductPage() {
           {/* Product Images */}
           <div>
             <Gallery
-              images={getImagesForSlug(product.slug, selectedColor)}
+              images={getImagesForSlug(
+                product.slug,
+                selectedColor,
+                selectedProductType
+              )}
               city={product.city}
             />
           </div>
 
           {/* Product Information */}
-          <div className="space-y-6">
+          <div className="space-y-3 sm:space-y-6">
             {/* Product Title & Price */}
             <div className="flex items-baseline justify-between">
               <div>
@@ -157,11 +170,21 @@ export default function ProductPage() {
                 <div className="text-2xl sm:text-3xl text-white font-light">
                   €{totalPrice}
                 </div>
-                {(personalizationCost > 0 || giftPackageCost > 0) && (
+                {(productTypeCost > 0 ||
+                  personalizationCost > 0 ||
+                  giftPackageCost > 0) && (
                   <div className="text-white/60 text-sm">
                     <div className="text-white/40 text-xs line-through">
                       €{basePrice}
                     </div>
+                    {productTypeCost > 0 && (
+                      <div>
+                        + €{productTypeCost}{" "}
+                        {selectedProductType === "hoodie"
+                          ? "hoodie"
+                          : "sweater"}
+                      </div>
+                    )}
                     {personalizationCost > 0 && (
                       <div>+ €{personalizationCost} kişiselleştirme</div>
                     )}
@@ -174,10 +197,103 @@ export default function ProductPage() {
             </div>
 
             {/* Product Options */}
-            <div className="space-y-4">
+            <div className="space-y-2 sm:space-y-4">
+              {/* Product Type Selection */}
+              <div>
+                <div className="text-white/80 text-sm mb-2 sm:mb-3 font-medium">
+                  Ürün Tipi
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setSelectedProductType("tshirt")}
+                    style={{
+                      padding: "8px 16px",
+                      border:
+                        selectedProductType === "tshirt"
+                          ? "1px solid rgba(0, 0, 0, 0.3)"
+                          : "1px solid rgba(0, 0, 0, 0.1)",
+                      borderRadius: "4px",
+                      fontSize: "12px",
+                      fontWeight: "700",
+                      backgroundColor:
+                        selectedProductType === "tshirt"
+                          ? "rgba(0, 0, 0, 0.05)"
+                          : "transparent",
+                      color:
+                        selectedProductType === "tshirt"
+                          ? "rgba(0, 0, 0, 0.8)"
+                          : "rgba(0, 0, 0, 0.6)",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Tişört
+                  </button>
+                  <button
+                    onClick={() => setSelectedProductType("hoodie")}
+                    style={{
+                      padding: "8px 16px",
+                      border:
+                        selectedProductType === "hoodie"
+                          ? "1px solid rgba(0, 0, 0, 0.3)"
+                          : "1px solid rgba(0, 0, 0, 0.1)",
+                      borderRadius: "4px",
+                      fontSize: "12px",
+                      fontWeight: "700",
+                      backgroundColor:
+                        selectedProductType === "hoodie"
+                          ? "rgba(0, 0, 0, 0.05)"
+                          : "transparent",
+                      color:
+                        selectedProductType === "hoodie"
+                          ? "rgba(0, 0, 0, 0.8)"
+                          : "rgba(0, 0, 0, 0.6)",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Hoodie (+€20)
+                  </button>
+                  <button
+                    onClick={() => setSelectedProductType("sweater")}
+                    style={{
+                      padding: "8px 16px",
+                      border:
+                        selectedProductType === "sweater"
+                          ? "1px solid rgba(0, 0, 0, 0.3)"
+                          : "1px solid rgba(0, 0, 0, 0.1)",
+                      borderRadius: "4px",
+                      fontSize: "12px",
+                      fontWeight: "700",
+                      backgroundColor:
+                        selectedProductType === "sweater"
+                          ? "rgba(0, 0, 0, 0.05)"
+                          : "transparent",
+                      color:
+                        selectedProductType === "sweater"
+                          ? "rgba(0, 0, 0, 0.8)"
+                          : "rgba(0, 0, 0, 0.6)",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Sweater (+€20)
+                  </button>
+                </div>
+                {(selectedProductType === "hoodie" ||
+                  selectedProductType === "sweater") && (
+                  <div className="bg-white/5 border border-white/10 rounded-none p-2 sm:p-3 mt-2 sm:mt-3">
+                    <div className="text-white/70 text-xs">
+                      Örnek görsellerde genel tasarım gösteriliyor ("sehir" ve
+                      "99" placeholder olarak). Siparişinizde {product.city}{" "}
+                      tasarımı{" "}
+                      {selectedProductType === "hoodie" ? "hoodie" : "sweater"}{" "}
+                      üzerine uygulanacak.
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Color Selection */}
               <div>
-                <div className="text-white/80 text-sm mb-3 font-medium">
+                <div className="text-white/80 text-sm mb-2 sm:mb-3 font-medium">
                   Renk
                 </div>
                 <div className="flex gap-2">
@@ -215,7 +331,7 @@ export default function ProductPage() {
 
               {/* Size Selection */}
               <div>
-                <div className="text-white/80 text-sm mb-3 font-medium">
+                <div className="text-white/80 text-sm mb-2 sm:mb-3 font-medium">
                   Beden
                 </div>
                 <div className="flex gap-2">
@@ -251,9 +367,9 @@ export default function ProductPage() {
             </div>
 
             {/* Personalization Options */}
-            <div className="space-y-4">
+            <div className="space-y-2 sm:space-y-4">
               <div>
-                <div className="text-white/80 text-sm mb-3 font-medium">
+                <div className="text-white/80 text-sm mb-2 sm:mb-3 font-medium">
                   Kişiselleştirme
                 </div>
                 <div className="space-y-3">
@@ -497,9 +613,9 @@ export default function ProductPage() {
             </div>
 
             {/* Gift Package Option */}
-            <div className="space-y-4">
+            <div className="space-y-2 sm:space-y-4">
               <div>
-                <div className="text-white/80 text-sm mb-3 font-medium">
+                <div className="text-white/80 text-sm mb-2 sm:mb-3 font-medium">
                   Hediye Paketi
                 </div>
                 <div className="space-y-3">
@@ -515,7 +631,7 @@ export default function ProductPage() {
                       htmlFor="giftPackage"
                       className="text-white/80 text-sm cursor-pointer"
                     >
-                      Özel hediye paketi (+€5)
+                      Özel hediye paketi
                     </label>
                   </div>
 
@@ -526,7 +642,8 @@ export default function ProductPage() {
                       </div>
                       <div className="text-white/80 text-xs space-y-1">
                         <div>• Özel tasarım hediye kutusu</div>
-                        <div>• 1 lokum</div>
+                        <div>• 1 Loki lokum</div>
+                        <div>• Eyup Sabri Tuncer ıslak mendil</div>
                         <div>• Özel ambalaj ve kurdele</div>
                         <div>• Hediye mesajı ekleme imkanı</div>
                       </div>
@@ -580,8 +697,13 @@ export default function ProductPage() {
                   city: product.city,
                   color: selectedColor,
                   size: selectedSize,
+                  productType: selectedProductType,
                   price: totalPrice,
-                  image: getImagesForSlug(product.slug, selectedColor)[0],
+                  image: getImagesForSlug(
+                    product.slug,
+                    selectedColor,
+                    selectedProductType
+                  )[0],
                   quantity: 1,
                   personalization:
                     personalizationMethod !== "none"
@@ -619,6 +741,32 @@ export default function ProductPage() {
             <p className="text-white/60 text-xs text-center">
               Şimdi sipariş ver, 3 gün içinde üretilir ve kargoya verilir
             </p>
+
+            {/* TikTok Link */}
+            <Link
+              href="https://tiktok.com/@grbt.studio"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block bg-white/5 border border-white/10 rounded-none p-4 hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer"
+            >
+              <div className="flex items-center gap-3">
+                <svg
+                  className="w-5 h-5 text-white flex-shrink-0"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
+                </svg>
+                <div className="flex-1">
+                  <div className="text-white text-xs font-medium mb-1">
+                    Daha fazla görsel ve video için TikTok'u ziyaret edin
+                  </div>
+                  <div className="text-white/80 hover:text-white text-xs font-medium underline">
+                    @grbt.studio →
+                  </div>
+                </div>
+              </div>
+            </Link>
 
             {/* Product Specifications */}
             <div className="space-y-4 py-6 border-t border-white/10">
@@ -794,6 +942,14 @@ export default function ProductPage() {
                 {product.city.toUpperCase()} - €{totalPrice}
               </div>
               <div className="text-white/60 text-xs">
+                <span className="font-bold text-[10px]">
+                  {selectedProductType === "hoodie"
+                    ? "Hoodie"
+                    : selectedProductType === "sweater"
+                    ? "Sweater"
+                    : "Tişört"}
+                </span>{" "}
+                •{" "}
                 <span className="font-bold uppercase tracking-wider text-[10px]">
                   {selectedColor}
                 </span>{" "}
@@ -839,8 +995,13 @@ export default function ProductPage() {
                   city: product.city,
                   color: selectedColor,
                   size: selectedSize,
+                  productType: selectedProductType,
                   price: totalPrice,
-                  image: getImagesForSlug(product.slug, selectedColor)[0],
+                  image: getImagesForSlug(
+                    product.slug,
+                    selectedColor,
+                    selectedProductType
+                  )[0],
                   quantity: 1,
                   personalization:
                     personalizationMethod !== "none"

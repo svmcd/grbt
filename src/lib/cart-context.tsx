@@ -1,6 +1,12 @@
 "use client";
 
-import { createContext, useContext, useReducer, useEffect, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useReducer,
+  useEffect,
+  ReactNode,
+} from "react";
 import { memleketSlugs } from "./catalog";
 
 export type CartItem = {
@@ -8,6 +14,7 @@ export type CartItem = {
   city: string;
   color: string;
   size: string;
+  productType: "tshirt" | "hoodie" | "sweater";
   price: number;
   image: string;
   quantity: number;
@@ -40,6 +47,7 @@ type CartAction =
         slug: string;
         color: string;
         size: string;
+        productType: "tshirt" | "hoodie" | "sweater";
         personalization?: any;
         giftPackage?: any;
       };
@@ -50,6 +58,7 @@ type CartAction =
         slug: string;
         color: string;
         size: string;
+        productType: "tshirt" | "hoodie" | "sweater";
         quantity: number;
         personalization?: any;
         giftPackage?: any;
@@ -69,8 +78,13 @@ const loadCartFromStorage = (): CartState => {
     const stored = localStorage.getItem("cart");
     if (stored) {
       const parsed = JSON.parse(stored);
+      // Migrate old cart items that don't have productType
+      const migratedItems = (parsed.items || []).map((item: any) => ({
+        ...item,
+        productType: item.productType || "tshirt", // Default to tshirt for old items
+      }));
       return {
-        items: parsed.items || [],
+        items: migratedItems,
         isOpen: false,
         justAdded: null,
       };
@@ -91,6 +105,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
           item.slug === action.payload.slug &&
           item.color === action.payload.color &&
           item.size === action.payload.size &&
+          item.productType === action.payload.productType &&
           JSON.stringify(item.personalization) ===
             JSON.stringify(action.payload.personalization) &&
           JSON.stringify(item.giftPackage) ===
@@ -102,6 +117,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
             item.slug === action.payload.slug &&
             item.color === action.payload.color &&
             item.size === action.payload.size &&
+            item.productType === action.payload.productType &&
             JSON.stringify(item.personalization) ===
               JSON.stringify(action.payload.personalization) &&
             JSON.stringify(item.giftPackage) ===
@@ -129,7 +145,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
       };
     }
     case "UPDATE_QUANTITY": {
-      const { slug, color, size, quantity, personalization, giftPackage } =
+      const { slug, color, size, productType, quantity, personalization, giftPackage } =
         action.payload;
       const updated = state.items
         .map((item) => {
@@ -137,6 +153,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
             item.slug === slug &&
             item.color === color &&
             item.size === size &&
+            item.productType === productType &&
             JSON.stringify(item.personalization) ===
               JSON.stringify(personalization) &&
             JSON.stringify(item.giftPackage) === JSON.stringify(giftPackage)
@@ -152,7 +169,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
       return { ...state, justAdded: null };
     }
     case "REMOVE_ITEM": {
-      const { slug, color, size, personalization, giftPackage } =
+      const { slug, color, size, productType, personalization, giftPackage } =
         action.payload;
       return {
         ...state,
@@ -162,6 +179,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
               item.slug === slug &&
               item.color === color &&
               item.size === size &&
+              item.productType === productType &&
               JSON.stringify(item.personalization) ===
                 JSON.stringify(personalization) &&
               JSON.stringify(item.giftPackage) === JSON.stringify(giftPackage)
@@ -187,6 +205,7 @@ type CartContextType = {
     slug: string,
     color: string,
     size: string,
+    productType: "tshirt" | "hoodie" | "sweater",
     personalization?: any,
     giftPackage?: any
   ) => void;
@@ -194,6 +213,7 @@ type CartContextType = {
     slug: string,
     color: string,
     size: string,
+    productType: "tshirt" | "hoodie" | "sweater",
     quantity: number,
     personalization?: any,
     giftPackage?: any
@@ -230,24 +250,26 @@ export function CartProvider({ children }: { children: ReactNode }) {
     slug: string,
     color: string,
     size: string,
+    productType: "tshirt" | "hoodie" | "sweater",
     personalization?: any,
     giftPackage?: any
   ) =>
     dispatch({
       type: "REMOVE_ITEM",
-      payload: { slug, color, size, personalization, giftPackage },
+      payload: { slug, color, size, productType, personalization, giftPackage },
     });
   const updateQuantity = (
     slug: string,
     color: string,
     size: string,
+    productType: "tshirt" | "hoodie" | "sweater",
     quantity: number,
     personalization?: any,
     giftPackage?: any
   ) =>
     dispatch({
       type: "UPDATE_QUANTITY",
-      payload: { slug, color, size, quantity, personalization, giftPackage },
+      payload: { slug, color, size, productType, quantity, personalization, giftPackage },
     });
   const clearCart = () => dispatch({ type: "CLEAR_CART" });
   const toggleCart = () => dispatch({ type: "TOGGLE_CART" });
