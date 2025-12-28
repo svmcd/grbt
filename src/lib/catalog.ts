@@ -101,10 +101,20 @@ export function getImagesForSlug(slug: string, color: string = "siyah", productT
     // Determine collection based on slug
     const collection = hasretSlugs.includes(slug) ? "hasret" : "memleket";
     
-    // Handle hoodie and sweater - use examples folder
+    // Handle hoodie and sweater
     if (productType === "hoodie" || productType === "sweater") {
         const colorKey = color === "beyaz" ? "white" : "black";
         const productKey = productType === "hoodie" ? "hoodie" : "sweater";
+        
+        // Hasret collection has hoodie/sweater images in the product folder
+        if (collection === "hasret") {
+            return [
+                `/products/collections/hasret/${slug}/${productKey}_${colorKey}_front.png`,
+                `/products/collections/hasret/${slug}/${productKey}_${colorKey}_back.png`,
+            ];
+        }
+        
+        // Memleket collection uses examples folder
         return [
             `/products/collections/memleket/examples/${productKey}_${colorKey}_front.png`,
             `/products/collections/memleket/examples/${productKey}_${colorKey}_back.png`,

@@ -278,17 +278,20 @@ export default function ProductPage() {
                   </button>
                 </div>
                 {(selectedProductType === "hoodie" ||
-                  selectedProductType === "sweater") && (
-                  <div className="bg-white/5 border border-white/10 rounded-none p-2 sm:p-3 mt-2 sm:mt-3">
-                    <div className="text-white/70 text-xs">
-                      Örnek görsellerde genel tasarım gösteriliyor ("sehir" ve
-                      "99" placeholder olarak). Siparişinizde {product.city}{" "}
-                      tasarımı{" "}
-                      {selectedProductType === "hoodie" ? "hoodie" : "sweater"}{" "}
-                      üzerine uygulanacak.
+                  selectedProductType === "sweater") &&
+                  !hasretSlugs.includes(slug || "") && (
+                    <div className="bg-white/5 border border-white/10 rounded-none p-2 sm:p-3 mt-2 sm:mt-3">
+                      <div className="text-white/70 text-xs">
+                        Örnek görsellerde genel tasarım gösteriliyor ("sehir" ve
+                        "99" placeholder olarak). Siparişinizde {product.city}{" "}
+                        tasarımı{" "}
+                        {selectedProductType === "hoodie"
+                          ? "hoodie"
+                          : "sweater"}{" "}
+                        üzerine uygulanacak.
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
               </div>
 
               {/* Color Selection */}
