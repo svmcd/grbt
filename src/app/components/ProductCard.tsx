@@ -8,6 +8,7 @@ import {
   getPrimaryImageForSlug,
   getProductBySlug,
   hasretSlugs,
+  recepIvedikSlugs,
 } from "@/lib/catalog";
 
 interface ProductCardProps {
@@ -24,8 +25,11 @@ export function ProductCard({ product }: ProductCardProps) {
 
   // Determine collection name
   const isHasretCollection = hasretSlugs.includes(product.slug);
+  const isRecepIvedikCollection = recepIvedikSlugs.includes(product.slug);
   const collectionName = isHasretCollection
     ? "Hasret Koleksiyonu"
+    : isRecepIvedikCollection
+    ? "Sinema Koleksiyonu"
     : "Memleket Koleksiyonu";
 
   return (

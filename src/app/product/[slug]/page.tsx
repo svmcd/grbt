@@ -8,6 +8,7 @@ import {
   getImagesForSlug,
   memleketSlugs,
   hasretSlugs,
+  recepIvedikSlugs,
 } from "@/lib/catalog";
 import { getPriceForSlug } from "@/lib/pricing";
 import { getTestPrice } from "@/lib/dev-mode";
@@ -115,8 +116,11 @@ export default function ProductPage() {
 
   // Determine collection name
   const isHasretCollection = hasretSlugs.includes(product.slug);
+  const isRecepIvedikCollection = recepIvedikSlugs.includes(product.slug);
   const collectionName = isHasretCollection
     ? "Hasret Koleksiyonu"
+    : isRecepIvedikCollection
+    ? "Sinema Koleksiyonu"
     : "Memleket Koleksiyonu";
 
   return (
@@ -279,7 +283,8 @@ export default function ProductPage() {
                 </div>
                 {(selectedProductType === "hoodie" ||
                   selectedProductType === "sweater") &&
-                  !hasretSlugs.includes(slug || "") && (
+                  !hasretSlugs.includes(slug || "") &&
+                  !recepIvedikSlugs.includes(slug || "") && (
                     <div className="bg-white/5 border border-white/10 rounded-none p-2 sm:p-3 mt-2 sm:mt-3">
                       <div className="text-white/70 text-xs">
                         Örnek görsellerde genel tasarım gösteriliyor ("sehir" ve
@@ -701,7 +706,7 @@ export default function ProductPage() {
                   color: selectedColor,
                   size: selectedSize,
                   productType: selectedProductType,
-                  price: totalPrice,
+                  price: totalPrice * 100, // Convert to cents
                   image: getImagesForSlug(
                     product.slug,
                     selectedColor,
@@ -744,6 +749,75 @@ export default function ProductPage() {
             <p className="text-white/60 text-xs text-center">
               Şimdi sipariş ver, 3 gün içinde üretilir ve kargoya verilir
             </p>
+
+            {/* Bundle Offers */}
+            <div className="bg-black border border-white/10 rounded-none p-4 mt-4">
+              <div className="text-white font-medium text-sm mb-2">
+                Özel Paket Fırsatları
+              </div>
+              <div className="space-y-1.5 text-xs text-white/80">
+                <div>
+                  • Telefon Kılıfı + Tişört al, tişörtte{" "}
+                  <span className="text-white font-medium">-€5</span> indirim{" "}
+                  <Link
+                    href="/phone-case/kilim"
+                    className="text-white underline underline-offset-1 hover:text-white/70 transition-colors border-b border-white"
+                  >
+                    → Telefon kılıflarını gör
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* Matching Product Feature */}
+            {(slug === "sibel_to_my_recep" || slug === "recep_to_my_sibel") && (
+              <div className="bg-white/5 border border-white/10 rounded-none p-4 mt-4">
+                <div className="text-white/80 text-sm font-medium mb-3">
+                  Eşleşen Ürün
+                </div>
+                <Link
+                  href={`/product/${
+                    slug === "sibel_to_my_recep"
+                      ? "recep_to_my_sibel"
+                      : "sibel_to_my_recep"
+                  }`}
+                  className="block group"
+                >
+                  {(() => {
+                    const matchingSlug =
+                      slug === "sibel_to_my_recep"
+                        ? "recep_to_my_sibel"
+                        : "sibel_to_my_recep";
+                    const matchingProduct = getProductBySlug(matchingSlug);
+                    if (!matchingProduct) return null;
+                    return (
+                      <div className="flex items-center gap-4">
+                        <div className="relative w-20 h-20 flex-shrink-0">
+                          <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-white/10 rounded-none blur-sm" />
+                          <Image
+                            src={matchingProduct.image}
+                            alt={matchingProduct.city}
+                            fill
+                            className="object-contain transition-transform duration-300 relative z-10 group-hover:scale-105"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-white text-sm font-medium mb-1 group-hover:text-white/80 transition-colors">
+                            {matchingProduct.city}
+                          </div>
+                          <div className="text-white/60 text-xs mb-2">
+                            Eşleşen ürünü görüntüle →
+                          </div>
+                          <div className="text-white/80 text-sm">
+                            €{getPriceForSlug(matchingSlug)}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </Link>
+              </div>
+            )}
 
             {/* TikTok Link */}
             <Link
@@ -999,7 +1073,7 @@ export default function ProductPage() {
                   color: selectedColor,
                   size: selectedSize,
                   productType: selectedProductType,
-                  price: totalPrice,
+                  price: totalPrice * 100, // Convert to cents
                   image: getImagesForSlug(
                     product.slug,
                     selectedColor,

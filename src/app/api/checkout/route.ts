@@ -25,47 +25,56 @@ export async function POST(request: Request) {
         const selectedShipping = shippingCountries.find(c => c.code === shippingCountry);
 
         // Calculate total from all items (before discount)
+        // item.price is already in cents
         const calculatedSubtotal = items.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0);
-        const discountAmount = discount || 0;
-        const expectedTotal = calculatedSubtotal - discountAmount;
-
-        console.log("Checkout request:", {
-            itemsCount: items.length,
-            itemsTotal: itemsTotal,
-            itemsSubtotal: itemsSubtotal,
-            calculatedSubtotal: calculatedSubtotal,
-            discount: discountAmount,
-            expectedTotal: expectedTotal,
-            shippingCost: shippingCost,
-            shippingCountry: shippingCountry,
-        });
+        // discount is in euros, convert to cents
+        const discountAmountCents = (discount || 0) * 100;
+        const expectedTotal = calculatedSubtotal - discountAmountCents;
 
         // Create Stripe checkout session
         // Apply discount to last item to keep clean prices on others
-        const remainingDiscount = discountAmount || 0;
+        const remainingDiscount = discountAmountCents || 0;
         const lineItems = items.map((item: any, index: number) => {
-            let finalPrice = item.price;
+            let finalPrice = item.price; // Already in cents
 
             // Apply all discount to the last item to keep other prices clean
             if (index === items.length - 1 && remainingDiscount > 0) {
                 // Apply discount per unit to last item
-                const discountPerUnit = remainingDiscount / item.quantity;
+                const discountPerUnit = Math.round(remainingDiscount / item.quantity);
                 finalPrice = item.price - discountPerUnit;
-                // Round to 2 decimals
-                finalPrice = Math.round(finalPrice * 100) / 100;
+                // Ensure price doesn't go negative
+                finalPrice = Math.max(0, finalPrice);
             }
+
+            const giftMessageText = item.giftPackage?.included && item.giftPackage?.message
+                ? ` - Hediye Mesajı: "${item.giftPackage.message}"`
+                : item.giftPackage?.included
+                    ? ' - Hediye Paketi'
+                    : '';
 
             return {
                 price_data: {
                     currency: "eur",
                     product_data: {
-                        name: `${item.city} ${item.productType === "hoodie" ? "Hoodie" : item.productType === "sweater" ? "Sweater" : "Tişört"} - ${item.color}, ${item.size}${item.personalization ? ` - ${item.personalization.method === 'printed' ? 'Baskı' : 'İşleme'}: "${item.personalization.text}" - ${item.personalization.placement} - Font: ${item.personalization.font} - Renk: ${item.personalization.color}` : ''}${item.giftPackage?.included ? ' - Hediye Paketi' : ''}`,
-                        description: `${item.productType === "hoodie" ? "Hoodie" : item.productType === "sweater" ? "Sweater" : "Tişört"}, ${item.color}, ${item.size}${item.personalization ? ` - ${item.personalization.method === 'printed' ? 'Baskı' : 'İşleme'}: "${item.personalization.text}" - ${item.personalization.placement} - Font: ${item.personalization.font} - Renk: ${item.personalization.color}` : ''}${item.giftPackage?.included ? ' - Hediye Paketi' : ''}`,
+                        name: `${item.city} ${item.productType === "phonecase" ? "Telefon Kılıfı" : item.productType === "hoodie" ? "Hoodie" : item.productType === "sweater" ? "Sweater" : "Tişört"}${item.productType !== "phonecase" ? ` - ${item.color}, ${item.size}` : ` - ${item.phoneModel || item.size}`}${item.personalization ? ` - ${item.personalization.method === 'printed' ? 'Baskı' : 'İşleme'}: "${item.personalization.text}" - ${item.personalization.placement} - Font: ${item.personalization.font} - Renk: ${item.personalization.color}` : ''}${giftMessageText}`,
+                        description: `${item.productType === "phonecase" ? "Telefon Kılıfı" : item.productType === "hoodie" ? "Hoodie" : item.productType === "sweater" ? "Sweater" : "Tişört"}${item.productType !== "phonecase" ? `, ${item.color}, ${item.size}` : `, ${item.phoneModel || item.size}`}${item.personalization ? ` - ${item.personalization.method === 'printed' ? 'Baskı' : 'İşleme'}: "${item.personalization.text}" - ${item.personalization.placement} - Font: ${item.personalization.font} - Renk: ${item.personalization.color}` : ''}${giftMessageText}`,
                     },
-                    unit_amount: Math.round(finalPrice * 100),
+                    unit_amount: Math.round(finalPrice), // finalPrice is already in cents
                 },
                 quantity: item.quantity,
             };
+        });
+
+        // Collect all gift messages for metadata
+        const giftMessages: string[] = [];
+        items.forEach((item: any, index: number) => {
+            if (item.giftPackage?.included && item.giftPackage?.message) {
+                const productName = `${item.city} ${item.productType === "phonecase" ? "Telefon Kılıfı" : item.productType === "hoodie" ? "Hoodie" : item.productType === "sweater" ? "Sweater" : "Tişört"}`;
+                const variant = item.productType !== "phonecase"
+                    ? `${item.color}, ${item.size}`
+                    : `${item.phoneModel || item.size}`;
+                giftMessages.push(`${productName} (${variant}): "${item.giftPackage.message}"`);
+            }
         });
 
         const session = await stripe.checkout.sessions.create({
@@ -107,11 +116,14 @@ export async function POST(request: Request) {
             shipping_address_collection: {
                 allowed_countries: shippingCountry ? [shippingCountry] : ['NL', 'DE', 'FR', 'CH', 'AT', 'GB', 'US', 'BE'],
             },
+            // Add gift messages to metadata
+            metadata: giftMessages.length > 0 ? {
+                gift_messages: giftMessages.join(' | ')
+            } : {},
             success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/order/success?session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/`,
         });
 
-        console.log("Stripe session created successfully:", session.id);
         return Response.json({ url: session.url });
     } catch (error) {
         console.error("Stripe error details:", error);

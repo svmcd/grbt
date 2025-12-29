@@ -8,6 +8,11 @@ const perProductOverrides: Record<string, { price?: number; available?: boolean 
     "gurbetten-memlekete": { price: 35 },
     "sıla-yolu": { price: 35 },
     "yabanci": { price: 30 },
+    // Sinema collection pricing
+    "devam": { price: 35 },
+    "recep_to_my_sibel": { price: 35 },
+    "sensiz_olmaz": { price: 35 },
+    "sibel_to_my_recep": { price: 35 },
 };
 
 export function getPriceForSlug(slug: string): number {

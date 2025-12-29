@@ -8,13 +8,14 @@ import {
   ReactNode,
 } from "react";
 import { memleketSlugs } from "./catalog";
+import { getTotalBundleDiscount } from "./bundle-pricing";
 
 export type CartItem = {
   slug: string;
   city: string;
   color: string;
   size: string;
-  productType: "tshirt" | "hoodie" | "sweater";
+  productType: "tshirt" | "hoodie" | "sweater" | "phonecase";
   price: number;
   image: string;
   quantity: number;
@@ -31,6 +32,9 @@ export type CartItem = {
     cost: number;
     message?: string;
   };
+  // Phone case specific fields
+  phoneModel?: string;
+  customPhoneModel?: string;
 };
 
 type CartState = {
@@ -47,7 +51,7 @@ type CartAction =
         slug: string;
         color: string;
         size: string;
-        productType: "tshirt" | "hoodie" | "sweater";
+        productType: "tshirt" | "hoodie" | "sweater" | "phonecase";
         personalization?: any;
         giftPackage?: any;
       };
@@ -58,7 +62,7 @@ type CartAction =
         slug: string;
         color: string;
         size: string;
-        productType: "tshirt" | "hoodie" | "sweater";
+        productType: "tshirt" | "hoodie" | "sweater" | "phonecase";
         quantity: number;
         personalization?: any;
         giftPackage?: any;
@@ -145,8 +149,15 @@ function cartReducer(state: CartState, action: CartAction): CartState {
       };
     }
     case "UPDATE_QUANTITY": {
-      const { slug, color, size, productType, quantity, personalization, giftPackage } =
-        action.payload;
+      const {
+        slug,
+        color,
+        size,
+        productType,
+        quantity,
+        personalization,
+        giftPackage,
+      } = action.payload;
       const updated = state.items
         .map((item) => {
           if (
@@ -205,7 +216,7 @@ type CartContextType = {
     slug: string,
     color: string,
     size: string,
-    productType: "tshirt" | "hoodie" | "sweater",
+    productType: "tshirt" | "hoodie" | "sweater" | "phonecase",
     personalization?: any,
     giftPackage?: any
   ) => void;
@@ -213,7 +224,7 @@ type CartContextType = {
     slug: string,
     color: string,
     size: string,
-    productType: "tshirt" | "hoodie" | "sweater",
+    productType: "tshirt" | "hoodie" | "sweater" | "phonecase",
     quantity: number,
     personalization?: any,
     giftPackage?: any
@@ -250,7 +261,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     slug: string,
     color: string,
     size: string,
-    productType: "tshirt" | "hoodie" | "sweater",
+    productType: "tshirt" | "hoodie" | "sweater" | "phonecase",
     personalization?: any,
     giftPackage?: any
   ) =>
@@ -262,14 +273,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
     slug: string,
     color: string,
     size: string,
-    productType: "tshirt" | "hoodie" | "sweater",
+    productType: "tshirt" | "hoodie" | "sweater" | "phonecase",
     quantity: number,
     personalization?: any,
     giftPackage?: any
   ) =>
     dispatch({
       type: "UPDATE_QUANTITY",
-      payload: { slug, color, size, productType, quantity, personalization, giftPackage },
+      payload: {
+        slug,
+        color,
+        size,
+        productType,
+        quantity,
+        personalization,
+        giftPackage,
+      },
     });
   const clearCart = () => dispatch({ type: "CLEAR_CART" });
   const toggleCart = () => dispatch({ type: "TOGGLE_CART" });
@@ -305,16 +324,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
     let familyDiscount = 0;
     if (memleketQuantity >= 3) {
       // 3+ memleket items: €10 discount
-      familyDiscount = 10;
+      familyDiscount = 10 * 100; // Convert to cents
     } else if (memleketQuantity >= 2) {
       // 2 memleket items: €5 discount
-      familyDiscount = 5;
+      familyDiscount = 5 * 100; // Convert to cents
     }
 
-    const total = allItemsTotal - familyDiscount;
-    console.log(
-      `Cart total: allItemsTotal=${allItemsTotal}, memleketQuantity=${memleketQuantity}, familyDiscount=${familyDiscount}, total=${total}`
-    );
+    // Calculate bundle discount (phone case + shirt = €5 discount)
+    const bundleDiscount = getTotalBundleDiscount(state.items);
+
+    const total = allItemsTotal - familyDiscount - bundleDiscount;
     return total;
   };
   const getItemCount = () =>

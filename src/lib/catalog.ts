@@ -48,6 +48,13 @@ export const hasretSlugs: string[] = [
     "yabanci",
 ];
 
+export const recepIvedikSlugs: string[] = [
+    "devam",
+    "recep_to_my_sibel",
+    "sensiz_olmaz",
+    "sibel_to_my_recep",
+];
+
 export function titleCaseCity(slug: string): string {
     if (!slug) return "";
 
@@ -77,7 +84,12 @@ export function titleCaseCity(slug: string): string {
         // Hasret collection
         "gurbetten-memlekete": "Gurbetten Memlekete",
         "sıla-yolu": "Sıla Yolu",
-        "yabanci": "Yabancı"
+        "yabanci": "Yabancı",
+        // Sinema collection
+        "devam": "Devam",
+        "recep_to_my_sibel": "Recep To My Sibel",
+        "sensiz_olmaz": "Sensiz Olmaz",
+        "sibel_to_my_recep": "Sibel To My Recep"
     };
 
     return cityNames[slug] || slug.charAt(0).toUpperCase() + slug.slice(1);
@@ -85,6 +97,9 @@ export function titleCaseCity(slug: string): string {
 
 export function getPrimaryImageForSlug(slug: string): string {
     // Determine collection based on slug
+    if (recepIvedikSlugs.includes(slug)) {
+        return `/products/collections/recep_ivedik/${slug}/front_black.png`;
+    }
     const collection = hasretSlugs.includes(slug) ? "hasret" : "memleket";
     const base = `/products/collections/${collection}/${slug}/siyah`;
 
@@ -98,6 +113,31 @@ export function getPrimaryImageForSlug(slug: string): string {
 }
 
 export function getImagesForSlug(slug: string, color: string = "siyah", productType: "tshirt" | "hoodie" | "sweater" = "tshirt"): string[] {
+    // Sinema collection - uses front images from product folder and default back images from yabanci
+    if (recepIvedikSlugs.includes(slug)) {
+        const colorKey = color === "beyaz" ? "white" : "black";
+        
+        if (productType === "hoodie" || productType === "sweater") {
+            const productKey = productType === "hoodie" ? "hoodie" : "sweater";
+            // Use front from product folder, back from yabanci defaults
+            return [
+                `/products/collections/recep_ivedik/${slug}/${productKey}_${colorKey}_front.png`,
+                `/products/collections/hasret/yabanci/${productKey}_${colorKey}_back.png`,
+            ];
+        }
+        
+        // T-shirt: use front from product folder, back from yabanci defaults
+        // Handle both front_white.png and front-white.png naming patterns
+        const colorFolder = color === "beyaz" ? "beyaz" : "siyah";
+        const frontFileName = slug === "recep_to_my_sibel" && colorKey === "white"
+            ? "front-white.png"  // This file uses hyphen
+            : `front_${colorKey}.png`;  // Others use underscore
+        return [
+            `/products/collections/recep_ivedik/${slug}/${frontFileName}`,
+            `/products/collections/hasret/yabanci/${colorFolder}/back.png`,
+        ];
+    }
+    
     // Determine collection based on slug
     const collection = hasretSlugs.includes(slug) ? "hasret" : "memleket";
     
@@ -456,13 +496,46 @@ const productData: Record<string, {
             link: "https://yabancihayvankoruma.org"
         },
         designOrigin: "Kültürel kimlik ve aidiyet duygusu"
+    },
+    // Sinema Collection
+    "devam": {
+        description: "Türk sinemasından ilham alan 'Devam' repliğini taşıyan özel tasarım.",
+        donation: {
+            percentage: 5,
+            organization: "Bu tişörtten elde edilen kârın %5'i bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+        },
+        designOrigin: "Türk sineması"
+    },
+    "recep_to_my_sibel": {
+        description: "Türk sinemasından ilham alan romantik tasarım.",
+        donation: {
+            percentage: 5,
+            organization: "Bu tişörtten elde edilen kârın %5'i bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+        },
+        designOrigin: "Türk sineması"
+    },
+    "sensiz_olmaz": {
+        description: "Türk sinemasından ilham alan özel tasarım.",
+        donation: {
+            percentage: 5,
+            organization: "Bu tişörtten elde edilen kârın %5'i bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+        },
+        designOrigin: "Türk sineması"
+    },
+    "sibel_to_my_recep": {
+        description: "Türk sinemasından ilham alan romantik tasarım.",
+        donation: {
+            percentage: 5,
+            organization: "Bu tişörtten elde edilen kârın %5'i bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+        },
+        designOrigin: "Türk sineması"
     }
 };
 
 export function getProductBySlug(slug: string): Product | undefined {
     // Decode URL-encoded slug
     const decodedSlug = decodeURIComponent(slug);
-    if (!memleketSlugs.includes(decodedSlug) && !hasretSlugs.includes(decodedSlug)) return undefined;
+    if (!memleketSlugs.includes(decodedSlug) && !hasretSlugs.includes(decodedSlug) && !recepIvedikSlugs.includes(decodedSlug)) return undefined;
     const city = titleCaseCity(decodedSlug);
     const image = getPrimaryImageForSlug(decodedSlug);
     const images = getImagesForSlug(decodedSlug);

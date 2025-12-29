@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { memleketSlugs, hasretSlugs, getProductBySlug } from "@/lib/catalog";
+import { memleketSlugs, hasretSlugs, recepIvedikSlugs, getProductBySlug } from "@/lib/catalog";
+import { phoneCaseSlugs, getPhoneCaseBySlug } from "@/lib/phone-case-catalog";
 import { ProductCard } from "@/app/components/ProductCard";
 import { TrustSignals } from "@/app/components/TrustSignals";
 import { FAQ } from "@/app/components/FAQ";
@@ -147,8 +148,95 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Hasret Collection Section */}
+      {/* Phone Case Collection Section */}
+      <div className="py-20 px-4 sm:px-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl font-light text-white mb-4 font-serif">
+              Telefon Kılıfları
+            </h2>
+            <p className="text-white/60 text-lg max-w-2xl mx-auto">
+              Geleneksel desenlerden ilham alan özel telefon kılıfı tasarımları.
+            </p>
+          </div>
+
+          <div className="flex justify-center">
+            {phoneCaseSlugs
+              .map((slug) => {
+                const phoneCase = getPhoneCaseBySlug(slug);
+                return phoneCase ? { ...phoneCase, originalSlug: slug } : null;
+              })
+              .filter((p): p is NonNullable<typeof p> => !!p)
+              .map((phoneCase) => (
+                <Link
+                  key={phoneCase.slug}
+                  href={`/phone-case/${phoneCase.slug}`}
+                  className="group block max-w-sm w-full"
+                >
+                  <div className="relative aspect-square mb-6">
+                    <Image
+                      src={`/products/phonecases/${phoneCase.originalSlug}/saffron/1.png`}
+                      alt={phoneCase.title}
+                      fill
+                      className="object-contain transition-transform duration-500 group-hover:scale-105"
+                    />
+                  </div>
+                  <div className="text-center space-y-2">
+                    <h3 className="text-white font-light text-xl group-hover:text-white/80 transition-colors font-serif">
+                      {phoneCase.title}
+                    </h3>
+                    <div className="text-white/80 text-sm">
+                      €{phoneCase.price}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Sinema Collection Section */}
       <div className="py-20 px-4 sm:px-8 bg-white/5">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl font-light text-white mb-4 font-serif">
+              Sinema Koleksiyonu
+            </h2>
+            <p className="text-white/60 text-lg max-w-2xl mx-auto">
+              Türk sinemasından ilham alan özel tasarımlar.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {recepIvedikSlugs
+              .filter((slug) => slug === "sibel_to_my_recep" || slug === "devam" || slug === "sensiz_olmaz")
+              .map((slug) => getProductBySlug(slug))
+              .filter(
+                (p): p is NonNullable<ReturnType<typeof getProductBySlug>> =>
+                  !!p
+              )
+              .map((p) => (
+                <ProductCard key={p.slug} product={p} />
+              ))}
+          </div>
+
+          <div className="text-center mt-12">
+            <Link
+              href="/collection/sinema"
+              className="inline-block px-8 py-4 font-medium tracking-wider uppercase text-sm transition-all duration-300 bg-white text-black hover:bg-white/90 rounded-none"
+              style={{
+                backgroundColor: "var(--white)",
+                color: "var(--black)",
+              }}
+            >
+              Sinema Koleksiyonunu Gör
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* Hasret Collection Section */}
+      <div className="py-20 px-4 sm:px-8">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-light text-white mb-4 font-serif">

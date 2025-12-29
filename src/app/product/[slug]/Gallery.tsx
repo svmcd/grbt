@@ -60,7 +60,7 @@ export function Gallery({ images, city }: { images: string[]; city: string }) {
       </div>
 
       {/* Thumbnails */}
-      <div className="mt-4 grid grid-cols-2 gap-3">
+      <div className="mt-2 grid grid-cols-5 gap-1">
         {validImages.map((src) => {
           const isBack = src.includes("back.png");
           const isFront = src.includes("front.png");
@@ -84,11 +84,11 @@ export function Gallery({ images, city }: { images: string[]; city: string }) {
                 src={src}
                 alt={`${city} ${isBack ? "back" : "front"}`}
                 fill
-                className="object-contain p-2"
+                className="object-contain p-0.5"
               />
               {/* Image label - only for front/back/shirt images */}
               {showLabel && (
-                <div className="absolute bottom-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded-none">
+                <div className="absolute bottom-0.5 left-0.5 bg-black/70 text-white text-[8px] px-1 py-0.5 rounded-none">
                   {isBack ? "Arka" : "Ön"}
                 </div>
               )}

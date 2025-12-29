@@ -6,6 +6,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { getAllShippingCountries, getShippingPrice } from "@/lib/shipping";
+import { calculateBundlePricing, getTotalBundleDiscount } from "@/lib/bundle-pricing";
+import { memleketSlugs } from "@/lib/catalog";
 
 export function CartDrawer() {
   const {
@@ -22,6 +24,7 @@ export function CartDrawer() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState("");
   const shippingCountries = getAllShippingCountries();
+  const [isShippingOpen, setIsShippingOpen] = useState(true);
 
   // Prevent body scroll when cart is open
   useEffect(() => {
@@ -61,7 +64,8 @@ export function CartDrawer() {
     ? shippingCountries.find((c) => c.code === selectedCountry)
     : undefined;
   const shippingCost = selectedCountry ? getShippingPrice(selectedCountry) : 0;
-  const itemsTotal = getSubtotal();
+  const itemsTotalCents = getSubtotal(); // Total in cents
+  const itemsTotal = itemsTotalCents / 100; // Convert to euros for display
 
   // Calculate estimated delivery dates based on selected country
   const estimatedDays = selectedShippingCountry?.estimatedDays || "5 days";
@@ -155,13 +159,15 @@ export function CartDrawer() {
                         </h3>
                         <div className="flex gap-1 mt-1">
                           <span className="px-1.5 py-0.5 bg-white/10 text-white text-[9px] sm:text-[10px] font-bold rounded">
-                            {item.productType === "hoodie" ? "Hoodie" : item.productType === "sweater" ? "Sweater" : "Tişört"}
+                            {item.productType === "phonecase" ? "Telefon Kılıfı" : item.productType === "hoodie" ? "Hoodie" : item.productType === "sweater" ? "Sweater" : "Tişört"}
                           </span>
-                          <span className="px-1.5 py-0.5 bg-white/10 text-white text-[9px] sm:text-[10px] font-bold uppercase tracking-wider rounded">
-                            {item.color}
-                          </span>
+                          {item.productType !== "phonecase" && (
+                            <span className="px-1.5 py-0.5 bg-white/10 text-white text-[9px] sm:text-[10px] font-bold uppercase tracking-wider rounded">
+                              {item.color}
+                            </span>
+                          )}
                           <span className="px-1.5 py-0.5 bg-white/10 text-white text-[9px] sm:text-[10px] font-bold rounded">
-                            {item.size}
+                            {item.productType === "phonecase" ? item.phoneModel || item.size : item.size}
                           </span>
                           {item.personalization && (
                             <span className="px-1.5 py-0.5 bg-white/10 text-white text-[9px] sm:text-[10px] font-bold rounded">
@@ -182,7 +188,7 @@ export function CartDrawer() {
                         )}
                         {item.giftPackage && (
                           <div className="text-white/50 text-xs mt-1">
-                            🎁 Hediye paketi dahil
+                            Hediye paketi dahil
                             {item.giftPackage.message && (
                               <div className="mt-1 italic">
                                 "{item.giftPackage.message}"
@@ -190,10 +196,95 @@ export function CartDrawer() {
                             )}
                           </div>
                         )}
+                        {item.productType === "phonecase" && (
+                          <div className="text-white/50 text-xs mt-1">
+                            Ön sipariş • 2 hafta içinde üretilir
+                          </div>
+                        )}
                         <div className="flex items-center justify-between mt-1 sm:mt-2">
-                          <p className="text-white text-sm sm:text-base">
-                            €{item.price}
-                          </p>
+                          {(() => {
+                            const bundlePricing = calculateBundlePricing(state.items);
+                            const adjustedItem = bundlePricing.find(
+                              (adj) =>
+                                adj.item.slug === item.slug &&
+                                adj.item.size === item.size &&
+                                adj.item.productType === item.productType &&
+                                adj.item.color === item.color &&
+                                (item.productType !== "phonecase" || adj.item.phoneModel === item.phoneModel) &&
+                                JSON.stringify(adj.item.personalization) === JSON.stringify(item.personalization) &&
+                                JSON.stringify(adj.item.giftPackage) === JSON.stringify(item.giftPackage)
+                            );
+                            const displayPrice = adjustedItem?.adjustedPrice || item.price;
+                            const hasBundleDiscount = adjustedItem?.bundleDiscount && adjustedItem.bundleDiscount > 0;
+                            
+                            // Calculate memleket discount for this item
+                            const isMemleketItem = memleketSlugs.includes(item.slug);
+                            let memleketDiscountCents = 0;
+                            if (isMemleketItem) {
+                              const memleketItems = state.items.filter((i) => memleketSlugs.includes(i.slug));
+                              const memleketQuantity = memleketItems.reduce((sum, i) => sum + i.quantity, 0);
+                              
+                              // Count memleket items before this one
+                              let memleketCountBefore = 0;
+                              let foundCurrentMemleketItem = false;
+                              for (const memleketItem of memleketItems) {
+                                const isCurrentItem = 
+                                  memleketItem.slug === item.slug &&
+                                  memleketItem.color === item.color &&
+                                  memleketItem.size === item.size &&
+                                  memleketItem.productType === item.productType &&
+                                  JSON.stringify(memleketItem.personalization) === JSON.stringify(item.personalization) &&
+                                  JSON.stringify(memleketItem.giftPackage) === JSON.stringify(item.giftPackage);
+                                
+                                if (isCurrentItem && !foundCurrentMemleketItem) {
+                                  foundCurrentMemleketItem = true;
+                                  // Apply discount to first item based on total quantity
+                                  if (memleketQuantity >= 3 && memleketCountBefore === 0) {
+                                    // €10 discount for 3+ items, apply to first item only
+                                    memleketDiscountCents = 1000; // €10 in cents
+                                  } else if (memleketQuantity >= 2 && memleketQuantity < 3 && memleketCountBefore === 0) {
+                                    // €5 discount for 2 items, apply to first item only
+                                    memleketDiscountCents = 500; // €5 in cents
+                                  }
+                                  break;
+                                }
+                                
+                                if (!foundCurrentMemleketItem) {
+                                  memleketCountBefore += memleketItem.quantity;
+                                }
+                              }
+                            }
+                            
+                            const totalDiscount = (hasBundleDiscount ? adjustedItem.bundleDiscount : 0) + memleketDiscountCents;
+                            const hasDiscount = totalDiscount > 0;
+                            
+                            const totalItemPrice = item.price * item.quantity;
+                            const totalItemPriceAfterDiscount = totalItemPrice - totalDiscount;
+                            
+                            return (
+                              <div>
+                                {hasDiscount ? (
+                                  <div>
+                                    <p className="text-white/50 text-xs line-through">
+                                      €{(totalItemPrice / 100).toFixed(2)}
+                                    </p>
+                                    <p className="text-white text-sm sm:text-base">
+                                      €{(totalItemPriceAfterDiscount / 100).toFixed(2)}
+                                    </p>
+                                    <div className="bg-black border border-white/10 rounded-none px-2 py-1 mt-1 inline-block">
+                                      <p className="text-white/80 text-xs">
+                                        -€{(totalDiscount / 100).toFixed(2)} indirim
+                                      </p>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <p className="text-white text-sm sm:text-base">
+                                    €{(totalItemPrice / 100).toFixed(2)}
+                                  </p>
+                                )}
+                              </div>
+                            );
+                          })()}
                           <div className="flex items-center gap-1.5">
                             <button
                               onClick={() => {
@@ -252,39 +343,81 @@ export function CartDrawer() {
 
             {state.items.length > 0 && (
               <div className="p-4 sm:p-6 border-t border-white/10 bg-black backdrop-blur-sm">
-                <div className="mb-4">
-                  <label className="block text-white/80 text-sm mb-2">
-                    Kargo Ülkesi
-                  </label>
-                  <select
-                    value={selectedCountry}
-                    onChange={(e) => setSelectedCountry(e.target.value)}
-                    className="w-full px-4 py-3 bg-white/5 border border-white/20 text-white text-sm rounded-none focus:outline-none focus:border-white/40 focus:bg-white/10 transition-all appearance-none cursor-pointer"
-                    style={{
-                      backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='black' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
-                      backgroundPosition: "right 0.75rem center",
-                      backgroundRepeat: "no-repeat",
-                      backgroundSize: "1.5em 1.5em",
-                      paddingRight: "2.5rem",
-                    }}
+                {/* Shipping Section */}
+                <div className="bg-white/5 border border-white/10 rounded-none mb-4">
+                  <button
+                    onClick={() => setIsShippingOpen(!isShippingOpen)}
+                    className="w-full flex items-center justify-between p-4 text-left"
                   >
-                    <option
-                      value=""
-                      disabled
-                      className="bg-black text-white/50 py-2"
-                    >
-                      Kargo ülkesi seçin
-                    </option>
-                    {shippingCountries.map((country) => (
-                      <option
-                        key={country.code}
-                        value={country.code}
-                        className="bg-black text-white py-2"
+                    <div className="text-white font-medium text-sm">Kargo</div>
+                    <div className="flex items-center gap-2">
+                      {selectedCountry && (
+                        <span className="text-white text-sm">
+                          {itemsTotalCents >= 10000 ? (
+                            "Ücretsiz"
+                          ) : (
+                            `€${shippingCost.toFixed(2)}`
+                          )}
+                        </span>
+                      )}
+                      <svg
+                        className={`w-4 h-4 text-white/60 transition-transform ${isShippingOpen ? 'rotate-180' : ''}`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
                       >
-                        {country.name}
-                      </option>
-                    ))}
-                  </select>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  </button>
+                  {isShippingOpen && (
+                    <div className="px-4 pb-4 space-y-3">
+                      <div>
+                        <label className="block text-white/80 text-sm mb-2">
+                          Kargo Ülkesi
+                        </label>
+                        <select
+                          value={selectedCountry}
+                          onChange={(e) => setSelectedCountry(e.target.value)}
+                          className="w-full px-4 py-3 bg-white/5 border border-white/20 text-white text-sm rounded-none focus:outline-none focus:border-white/40 focus:bg-white/10 transition-all appearance-none cursor-pointer"
+                          style={{
+                            backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='white' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                            backgroundPosition: "right 0.75rem center",
+                            backgroundRepeat: "no-repeat",
+                            backgroundSize: "1.5em 1.5em",
+                            paddingRight: "2.5rem",
+                          }}
+                        >
+                          <option
+                            value=""
+                            disabled
+                            className="bg-black text-white/50 py-2"
+                          >
+                            Kargo ülkesi seçin
+                          </option>
+                          {shippingCountries.map((country) => (
+                            <option
+                              key={country.code}
+                              value={country.code}
+                              className="bg-black text-white py-2"
+                            >
+                              {country.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      {selectedCountry && (
+                        <div className="text-white/60 text-xs">
+                          {minDateStr} - {maxDateStr} arası teslim al
+                        </div>
+                      )}
+                      {itemsTotalCents < 10000 && (
+                        <div className="text-white/60 text-xs text-center">
+                          €100 üzeri ücretsiz kargo
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-2 mb-4">
@@ -302,36 +435,45 @@ export function CartDrawer() {
                       </span>
                     </div>
                   )}
-                  <div className="flex justify-between items-center">
-                    <span className="text-white/80 text-sm">Kargo</span>
-                    <span className="text-white">
-                      {selectedCountry ? (
-                        itemsTotal >= 100 ? (
-                          <span className="text-white">Ücretsiz</span>
-                        ) : (
-                          `€${shippingCost.toFixed(2)}`
-                        )
-                      ) : (
-                        <span className="text-white/50 text-xs">
-                          Ülke seçin
-                        </span>
-                      )}
-                    </span>
-                  </div>
-                  {itemsTotal < 100 && (
-                    <div className="text-white/60 text-xs text-center">
-                      €100 üzeri ücretsiz kargo
-                    </div>
-                  )}
+                  {(() => {
+                    const bundlePricing = calculateBundlePricing(state.items);
+                    const phoneCaseBundle = bundlePricing.find(adj => adj.bundleType === "phonecase-phonecase");
+                    const shirtBundle = bundlePricing.find(adj => adj.bundleType === "phonecase-shirt");
+                    const totalBundleDiscount = getTotalBundleDiscount(state.items);
+                    
+                    return (
+                      <>
+                        {phoneCaseBundle && phoneCaseBundle.bundleDiscount > 0 && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-white/80 text-sm">
+                              2 Telefon Kılıfı İndirimi
+                            </span>
+                            <span className="text-white">
+                              -€{(phoneCaseBundle.bundleDiscount / 100).toFixed(2)}
+                            </span>
+                          </div>
+                        )}
+                        {shirtBundle && shirtBundle.bundleDiscount > 0 && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-white/80 text-sm">
+                              Telefon Kılıfı + Tişört İndirimi
+                            </span>
+                            <span className="text-white">
+                              -€{(shirtBundle.bundleDiscount / 100).toFixed(2)}
+                            </span>
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
                   <div className="border-t border-white/10 pt-2">
                     <div className="flex justify-between items-center">
                       <span className="text-white font-medium">Toplam</span>
                       <span className="text-white text-xl font-medium">
                         €
                         {(
-                          itemsTotal -
-                          getMemleketSavings() +
-                          (itemsTotal >= 100 ? 0 : shippingCost)
+                          (getTotal() / 100) +
+                          (itemsTotalCents >= 10000 ? 0 : shippingCost)
                         ).toFixed(2)}
                       </span>
                     </div>
@@ -347,16 +489,20 @@ export function CartDrawer() {
                       }
                       setIsProcessing(true);
                       try {
+                        const bundleDiscount = getTotalBundleDiscount(state.items);
+                        const memleketDiscount = getMemleketSavings() * 100; // Convert to cents
+                        const totalDiscount = bundleDiscount + memleketDiscount;
+                        
                         const resp = await fetch("/api/checkout", {
                           method: "POST",
                           headers: { "Content-Type": "application/json" },
                           body: JSON.stringify({
                             items: state.items,
                             shippingCountry: selectedCountry,
-                            itemsTotal: itemsTotal - getMemleketSavings(),
-                            itemsSubtotal: itemsTotal,
-                            discount: getMemleketSavings(),
-                            shippingCost: itemsTotal >= 100 ? 0 : shippingCost,
+                            itemsTotal: (itemsTotalCents - totalDiscount) / 100, // Convert to euros
+                            itemsSubtotal: itemsTotalCents / 100, // Convert to euros
+                            discount: totalDiscount / 100, // Total discount in euros
+                            shippingCost: itemsTotalCents >= 10000 ? 0 : shippingCost, // €100 in cents
                           }),
                         });
                         const contentType =
