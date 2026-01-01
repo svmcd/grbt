@@ -5,6 +5,7 @@ import Image from "next/image";
 import { memleketSlugs, hasretSlugs, recepIvedikSlugs, getProductBySlug } from "@/lib/catalog";
 import { phoneCaseSlugs, getPhoneCaseBySlug } from "@/lib/phone-case-catalog";
 import { ProductCard } from "@/app/components/ProductCard";
+import { FamilyOffer } from "@/app/components/FamilyOffer";
 import { TrustSignals } from "@/app/components/TrustSignals";
 import { FAQ } from "@/app/components/FAQ";
 import { NewsletterSignup } from "@/app/components/NewsletterSignup";
@@ -57,7 +58,7 @@ export default function Home() {
                 <div className="grid grid-cols-2 gap-6">
                   <div className="text-center">
                     <div className="text-3xl font-light text-black mb-2">
-                      21
+                      {memleketSlugs.length}
                     </div>
                     <div className="text-black/60 text-sm uppercase tracking-wider">
                       Şehir
@@ -145,6 +146,11 @@ export default function Home() {
               Memleket Koleksiyonunu Gör
             </Link>
           </div>
+
+          {/* Özel Aile Fırsatı */}
+          <div className="mt-16">
+            <FamilyOffer />
+          </div>
         </div>
       </div>
 
@@ -191,6 +197,31 @@ export default function Home() {
                   </div>
                 </Link>
               ))}
+          </div>
+
+          {/* Bundle Offer */}
+          <div className="mt-16 max-w-md mx-auto">
+            <div className="bg-black border border-white/10 rounded-none p-4">
+              <div className="text-white font-medium text-sm mb-2">
+                Özel Paket Fırsatları
+              </div>
+              <div className="space-y-1.5 text-xs text-white/80">
+                <div>
+                  • 2 Telefon Kılıfı al, 2. kılıfta{" "}
+                  <span className="text-white font-medium">-€10</span> indirim
+                </div>
+                <div>
+                  • Telefon Kılıfı + Tişört al, tişörtte{" "}
+                  <span className="text-white font-medium">-€5</span> indirim{" "}
+                  <Link
+                    href="/collection/memleket"
+                    className="text-white underline border-b border-white underline-offset-1 hover:text-white/70 transition-colors font-medium"
+                  >
+                    → Tişörtleri gör
+                  </Link>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

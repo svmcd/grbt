@@ -14,7 +14,7 @@ export async function POST(request: Request) {
                 { status: 500 }
             );
         }
-        const { items, shippingCountry, itemsTotal, itemsSubtotal, discount, shippingCost } = await request.json();
+        const { items, shippingCountry, discount, shippingCost } = await request.json();
 
         if (!items || items.length === 0) {
             return Response.json({ error: "No items provided" }, { status: 400 });
@@ -24,12 +24,8 @@ export async function POST(request: Request) {
         const shippingCountries = getAllShippingCountries();
         const selectedShipping = shippingCountries.find(c => c.code === shippingCountry);
 
-        // Calculate total from all items (before discount)
-        // item.price is already in cents
-        const calculatedSubtotal = items.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0);
         // discount is in euros, convert to cents
         const discountAmountCents = (discount || 0) * 100;
-        const expectedTotal = calculatedSubtotal - discountAmountCents;
 
         // Create Stripe checkout session
         // Apply discount to last item to keep clean prices on others
@@ -67,7 +63,7 @@ export async function POST(request: Request) {
 
         // Collect all gift messages for metadata
         const giftMessages: string[] = [];
-        items.forEach((item: any, index: number) => {
+        items.forEach((item: any) => {
             if (item.giftPackage?.included && item.giftPackage?.message) {
                 const productName = `${item.city} ${item.productType === "phonecase" ? "Telefon Kılıfı" : item.productType === "hoodie" ? "Hoodie" : item.productType === "sweater" ? "Sweater" : "Tişört"}`;
                 const variant = item.productType !== "phonecase"

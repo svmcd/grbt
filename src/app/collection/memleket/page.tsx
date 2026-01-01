@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { memleketSlugs, getProductBySlug } from "@/lib/catalog";
 import { ProductCard } from "@/app/components/ProductCard";
+import { SearchBar } from "@/app/components/SearchBar";
 
 export default function MemleketCollectionPage() {
   return (
@@ -21,6 +22,15 @@ export default function MemleketCollectionPage() {
             <div className="text-white/40 text-sm">
               {memleketSlugs.length} şehir • Her biri özel tasarım
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Search Bar */}
+      <div className="px-4 sm:px-8 pb-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="max-w-md mx-auto">
+            <SearchBar />
           </div>
         </div>
       </div>

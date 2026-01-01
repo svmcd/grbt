@@ -26,20 +26,30 @@ export const memleketSlugs: string[] = [
     "ardahan",
     "aydin",
     "corum",
+    "denizli",
+    "erzurum",
     "gaziantep",
+    "giresun",
     "gumushane",
+    "kahramanmaras",
     "karaman",
+    "kars",
     "kayseri",
     "kirsehir",
     "konya",
+    "mardin",
     "nevsehir",
     "nigde",
+    "ordu",
     "rize",
     "sakarya",
+    "samsun",
+    "sanliurfa",
     "sivas",
     "trabzon",
     "usak",
     "yozgat",
+    "zonguldak",
 ];
 
 export const hasretSlugs: string[] = [
@@ -67,20 +77,30 @@ export function titleCaseCity(slug: string): string {
         "ardahan": "Ardahan",
         "aydin": "Aydın",
         "corum": "Çorum",
+        "denizli": "Denizli",
+        "erzurum": "Erzurum",
         "gaziantep": "Gaziantep",
+        "giresun": "Giresun",
         "gumushane": "Gümüşhane",
+        "kahramanmaras": "Kahramanmaraş",
         "karaman": "Karaman",
+        "kars": "Kars",
         "kayseri": "Kayseri",
         "kirsehir": "Kırşehir",
         "konya": "Konya",
+        "mardin": "Mardin",
         "nevsehir": "Nevşehir",
         "nigde": "Niğde",
+        "ordu": "Ordu",
         "rize": "Rize",
         "sakarya": "Sakarya",
+        "samsun": "Samsun",
+        "sanliurfa": "Şanlıurfa",
         "sivas": "Sivas",
         "trabzon": "Trabzon",
         "usak": "Uşak",
         "yozgat": "Yozgat",
+        "zonguldak": "Zonguldak",
         // Hasret collection
         "gurbetten-memlekete": "Gurbetten Memlekete",
         "sıla-yolu": "Sıla Yolu",
@@ -116,7 +136,7 @@ export function getImagesForSlug(slug: string, color: string = "siyah", productT
     // Sinema collection - uses front images from product folder and default back images from yabanci
     if (recepIvedikSlugs.includes(slug)) {
         const colorKey = color === "beyaz" ? "white" : "black";
-        
+
         if (productType === "hoodie" || productType === "sweater") {
             const productKey = productType === "hoodie" ? "hoodie" : "sweater";
             // Use front from product folder, back from yabanci defaults
@@ -125,7 +145,7 @@ export function getImagesForSlug(slug: string, color: string = "siyah", productT
                 `/products/collections/hasret/yabanci/${productKey}_${colorKey}_back.png`,
             ];
         }
-        
+
         // T-shirt: use front from product folder, back from yabanci defaults
         // Handle both front_white.png and front-white.png naming patterns
         const colorFolder = color === "beyaz" ? "beyaz" : "siyah";
@@ -137,15 +157,15 @@ export function getImagesForSlug(slug: string, color: string = "siyah", productT
             `/products/collections/hasret/yabanci/${colorFolder}/back.png`,
         ];
     }
-    
+
     // Determine collection based on slug
     const collection = hasretSlugs.includes(slug) ? "hasret" : "memleket";
-    
+
     // Handle hoodie and sweater
     if (productType === "hoodie" || productType === "sweater") {
         const colorKey = color === "beyaz" ? "white" : "black";
         const productKey = productType === "hoodie" ? "hoodie" : "sweater";
-        
+
         // Hasret collection has hoodie/sweater images in the product folder
         if (collection === "hasret") {
             return [
@@ -153,14 +173,14 @@ export function getImagesForSlug(slug: string, color: string = "siyah", productT
                 `/products/collections/hasret/${slug}/${productKey}_${colorKey}_back.png`,
             ];
         }
-        
+
         // Memleket collection uses examples folder
         return [
             `/products/collections/memleket/examples/${productKey}_${colorKey}_front.png`,
             `/products/collections/memleket/examples/${productKey}_${colorKey}_back.png`,
         ];
     }
-    
+
     // T-shirt images
     const base = `/products/collections/${collection}/${slug}/${color}`;
     const commonBase = `/products/collections/${collection}/${slug}/siyah`;
@@ -529,6 +549,87 @@ const productData: Record<string, {
             organization: "Bu tişörtten elde edilen kârın %5'i bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
         },
         designOrigin: "Türk sineması"
+    },
+    // New cities
+    denizli: {
+        description: "Denizli'nin zengin tarihi ve kültürel mirasını yansıtan tasarım.",
+        donation: {
+            percentage: 5,
+            organization: "Bu tişörtten elde edilen kârın %5'i Denizli'deki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+        },
+        designOrigin: "Denizli'nin tarihi ve kültürel özellikleri"
+    },
+    erzurum: {
+        description: "Erzurum'un soğuk ama sıcak kalpli atmosferini yansıtan tasarım.",
+        donation: {
+            percentage: 5,
+            organization: "Bu tişörtten elde edilen kârın %5'i Erzurum'daki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+        },
+        designOrigin: "Erzurum'un tarihi ve kültürel özellikleri"
+    },
+    giresun: {
+        description: "Giresun'un Karadeniz'in eşsiz güzelliklerini yansıtan tasarım.",
+        donation: {
+            percentage: 5,
+            organization: "Bu tişörtten elde edilen kârın %5'i Giresun'daki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+        },
+        designOrigin: "Giresun'un tarihi ve kültürel özellikleri"
+    },
+    kahramanmaras: {
+        description: "Kahramanmaraş'ın zengin kültürel mirasını yansıtan tasarım.",
+        donation: {
+            percentage: 5,
+            organization: "Bu tişörtten elde edilen kârın %5'i Kahramanmaraş'taki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+        },
+        designOrigin: "Kahramanmaraş'ın tarihi ve kültürel özellikleri"
+    },
+    kars: {
+        description: "Kars'ın soğuk ama sıcak kalpli atmosferini yansıtan tasarım.",
+        donation: {
+            percentage: 5,
+            organization: "Bu tişörtten elde edilen kârın %5'i Kars'taki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+        },
+        designOrigin: "Kars'ın tarihi ve kültürel özellikleri"
+    },
+    mardin: {
+        description: "Mardin'in eşsiz mimarisi ve kültürel zenginliğini yansıtan tasarım.",
+        donation: {
+            percentage: 5,
+            organization: "Bu tişörtten elde edilen kârın %5'i Mardin'deki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+        },
+        designOrigin: "Mardin'in tarihi ve kültürel özellikleri"
+    },
+    ordu: {
+        description: "Ordu'nun Karadeniz'in eşsiz güzelliklerini yansıtan tasarım.",
+        donation: {
+            percentage: 5,
+            organization: "Bu tişörtten elde edilen kârın %5'i Ordu'daki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+        },
+        designOrigin: "Ordu'nun tarihi ve kültürel özellikleri"
+    },
+    samsun: {
+        description: "Samsun'un Karadeniz'in eşsiz güzelliklerini yansıtan tasarım.",
+        donation: {
+            percentage: 5,
+            organization: "Bu tişörtten elde edilen kârın %5'i Samsun'daki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+        },
+        designOrigin: "Samsun'un tarihi ve kültürel özellikleri"
+    },
+    sanliurfa: {
+        description: "Şanlıurfa'nın zengin tarihi ve kültürel mirasını yansıtan tasarım.",
+        donation: {
+            percentage: 5,
+            organization: "Bu tişörtten elde edilen kârın %5'i Şanlıurfa'daki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+        },
+        designOrigin: "Şanlıurfa'nın tarihi ve kültürel özellikleri"
+    },
+    zonguldak: {
+        description: "Zonguldak'ın Karadeniz'in eşsiz güzelliklerini yansıtan tasarım.",
+        donation: {
+            percentage: 5,
+            organization: "Bu tişörtten elde edilen kârın %5'i Zonguldak'taki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+        },
+        designOrigin: "Zonguldak'ın tarihi ve kültürel özellikleri"
     }
 };
 
@@ -540,6 +641,10 @@ export function getProductBySlug(slug: string): Product | undefined {
     const image = getPrimaryImageForSlug(decodedSlug);
     const images = getImagesForSlug(decodedSlug);
     const data = productData[decodedSlug];
+
+    if (!data) {
+        return undefined;
+    }
 
     return {
         slug: decodedSlug,

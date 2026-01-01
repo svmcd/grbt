@@ -24,6 +24,32 @@ import {
   recepIvedikSlugs,
 } from "@/lib/catalog";
 
+// Normalize string for search (case-insensitive, accent-insensitive)
+function normalizeForSearch(text: string): string {
+  if (!text) return "";
+  return (
+    text
+      .toLowerCase()
+      // Handle Turkish characters first
+      .replace(/ğ/g, "g")
+      .replace(/Ğ/g, "g")
+      .replace(/ü/g, "u")
+      .replace(/Ü/g, "u")
+      .replace(/ş/g, "s")
+      .replace(/Ş/g, "s")
+      .replace(/ı/g, "i")
+      .replace(/İ/g, "i")
+      .replace(/I/g, "i")
+      .replace(/ö/g, "o")
+      .replace(/Ö/g, "o")
+      .replace(/ç/g, "c")
+      .replace(/Ç/g, "c")
+      // Remove all other diacritics
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+  );
+}
+
 const PHONE_MODELS = [
   // iPhone 17 Series
   "iPhone 17 Pro Max",
@@ -381,11 +407,11 @@ export default function PhoneCasePage() {
                 />
                 {showPhoneModelDropdown && (
                   <div className="absolute z-50 w-full mt-1 bg-black border border-white/20 max-h-60 overflow-y-auto">
-                    {PHONE_MODELS.filter((model) =>
-                      model
-                        .toLowerCase()
-                        .includes(phoneModelSearch.toLowerCase())
-                    ).map((model) => (
+                    {PHONE_MODELS.filter((model) => {
+                      const searchTerm = normalizeForSearch(phoneModelSearch);
+                      if (!searchTerm) return true; // Show all if search is empty
+                      return normalizeForSearch(model).includes(searchTerm);
+                    }).map((model) => (
                       <button
                         key={model}
                         type="button"
@@ -406,11 +432,11 @@ export default function PhoneCasePage() {
                         {model}
                       </button>
                     ))}
-                    {PHONE_MODELS.filter((model) =>
-                      model
-                        .toLowerCase()
-                        .includes(phoneModelSearch.toLowerCase())
-                    ).length === 0 && (
+                    {PHONE_MODELS.filter((model) => {
+                      const searchTerm = normalizeForSearch(phoneModelSearch);
+                      if (!searchTerm) return true;
+                      return normalizeForSearch(model).includes(searchTerm);
+                    }).length === 0 && (
                       <div className="px-4 py-2 text-white/60 text-sm">
                         Sonuç bulunamadı
                       </div>

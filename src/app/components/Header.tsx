@@ -38,47 +38,71 @@ export function Header() {
             className="h-5 sm:h-6 w-auto"
           />
         </Link>
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-4 sm:gap-6">
           {/* Desktop Navigation */}
-          <nav className="hidden sm:flex items-center gap-3 sm:gap-6 text-sm">
+          <nav className="hidden lg:flex items-center gap-4 xl:gap-6 text-sm">
             <Link
               href="/"
-              className="text-white/80 hover:text-white transition-colors"
+              className="text-white/80 hover:text-white transition-colors whitespace-nowrap"
             >
               Ana Sayfa
             </Link>
             <Link
+              href="/collection/memleket"
+              className="text-white/80 hover:text-white transition-colors whitespace-nowrap"
+            >
+              Memleket
+            </Link>
+            <Link
+              href="/collection/hasret"
+              className="text-white/80 hover:text-white transition-colors whitespace-nowrap"
+            >
+              Hasret
+            </Link>
+            <Link
+              href="/collection/sinema"
+              className="text-white/80 hover:text-white transition-colors whitespace-nowrap"
+            >
+              Sinema
+            </Link>
+            <Link
+              href="/phone-case/kilim"
+              className="text-white/80 hover:text-white transition-colors whitespace-nowrap text-xs"
+            >
+              Telefon Kılıfları
+            </Link>
+            <Link
               href="/contact"
-              className="text-white/80 hover:text-white transition-colors"
+              className="text-white/80 hover:text-white transition-colors whitespace-nowrap"
             >
               İletişim
             </Link>
           </nav>
+          
+          {/* Tablet/Mobile Menu Button - Show on md screens too */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="lg:hidden text-white/80 hover:text-white transition-colors w-8 h-8 flex items-center justify-center"
+          >
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              {mobileMenuOpen ? (
+                <path d="M18 6L6 18M6 6l12 12" />
+              ) : (
+                <path d="M3 12h18M3 6h18M3 18h18" />
+              )}
+            </svg>
+          </button>
 
           <div className="flex items-center gap-2 sm:gap-4">
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="sm:hidden text-white/80 hover:text-white transition-colors w-8 h-8 flex items-center justify-center"
-            >
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                {mobileMenuOpen ? (
-                  <path d="M18 6L6 18M6 6l12 12" />
-                ) : (
-                  <path d="M3 12h18M3 6h18M3 18h18" />
-                )}
-              </svg>
-            </button>
-
             {/* Desktop Search */}
-            <div className="hidden sm:block">
+            <div className="hidden lg:block">
               <SearchBar />
             </div>
 
@@ -86,7 +110,7 @@ export function Header() {
             <button
               onClick={toggleCart}
               data-cart-toggle
-              className="hidden sm:block relative bg-white/10 backdrop-blur-sm border border-white/20 rounded-none w-10 h-10 hover:bg-white/20 transition-colors"
+              className="hidden lg:block relative bg-white/10 backdrop-blur-sm border border-white/20 rounded-none w-10 h-10 hover:bg-white/20 transition-colors"
             >
               <svg
                 width="20"
@@ -109,10 +133,15 @@ export function Header() {
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile/Tablet Menu */}
       {mobileMenuOpen && (
-        <div className="sm:hidden bg-black border-t border-white/10">
+        <div className="lg:hidden bg-black border-t border-white/10">
           <div className="px-4 py-4 space-y-4">
+            {/* Search Bar in Mobile Menu */}
+            <div className="lg:hidden">
+              <SearchBar isMobile={true} />
+            </div>
+            
             <nav className="space-y-3">
               <Link
                 href="/"
@@ -121,6 +150,39 @@ export function Header() {
               >
                 Ana Sayfa
               </Link>
+              <div className="pt-2 pb-1 border-t border-white/10">
+                <div className="text-white/60 text-xs uppercase tracking-wider mb-2">
+                  Koleksiyonlar
+                </div>
+                <Link
+                  href="/collection/memleket"
+                  className="block text-white/80 hover:text-white transition-colors pl-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Memleket Koleksiyonu
+                </Link>
+                <Link
+                  href="/collection/hasret"
+                  className="block text-white/80 hover:text-white transition-colors pl-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Hasret Koleksiyonu
+                </Link>
+                <Link
+                  href="/collection/sinema"
+                  className="block text-white/80 hover:text-white transition-colors pl-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Sinema Koleksiyonu
+                </Link>
+                <Link
+                  href="/phone-case/kilim"
+                  className="block text-white/80 hover:text-white transition-colors pl-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Telefon Kılıfları
+                </Link>
+              </div>
               <Link
                 href="/contact"
                 className="block text-white/80 hover:text-white transition-colors"

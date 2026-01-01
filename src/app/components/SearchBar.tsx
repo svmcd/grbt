@@ -1,9 +1,35 @@
 "use client";
 
 import { useState } from "react";
-import { memleketSlugs, getProductBySlug } from "@/lib/catalog";
+import { memleketSlugs, hasretSlugs, recepIvedikSlugs, getProductBySlug } from "@/lib/catalog";
 import Link from "next/link";
 import Image from "next/image";
+
+// Normalize string for search (case-insensitive, accent-insensitive)
+function normalizeForSearch(text: string): string {
+  if (!text) return "";
+  return (
+    text
+      .toLowerCase()
+      // Handle Turkish characters first
+      .replace(/ğ/g, "g")
+      .replace(/Ğ/g, "g")
+      .replace(/ü/g, "u")
+      .replace(/Ü/g, "u")
+      .replace(/ş/g, "s")
+      .replace(/Ş/g, "s")
+      .replace(/ı/g, "i")
+      .replace(/İ/g, "i")
+      .replace(/I/g, "i")
+      .replace(/ö/g, "o")
+      .replace(/Ö/g, "o")
+      .replace(/ç/g, "c")
+      .replace(/Ç/g, "c")
+      // Remove all other diacritics
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+  );
+}
 
 export function SearchBar({ isMobile = false }: { isMobile?: boolean }) {
   const [query, setQuery] = useState("");
@@ -13,11 +39,13 @@ export function SearchBar({ isMobile = false }: { isMobile?: boolean }) {
   const handleSearch = (value: string) => {
     setQuery(value);
     if (value.length > 0) {
-      const filtered = memleketSlugs
+      const searchTerm = normalizeForSearch(value);
+      const allSlugs = [...memleketSlugs, ...hasretSlugs, ...recepIvedikSlugs];
+      const filtered = allSlugs
         .map((slug) => getProductBySlug(slug))
         .filter(
           (product) =>
-            product && product.city.toLowerCase().includes(value.toLowerCase())
+            product && normalizeForSearch(product.city).includes(searchTerm)
         )
         .slice(0, 5);
       setResults(filtered);
@@ -39,14 +67,16 @@ export function SearchBar({ isMobile = false }: { isMobile?: boolean }) {
           onBlur={() => setTimeout(() => setIsOpen(false), 200)}
           className={`w-full pl-10 pr-4 py-3 focus:outline-none rounded-none ${
             isMobile
-              ? "bg-white/10 backdrop-blur-sm border border-black/20 text-black focus:bg-black focus:text-white focus:border-white/40 text-base"
+              ? "bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder-white/50 focus:bg-white/20 focus:border-white/40 text-base"
               : "bg-white/10 backdrop-blur-sm border border-black/20 text-black focus:bg-black focus:text-white focus:border-white/40 text-sm"
           }`}
           style={
-            {
-              color: "black",
-              mixBlendMode: "difference",
-            } as React.CSSProperties
+            !isMobile
+              ? ({
+                  color: "black",
+                  mixBlendMode: "difference",
+                } as React.CSSProperties)
+              : undefined
           }
         />
         <svg
@@ -66,7 +96,7 @@ export function SearchBar({ isMobile = false }: { isMobile?: boolean }) {
       {isOpen && results.length > 0 && (
         <div
           className={`absolute left-0 right-0 bg-black border border-white/10 rounded-none overflow-hidden z-[60] ${
-            isMobile ? "bottom-full mb-2" : "top-full mt-2"
+            isMobile ? "top-full mt-2" : "top-full mt-2"
           }`}
         >
           {results.map((product) => (
@@ -91,7 +121,13 @@ export function SearchBar({ isMobile = false }: { isMobile?: boolean }) {
                 <div className="text-white font-light">
                   {product.city.toUpperCase()}
                 </div>
-                <div className="text-white/60 text-xs">Memleket</div>
+                <div className="text-white/60 text-xs">
+                  {hasretSlugs.includes(product.slug)
+                    ? "Hasret"
+                    : recepIvedikSlugs.includes(product.slug)
+                    ? "Sinema"
+                    : "Memleket"}
+                </div>
               </div>
             </Link>
           ))}
