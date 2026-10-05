@@ -8,7 +8,6 @@ import { Footer } from "@/app/components/Footer";
 import { CartProvider } from "@/lib/cart-context";
 import { CartDrawer } from "@/app/components/CartDrawer";
 import { ThemeProvider } from "@/lib/theme-context";
-import { DevToggle } from "@/app/components/DevToggle";
 import { LocaleProvider } from "@/i18n/LocaleProvider";
 import { getLocale, getMessages } from "@/i18n/server";
 import metaMessages from "@/i18n/messages/meta";
@@ -71,7 +70,6 @@ export default async function RootLayout({
               <main className="min-h-[70vh]">{children}</main>
               <Footer />
               <CartDrawer />
-              <DevToggle />
               <Analytics />
             </CartProvider>
           </AuthProvider>
