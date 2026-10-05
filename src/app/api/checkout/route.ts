@@ -5,6 +5,7 @@ import { getLocale } from "@/i18n/server";
 import common from "@/i18n/messages/common";
 import emails from "@/i18n/messages/emails";
 import { checkoutItemMetadata, countryName, describeCheckoutItem } from "@/lib/emails/line-items";
+import { recordEvent, visitorFromRequest } from "@/lib/traffic";
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const stripe = STRIPE_SECRET_KEY
@@ -79,6 +80,10 @@ export async function POST(request: Request) {
             }
         });
 
+        // Store analytics: anonymous daily visitor id, so the purchase can be linked to the visit
+        const trackHost = (request.headers.get("host") || "").endsWith("egrikuyu.com");
+        const visitor = trackHost ? visitorFromRequest(request.headers) : null;
+
         const session = await stripe.checkout.sessions.create({
             payment_method_types: [
                 "card",
@@ -124,10 +129,17 @@ export async function POST(request: Request) {
             metadata: {
                 ...(giftMessages.length > 0 ? { gift_messages: giftMessages.join(' | ') } : {}),
                 locale,
+                ...(visitor ? { vh: visitor.hash, vd: visitor.day } : {}),
             },
             success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/order/success?session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/`,
         });
+
+        if (visitor) {
+            await recordEvent({ event: "begin_checkout", value: session.amount_total || 0 }, visitor).catch((e) =>
+                console.error("track begin_checkout failed:", e)
+            );
+        }
 
         return Response.json({ url: session.url });
     } catch (error) {

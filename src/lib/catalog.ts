@@ -127,6 +127,11 @@ export function titleCaseCity(slug: string): string {
     return cityNames[slug] || slug.charAt(0).toUpperCase() + slug.slice(1);
 }
 
+// Reverse of titleCaseCity: "Şanlıurfa" -> "sanliurfa"
+export function slugForCity(city: string): string | undefined {
+    return [...memleketSlugs, ...hasretSlugs, ...recepIvedikSlugs].find((slug) => titleCaseCity(slug) === city);
+}
+
 export function getPrimaryImageForSlug(slug: string): string {
     // Determine collection based on slug
     if (recepIvedikSlugs.includes(slug)) {

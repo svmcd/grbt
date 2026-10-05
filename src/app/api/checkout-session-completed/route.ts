@@ -5,6 +5,8 @@ import { adminDb } from "@/lib/firebase-admin";
 import { buildOrderConfirmationEmail, sessionLocale } from "@/lib/emails/order-confirmation";
 import { lineItemsForStorage } from "@/lib/emails/line-items";
 import { mailFrom, REPLY_TO } from "@/lib/emails/sender";
+import { recordEvent } from "@/lib/traffic";
+import { slugForCity } from "@/lib/catalog";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
     apiVersion: "2025-09-30.clover",
@@ -42,7 +44,7 @@ export async function POST(req: Request) {
         const session = event.data.object as Stripe.Checkout.Session;
         try {
             const customerEmail = (session.customer_details && session.customer_details.email) || "";
-            if (customerEmail) {
+            {
                 // Retrieve session with expanded line items for detailed email
                 const detailedSession = await stripe.checkout.sessions.retrieve(session.id, {
                     expand: ['line_items.data.price.product']
@@ -69,14 +71,20 @@ export async function POST(req: Request) {
                     shipping: detailedSession.collected_information?.shipping_details,
                 });
 
-                // Send detailed email
-                await transporter.sendMail({
-                    from: mailFrom(),
-                    replyTo: REPLY_TO,
-                    to: customerEmail,
-                    subject,
-                    html: emailHtml,
-                });
+                // Send detailed email (the order is saved below even when there is no email)
+                if (customerEmail) {
+                    try {
+                        await transporter.sendMail({
+                            from: mailFrom(),
+                            replyTo: REPLY_TO,
+                            to: customerEmail,
+                            subject,
+                            html: emailHtml,
+                        });
+                    } catch (mailError) {
+                        console.error("Failed to send confirmation email", mailError);
+                    }
+                }
 
                 // Store order in Firebase using Admin SDK
                 try {
@@ -93,6 +101,14 @@ export async function POST(req: Request) {
                         // Turkish product names for the admin dashboard, product ids as before
                         line_items: lineItemsForStorage(lineItems),
                         locale,
+                        payment_intent: typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id || null,
+                        customer_name: detailedSession.customer_details?.name || "",
+                        customer_phone: detailedSession.customer_details?.phone || "",
+                        amount_shipping: detailedSession.total_details?.amount_shipping ?? null,
+                        amount_discount: detailedSession.total_details?.amount_discount ?? null,
+                        currency: detailedSession.currency || "eur",
+                        refunded_amount: 0,
+                        stripe_refunds: [],
                         shipped: false,
                         custom_flag: "",
                         notes: "",
@@ -103,12 +119,22 @@ export async function POST(req: Request) {
 
                     const orderRef = adminDb.collection('orders').doc(session.id);
                     await orderRef.set(orderData);
+
+                    // Store analytics: count the purchase on the day and visitor that started checkout
+                    const vh = session.metadata?.vh;
+                    const vd = session.metadata?.vd;
+                    if (vh && vd) {
+                        await recordEvent(
+                            { event: "purchase", value: session.amount_total || 0, slugs: purchasedSlugs(lineItems) },
+                            { hash: vh, day: vd, country: "", device: "" }
+                        ).catch((e) => console.error("track purchase failed:", e));
+                    }
                 } catch (firebaseError) {
                     console.error("Error storing order in Firebase:", firebaseError);
                 }
             }
         } catch (e) {
-            console.error("Failed to send confirmation email", e);
+            console.error("Failed to process completed checkout", e);
         }
     }
 
@@ -121,4 +147,12 @@ export const config = {
     },
 };
 
-
+// Product slugs of the purchased items (the checkout stores the display name in product metadata)
+function purchasedSlugs(items: Stripe.LineItem[]): { slug: string; quantity: number }[] {
+    return items.flatMap((li) => {
+        const product = li.price?.product;
+        const city = product && typeof product !== "string" && "metadata" in product ? product.metadata?.city : undefined;
+        const slug = city ? slugForCity(city) : undefined;
+        return slug ? [{ slug, quantity: li.quantity || 1 }] : [];
+    });
+}

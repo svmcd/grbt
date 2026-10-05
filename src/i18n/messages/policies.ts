@@ -15,7 +15,7 @@ export default defineMessages({
                 "Collected data is used only for the purposes of providing and improving the service. It is not shared with third parties.",
             cookiesTitle: "Cookies",
             cookiesText:
-                "We use cookies to improve the website experience. You can manage cookies in your browser settings.",
+                "We use cookies to improve the website experience. You can manage cookies in your browser settings. We count visits to the shop anonymously and without cookies (page views, products viewed, added to cart and purchased); IP addresses are not stored.",
             contactText: "For questions about privacy, you can reach us at info@egrikuyu.com.",
         },
         terms: {
@@ -79,7 +79,7 @@ export default defineMessages({
                 "Die erhobenen Daten werden ausschließlich zur Erbringung und Verbesserung der Dienstleistung verwendet. Sie werden nicht an Dritte weitergegeben.",
             cookiesTitle: "Cookies",
             cookiesText:
-                "Wir verwenden Cookies, um das Nutzungserlebnis auf der Website zu verbessern. Sie können Cookies in Ihren Browsereinstellungen verwalten.",
+                "Wir verwenden Cookies, um das Nutzungserlebnis auf der Website zu verbessern. Sie können Cookies in Ihren Browsereinstellungen verwalten. Besuche im Shop zählen wir anonym und ohne Cookies (Seitenaufrufe, angesehene, in den Warenkorb gelegte und gekaufte Produkte); IP-Adressen werden nicht gespeichert.",
             contactText: "Bei Fragen zum Datenschutz erreichen Sie uns unter info@egrikuyu.com.",
         },
         terms: {
@@ -144,7 +144,7 @@ export default defineMessages({
                 "Les données collectées sont utilisées uniquement pour fournir et améliorer le service. Elles ne sont pas partagées avec des tiers.",
             cookiesTitle: "Cookies",
             cookiesText:
-                "Nous utilisons des cookies pour améliorer l'expérience sur le site web. Vous pouvez gérer les cookies dans les paramètres de votre navigateur.",
+                "Nous utilisons des cookies pour améliorer l'expérience sur le site web. Vous pouvez gérer les cookies dans les paramètres de votre navigateur. Nous comptons les visites de la boutique de manière anonyme et sans cookies (pages vues, produits consultés, ajoutés au panier et achetés) ; les adresses IP ne sont pas enregistrées.",
             contactText:
                 "Pour toute question relative à la confidentialité, vous pouvez nous contacter à l'adresse info@egrikuyu.com.",
         },
@@ -210,7 +210,7 @@ export default defineMessages({
                 "Toplanan veriler yalnızca hizmet sağlama ve iyileştirme amaçlarıyla kullanılır. Üçüncü taraflarla paylaşılmaz.",
             cookiesTitle: "Çerezler",
             cookiesText:
-                "Web sitesi deneyimini iyileştirmek için çerezler kullanıyoruz. Tarayıcı ayarlarınızdan çerezleri yönetebilirsiniz.",
+                "Web sitesi deneyimini iyileştirmek için çerezler kullanıyoruz. Tarayıcı ayarlarınızdan çerezleri yönetebilirsiniz. Mağaza ziyaretlerini anonim olarak ve çerez kullanmadan sayıyoruz (sayfa görüntülemeleri, görüntülenen, sepete eklenen ve satın alınan ürünler); IP adresleri saklanmaz.",
             contactText: "Gizlilik konularında sorularınız için info@egrikuyu.com adresinden bize ulaşabilirsiniz.",
         },
         terms: {

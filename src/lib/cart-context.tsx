@@ -8,6 +8,7 @@ import {
   ReactNode,
 } from "react";
 import { memleketSlugs } from "./catalog";
+import { track } from "./track";
 
 export type CartItem = {
   slug: string;
@@ -254,8 +255,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [state.items]);
 
-  const addItem = (item: CartItem) =>
+  const addItem = (item: CartItem) => {
+    track("add_to_cart", { slug: item.slug, quantity: item.quantity, value: item.price * item.quantity });
     dispatch({ type: "ADD_ITEM", payload: item });
+  };
   const removeItem = (
     slug: string,
     color: string,
@@ -263,11 +266,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
     productType: "tshirt" | "hoodie" | "sweater",
     personalization?: any,
     giftPackage?: any
-  ) =>
+  ) => {
+    track("remove_from_cart", { slug });
     dispatch({
       type: "REMOVE_ITEM",
       payload: { slug, color, size, productType, personalization, giftPackage },
     });
+  };
   const updateQuantity = (
     slug: string,
     color: string,

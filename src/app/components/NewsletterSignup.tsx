@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
-import { useMessages } from "@/i18n/LocaleProvider";
+import { useLocale, useMessages } from "@/i18n/LocaleProvider";
 import sectionMessages from "@/i18n/messages/homeSections";
 
 // Newsletter form. Styled for the dark footer by default; tone="light" for white sections.
@@ -16,6 +16,8 @@ export function NewsletterSignup({
   const [email, setEmail] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(false);
+  const { locale } = useLocale();
   const dark = tone === "dark";
   const inputId = useId();
 
@@ -24,13 +26,21 @@ export function NewsletterSignup({
     if (!email) return;
 
     setIsLoading(true);
-
-    // Simulate API call
-    setTimeout(() => {
+    setError(false);
+    try {
+      const res = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, locale }),
+      });
+      if (!res.ok) throw new Error(String(res.status));
       setIsSubmitted(true);
-      setIsLoading(false);
       setEmail("");
-    }, 1000);
+    } catch {
+      setError(true);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const strong = dark ? "text-paper" : "text-ink";
@@ -73,6 +83,11 @@ export function NewsletterSignup({
                 {isLoading ? "..." : t.subscribe}
               </button>
             </div>
+            {error && (
+              <p role="alert" className={`sub-xs mt-4 ${strong}`}>
+                {t.error}
+              </p>
+            )}
             <p className={`sub-xs mt-4 ${soft}`}>{t.privacy}</p>
           </form>
         </>

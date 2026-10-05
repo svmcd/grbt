@@ -243,3 +243,10 @@ button:disabled {
   width: 100%;
 }
 .storefront-input:focus { border-color: var(--ink); }
+
+/* Admin (/admin): the global `a { color: inherit }` above is unlayered, so it beats
+   Tailwind text colours on links. Inside the admin, roll links back to the layered
+   styles (Tailwind preflight still makes them inherit when no colour class is set). */
+.admin-ui a {
+  color: revert-layer;
+}

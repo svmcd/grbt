@@ -75,6 +75,7 @@ export default defineMessages({
             placeholder: "Your email address",
             subscribe: "SUBSCRIBE",
             privacy: "We only use your email address to send the newsletter. You can unsubscribe at any time.",
+            error: "Something went wrong. Please try again.",
         },
     },
     de: {
@@ -148,6 +149,7 @@ export default defineMessages({
             placeholder: "Ihre E-Mail-Adresse",
             subscribe: "ABONNIEREN",
             privacy: "Wir verwenden Ihre E-Mail-Adresse ausschließlich für den Versand des Newsletters. Sie können sich jederzeit abmelden.",
+            error: "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
         },
     },
     fr: {
@@ -221,6 +223,7 @@ export default defineMessages({
             placeholder: "Votre adresse e-mail",
             subscribe: "S'ABONNER",
             privacy: "Nous utilisons votre adresse e-mail uniquement pour l'envoi de la newsletter. Vous pouvez vous désabonner à tout moment.",
+            error: "Une erreur est survenue. Veuillez réessayer.",
         },
     },
     tr: {
@@ -294,6 +297,7 @@ export default defineMessages({
             placeholder: "E-posta adresiniz",
             subscribe: "ABONE OL",
             privacy: "E-posta adresinizi sadece bülten gönderimi için kullanırız. İstediğiniz zaman abonelikten çıkabilirsiniz.",
+            error: "Bir hata oluştu. Lütfen tekrar deneyin.",
         },
     },
 });

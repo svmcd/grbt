@@ -1,26 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { adminAuth, adminDb } from "@/lib/firebase-admin";
+import { adminDb } from "@/lib/firebase-admin";
 import nodemailer from "nodemailer";
 import Stripe from "stripe";
 import { isLocale, type Locale } from "@/i18n/config";
 import emails from "@/i18n/messages/emails";
 import { mailFrom, REPLY_TO } from "@/lib/emails/sender";
+import { requireAdmin } from "@/lib/admin/auth";
 
-async function verifyAuth(request: NextRequest) {
-    const authHeader = request.headers.get("authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        return null;
-    }
-
-    const token = authHeader.substring(7);
-    try {
-        const decodedToken = await adminAuth.verifyIdToken(token);
-        return decodedToken;
-    } catch (error) {
-        console.error("Token verification failed:", error);
-        return null;
-    }
-}
 
 const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST || "smtp.gmail.com",
@@ -58,10 +44,8 @@ async function orderLocale(orderId: string): Promise<Locale> {
 }
 
 export async function POST(request: NextRequest) {
-    const user = await verifyAuth(request);
-    if (!user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const admin = await requireAdmin(request);
+    if (admin instanceof NextResponse) return admin;
 
     try {
         const { orderId, status, email, trackingProvider, trackingCode, postalCode, country } = await request.json();

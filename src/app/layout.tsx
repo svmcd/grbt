@@ -3,10 +3,13 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
 import { Analytics } from "@vercel/analytics/next";
+import { Suspense } from "react";
+import { PageViewTracker } from "@/app/components/PageViewTracker";
 import { Header } from "@/app/components/Header";
 import { Footer } from "@/app/components/Footer";
 import { CartProvider } from "@/lib/cart-context";
 import { CartDrawer } from "@/app/components/CartDrawer";
+import { StoreChrome } from "@/app/components/StoreChrome";
 import { ThemeProvider } from "@/lib/theme-context";
 import { LocaleProvider } from "@/i18n/LocaleProvider";
 import { getLocale, getMessages } from "@/i18n/server";
@@ -21,7 +24,10 @@ export async function generateMetadata(): Promise<Metadata> {
   const t = await getMessages(metaMessages);
   return {
     metadataBase: new URL("https://egrikuyu.com"),
-    title: t.title,
+    title: { default: t.title, template: "%s | eğrikuyu" },
+    // Google Search Console verification: set GOOGLE_SITE_VERIFICATION on Vercel
+    ...(process.env.GOOGLE_SITE_VERIFICATION ? { verification: { google: process.env.GOOGLE_SITE_VERIFICATION } } : {}),
+    openGraph: { type: "website", siteName: "eğrikuyu", title: t.title, description: t.description, url: "https://egrikuyu.com" },
     description: t.description,
     keywords: t.keywords,
     icons: {
@@ -66,11 +72,32 @@ export default async function RootLayout({
         <ThemeProvider>
           <AuthProvider>
             <CartProvider>
-              <Header />
+              <StoreChrome>
+                <Header />
+              </StoreChrome>
               <main className="min-h-[70vh]">{children}</main>
-              <Footer />
-              <CartDrawer />
-              <Analytics />
+              <StoreChrome>
+                <Footer />
+                <CartDrawer />
+                <Analytics />
+              <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{
+                  __html: JSON.stringify({
+                    "@context": "https://schema.org",
+                    "@type": "Organization",
+                    name: "eğrikuyu",
+                    url: "https://egrikuyu.com",
+                    logo: "https://egrikuyu.com/egrikuyu.svg",
+                    email: "info@egrikuyu.com",
+                    sameAs: ["https://instagram.com/egriikuyu", "https://tiktok.com/@egrikuyu.com"],
+                  }),
+                }}
+              />
+              <Suspense fallback={null}>
+                <PageViewTracker />
+              </Suspense>
+              </StoreChrome>
             </CartProvider>
           </AuthProvider>
         </ThemeProvider>

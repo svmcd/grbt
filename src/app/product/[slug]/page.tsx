@@ -20,7 +20,9 @@ import productPageMessages from "@/i18n/messages/productPage";
 import { Gallery } from "./Gallery";
 import { ProductDetails } from "./ProductDetails";
 import { ImageBand, RelatedProducts } from "./RelatedProducts";
+import { ProductReviews } from "./ProductReviews";
 import { CheckSquare, FieldLabel, OptionBox, OptionLabel, Panel, Swatch } from "./ProductOptions";
+import { track } from "@/lib/track";
 
 type ProductType = "tshirt" | "hoodie" | "sweater";
 type PersonalizationMethod = "printed" | "embroidered" | "none";
@@ -33,6 +35,9 @@ const FONTS = [
 
 export default function ProductPage() {
   const { slug } = useParams<{ slug: string }>();
+  useEffect(() => {
+    if (slug) track("product_view", { slug: decodeURIComponent(slug) });
+  }, [slug]);
   const { locale } = useLocale();
   const common = useMessages(commonMessages);
   const t = useMessages(productPageMessages);
@@ -483,6 +488,7 @@ export default function ProductPage() {
       </div>
 
       <ImageBand slug={product.slug} city={product.city} />
+      <ProductReviews slug={product.slug} />
       <RelatedProducts slug={product.slug} />
 
       {/* Sticky add-to-cart bar (spacer keeps the footer end reachable) */}
