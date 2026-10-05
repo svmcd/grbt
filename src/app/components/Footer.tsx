@@ -2,6 +2,7 @@
 
 import Link from "@/i18n/LocaleLink";
 import { NewsletterSignup } from "./NewsletterSignup";
+import { PaymentLogos } from "./PaymentLogos";
 import { LanguageSwitcher } from "@/i18n/LanguageSwitcher";
 import { useMessages } from "@/i18n/LocaleProvider";
 import commonMessages from "@/i18n/messages/common";
@@ -99,6 +100,7 @@ export function Footer() {
       {/* Bottom bar */}
       <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-t border-night-line px-4 py-4 md:px-8 lg:px-12">
         <LanguageSwitcher direction="up" align="left" className="text-paper" />
+        <PaymentLogos className="order-last w-full md:order-none md:w-auto" />
         <span className="sub-xs text-night-subdued">
           © {new Date().getFullYear()} eğrikuyu
         </span>

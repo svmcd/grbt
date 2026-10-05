@@ -1,7 +1,7 @@
-import { getAvailableColors, getImagesForSlug } from "@/lib/catalog";
+import { colorsFor, getImagesForSlug } from "@/lib/catalog";
 import extraPhotos from "./extra-photos.json";
 
-export const PRODUCT_TYPES = ["tshirt", "hoodie", "sweater"] as const;
+export const PRODUCT_TYPES = ["tshirt", "longsleeve", "hoodie", "sweater"] as const;
 export type ProductType = (typeof PRODUCT_TYPES)[number];
 
 // Gallery images per variant, keyed "type|color". The catalog lists optional extra photos
@@ -21,7 +21,7 @@ export function bandPhotoForSlug(slug: string): string | null {
 export function galleryImagesForSlug(slug: string): Record<string, string[]> {
   const out: Record<string, string[]> = {};
   for (const type of PRODUCT_TYPES) {
-    for (const color of getAvailableColors()) {
+    for (const color of colorsFor(slug, type)) {
       out[variantKey(type, color)] = getImagesForSlug(slug, color, type).filter(
         (src) => Boolean(src) && (!isExtraPhoto(src) || existingExtras.has(src))
       );

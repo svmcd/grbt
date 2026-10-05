@@ -1,4 +1,4 @@
-import { FREE_SHIPPING_FROM_EUR, STANDARD_SHIPPING_EUR, deliveryDays } from "@/lib/shipping";
+import { FREE_SHIPPING_FROM_EUR, PRODUCTION_DAYS, SHIPPING_COUNTRY_CODES, STANDARD_SHIPPING_EUR, transitDays } from "@/lib/shipping";
 
 // The 27 EU member states: the returns policy grants them the 60-day right of withdrawal
 const EU_COUNTRIES = [
@@ -6,17 +6,19 @@ const EU_COUNTRIES = [
     "IT", "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE",
 ];
 
-// Shipping is worldwide at one rate. schema.org needs explicit countries, so the
-// structured data names the EU plus the main markets outside it.
-const SHIPPING_MARKETS = [...EU_COUNTRIES, "CH", "GB", "US", "TR"];
+// One rate for every country we ship to (Stripe and Cloprod both support it)
+const SHIPPING_MARKETS = SHIPPING_COUNTRY_CODES;
 
 const days = (min: number, max: number) => ({ "@type": "QuantitativeValue", minValue: min, maxValue: max, unitCode: "DAY" });
 
-// schema.org OfferShippingDetails, one entry per delivery-time band (NL, EU, rest)
+// schema.org OfferShippingDetails, one entry per transit-time band (Cloprod's days per country);
+// handling time is the production time
 export function shippingDetails(priceEur: number) {
     const bands = new Map<string, { min: number; max: number; countries: string[] }>();
     for (const code of SHIPPING_MARKETS) {
-        const { min, max } = deliveryDays(code);
+        const transit = transitDays(code);
+        if (!transit) continue;
+        const { min, max } = transit;
         const key = `${min}-${max}`;
         const band = bands.get(key) ?? { min, max, countries: [] };
         band.countries.push(code);
@@ -29,7 +31,7 @@ export function shippingDetails(priceEur: number) {
         shippingDestination: band.countries.map((addressCountry) => ({ "@type": "DefinedRegion", addressCountry })),
         deliveryTime: {
             "@type": "ShippingDeliveryTime",
-            handlingTime: days(1, 3),
+            handlingTime: days(PRODUCTION_DAYS.min, PRODUCTION_DAYS.max),
             transitTime: days(band.min, band.max),
         },
     }));

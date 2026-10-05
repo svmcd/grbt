@@ -1,4 +1,5 @@
 import { getImagesForSlug, hasretSlugs, memleketSlugs, recepIvedikSlugs, titleCaseCity } from "@/lib/catalog";
+import { itemColorKey } from "./orders";
 
 // Design title as stored on orders ("Nevşehir", "Sıla Yolu") → catalog slug
 const SLUG_BY_TITLE = new Map(
@@ -9,9 +10,20 @@ const SLUG_BY_TITLE = new Map(
 export function designImage(title: string, productType: string, color: string): string | null {
     const slug = SLUG_BY_TITLE.get(title.trim().toLocaleLowerCase("tr"));
     if (!slug) return null;
-    const type = productType === "Hoodie" ? "hoodie" : productType === "Sweater" ? "sweater" : productType === "T-shirt" || !productType ? "tshirt" : null;
+    const type =
+        productType === "Hoodie"
+            ? "hoodie"
+            : productType === "Sweater"
+              ? "sweater"
+              : productType === "Long Sleeve"
+                ? "longsleeve"
+                : productType === "T-shirt" || !productType
+                  ? "tshirt"
+                  : null;
     if (!type) return null;
-    const images = getImagesForSlug(slug, color === "White" ? "beyaz" : "siyah", type);
+    // Colour folder of the ordered garment colour (unknown colours show the default one)
+    const key = itemColorKey({ productType: productType || "T-shirt", color })?.key ?? "siyah";
+    const images = getImagesForSlug(slug, key, type);
     // Sinema designs are printed on the front; the others on the back
     if (recepIvedikSlugs.includes(slug)) return images[0] || null;
     return images[1] || images[0] || null;

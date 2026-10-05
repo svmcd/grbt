@@ -1,6 +1,7 @@
 import type Stripe from "stripe";
 import type { Locale } from "@/i18n/config";
 import common from "@/i18n/messages/common";
+import { GARMENTS, colorName, type GarmentType } from "@/lib/garments";
 import emails from "@/i18n/messages/emails";
 
 // The cart fields the checkout route turns into a Stripe line item.
@@ -24,12 +25,20 @@ export type CheckoutItemInput = {
 
 const productTypeLabel = (item: CheckoutItemInput, locale: Locale) => {
     const types = common[locale].productTypes;
-    return item.productType === "hoodie" ? types.hoodie : item.productType === "sweater" ? types.sweater : types.tshirt;
+    return item.productType === "hoodie" || item.productType === "sweater" || item.productType === "longsleeve"
+        ? types[item.productType]
+        : types.tshirt;
 };
 
-// Turkish keeps the raw stored color value ("siyah"), exactly as the names looked before localization.
-const colorLabel = (color: string, locale: Locale) =>
-    locale === "tr" ? color : common[locale].colors[color] ?? color;
+// Colour name from garments.ts. Turkish is lowercase inside the line ("Konya Tişört - siyah, M",
+// "Konya Hoodie - gece mavisi, M", "Konya Uzun Kollu - kırmızı, M"): for siyah and beyaz that is exactly the stored key, as the names
+// looked before localization. src/lib/admin/orders.ts reads these names back.
+// With the product type the garment's own name is used (a long sleeve "siyah" is "Washed Black",
+// "yıkamalı siyah" in Turkish).
+export const colorLabel = (color: string, locale: Locale, productType?: string) => {
+    const type = productType && productType in GARMENTS ? (productType as GarmentType) : undefined;
+    return locale === "tr" ? colorName(color, "tr", type).toLocaleLowerCase("tr") : colorName(color, locale, type);
+};
 
 // Name and description the customer sees in Stripe Checkout. For "tr" the output is identical to the
 // strings the checkout route built before localization (orders and the admin dashboard rely on it).
@@ -37,7 +46,7 @@ export function describeCheckoutItem(item: CheckoutItemInput, locale: Locale): {
     const c = common[locale];
     const e = emails[locale];
     const type = productTypeLabel(item, locale);
-    const color = colorLabel(item.color, locale);
+    const color = colorLabel(item.color, locale, item.productType);
 
     const gift = item.giftPackage?.included && item.giftPackage?.message
         ? ` - ${e.colon(c.giftMessage)} "${item.giftPackage.message}"`

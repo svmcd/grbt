@@ -1,5 +1,6 @@
 import type Stripe from "stripe";
 import { intlLocales, type Locale } from "@/i18n/config";
+import cloprodShipping from "@/data/cloprod-shipping.json";
 
 // Shipping rules: one standard rate for every destination, free from a threshold on the items.
 export const STANDARD_SHIPPING_EUR = 8;
@@ -28,10 +29,21 @@ const STRIPE_SHIPPING_COUNTRIES: AllowedCountry[] = [
     "VC", "VE", "VG", "VN", "VU", "WF", "WS", "XK", "YE", "YT", "ZA", "ZM", "ZW",
 ];
 
-export const SHIPPING_COUNTRY_CODES: string[] = STRIPE_SHIPPING_COUNTRIES;
+// Transit time per destination, in business days, from Cloprod's shipping list
+// (src/data/cloprod-shipping.json: the fastest channel Cloprod offers for each country).
+// Cloprod makes and ships every order; a country missing from that list cannot be delivered to.
+const TRANSIT_DAYS = new Map<string, { min: number; max: number }>(
+    (cloprodShipping as { code: string; days: string }[]).map(({ code, days }) => {
+        const [min, max] = days.split("-").map(Number);
+        return [code, { min, max: max ?? min }];
+    })
+);
+
+// Countries the cart, /api/checkout and Stripe offer: those Stripe accepts and Cloprod delivers to
+export const SHIPPING_COUNTRY_CODES: AllowedCountry[] = STRIPE_SHIPPING_COUNTRIES.filter((code) => TRANSIT_DAYS.has(code));
 
 // Shown first in the cart's country picker
-export const POPULAR_SHIPPING_COUNTRIES = ["NL", "DE", "BE", "FR", "AT", "CH", "GB", "US", "TR"];
+export const POPULAR_SHIPPING_COUNTRIES = ["NL", "DE", "BE", "FR", "AT", "CH", "GB", "US"];
 
 // The 27 EU member states
 const EU_COUNTRY_CODES = new Set([
@@ -40,20 +52,71 @@ const EU_COUNTRY_CODES = new Set([
 ]);
 
 export function isShippingCountry(code: unknown): code is AllowedCountry {
-    return typeof code === "string" && SHIPPING_COUNTRY_CODES.includes(code);
+    return typeof code === "string" && (SHIPPING_COUNTRY_CODES as string[]).includes(code);
 }
 
 export function isEU(code: string): boolean {
     return EU_COUNTRY_CODES.has(code.toUpperCase());
 }
 
-// Delivery time in business days after dispatch, as stated in the shipping policy:
-// Netherlands 1-3, EU 3-7, everywhere else 7-14.
-export function deliveryDays(countryCode: string): { min: number; max: number } {
-    const code = countryCode.toUpperCase();
-    if (code === "NL") return { min: 1, max: 3 };
-    if (isEU(code)) return { min: 3, max: 7 };
-    return { min: 7, max: 14 };
+// Production time at Cloprod, in business days (Cloprod's stated production time)
+export const PRODUCTION_DAYS = { min: 1, max: 3 };
+
+// Transit time to a country in business days, null when Cloprod does not deliver there
+export function transitDays(countryCode: string): { min: number; max: number } | null {
+    return TRANSIT_DAYS.get(countryCode.toUpperCase()) ?? null;
+}
+
+// Delivery time in business days from the order: production plus transit.
+// Null for a country we cannot ship to.
+export function deliveryDays(countryCode: string): { min: number; max: number } | null {
+    const transit = transitDays(countryCode);
+    if (!transit) return null;
+    return { min: PRODUCTION_DAYS.min + transit.min, max: PRODUCTION_DAYS.max + transit.max };
+}
+
+// The date `days` business days (Monday to Friday) after `from`. An order placed on a weekend
+// counts its first business day from Monday. Public holidays are not taken into account.
+export function addBusinessDays(from: Date, days: number): Date {
+    const date = new Date(from.getFullYear(), from.getMonth(), from.getDate());
+    let left = days;
+    while (left > 0) {
+        date.setDate(date.getDate() + 1);
+        const weekday = date.getDay();
+        if (weekday !== 0 && weekday !== 6) left--;
+    }
+    return date;
+}
+
+export type DeliveryTimeline = {
+    ordered: Date;
+    shipped: { from: Date; to: Date }; // end of production: handed to the carrier
+    delivered: { from: Date; to: Date };
+};
+
+// Dates for an order placed on `ordered`, from the same business days as deliveryDays()
+export function deliveryTimeline(countryCode: string, ordered: Date = new Date()): DeliveryTimeline | null {
+    const days = deliveryDays(countryCode);
+    if (!days) return null;
+    return {
+        ordered,
+        shipped: { from: addBusinessDays(ordered, PRODUCTION_DAYS.min), to: addBusinessDays(ordered, PRODUCTION_DAYS.max) },
+        delivered: { from: addBusinessDays(ordered, days.min), to: addBusinessDays(ordered, days.max) },
+    };
+}
+
+// "Thu 9 Oct" in the visitor's language
+export function formatDeliveryDate(date: Date, intlLocale: string): string {
+    return new Intl.DateTimeFormat(intlLocale, { weekday: "short", day: "numeric", month: "short" }).format(date);
+}
+
+// "Tue 7 – Thu 9 Oct": a date range in the visitor's language (one date when both are the same day)
+export function formatDeliveryRange(from: Date, to: Date, intlLocale: string): string {
+    const format = new Intl.DateTimeFormat(intlLocale, { weekday: "short", day: "numeric", month: "short" });
+    if (from.getTime() === to.getTime()) return format.format(from);
+    return typeof format.formatRange === "function"
+        ? format.formatRange(from, to)
+        : `${format.format(from)} - ${format.format(to)}`;
 }
 
 // Shipping for an order, in cents. The free-shipping threshold is measured on the items

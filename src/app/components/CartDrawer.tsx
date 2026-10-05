@@ -5,19 +5,26 @@ import { cartUnitCents, useCart, type CartItem } from "@/lib/cart-context";
 import Image from "next/image";
 import Link from "@/i18n/LocaleLink";
 import { motion, AnimatePresence } from "framer-motion";
-import { FREE_SHIPPING_FROM_EUR, deliveryDays, isEU, isShippingCountry, shippingCents } from "@/lib/shipping";
-import { memleketSlugs } from "@/lib/catalog";
+import {
+  FREE_SHIPPING_FROM_EUR,
+  deliveryTimeline,
+  formatDeliveryDate,
+  getCountryName,
+  isEU,
+  shippingCents,
+} from "@/lib/shipping";
+import { fetchGeo, readStoredCountry, storeCountry } from "@/lib/use-shipping-country";
+import { colorsFor, memleketSlugs } from "@/lib/catalog";
+import { colorName } from "@/lib/garments";
 import { MAX_QUANTITY, memleketDiscountCents } from "@/lib/cart-pricing";
 import { useFormatPrice, useLocale, useMessages } from "@/i18n/LocaleProvider";
 import commonMessages from "@/i18n/messages/common";
 import cartMessages from "@/i18n/messages/cart";
 import { CountryCombobox } from "./CountryCombobox";
+import { PaymentLogos } from "./PaymentLogos";
 
 // Free shipping threshold, in cents, measured on the subtotal before discounts
 const FREE_SHIPPING_CENTS = FREE_SHIPPING_FROM_EUR * 100;
-
-// The visitor's last chosen shipping country
-const COUNTRY_STORAGE_KEY = "shippingCountry";
 
 const sameLine = (a: CartItem, b: CartItem) =>
   a.slug === b.slug &&
@@ -62,6 +69,8 @@ export function CartDrawer() {
   const [invalidLine, setInvalidLine] = useState<number | null>(null);
   useEffect(() => setInvalidLine(null), [state.items]);
   const [selectedCountry, setSelectedCountry] = useState("");
+  // The visitor's country by IP when we cannot ship there (e.g. TR): explained above the picker
+  const [unsupportedCountry, setUnsupportedCountry] = useState<string | null>(null);
   const { locale, intlLocale } = useLocale();
   const common = useMessages(commonMessages);
   const t = useMessages(cartMessages);
@@ -117,40 +126,30 @@ export function CartDrawer() {
   const qualifiesForFreeShipping = shippingCost === 0;
   const freeShippingProgress = Math.min(1, itemsTotalCents / FREE_SHIPPING_CENTS);
   const memleketSavings = getMemleketSavings();
-  const days = selectedCountry ? deliveryDays(selectedCountry) : null;
+  // Same dates as the product page: production plus transit, in business days from today
+  const timeline = selectedCountry ? deliveryTimeline(selectedCountry) : null;
 
   // Shipping country: the last choice on this device, otherwise the visitor's country by IP
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(COUNTRY_STORAGE_KEY);
-      if (isShippingCountry(stored)) setSelectedCountry((current) => current || stored);
-    } catch {
-      // Storage blocked: the visitor picks a country
-    }
+    const stored = readStoredCountry();
+    if (stored) setSelectedCountry((current) => current || stored);
   }, []);
 
   const geoRequested = useRef(false);
   useEffect(() => {
     if (!state.isOpen || selectedCountry || geoRequested.current) return;
     geoRequested.current = true;
-    fetch("/api/geo")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data: { country?: string | null } | null) => {
-        const country = data?.country;
-        if (isShippingCountry(country)) setSelectedCountry((current) => current || country);
-      })
-      .catch(() => {
-        // No preselection; the visitor picks a country
-      });
+    // No preselection when the country is unknown or one we cannot ship to; the visitor picks one
+    fetchGeo().then(({ country, detected }) => {
+      if (country) setSelectedCountry((current) => current || country);
+      else if (detected) setUnsupportedCountry(detected);
+    });
   }, [state.isOpen, selectedCountry]);
 
   const chooseCountry = (code: string) => {
     setSelectedCountry(code);
-    try {
-      localStorage.setItem(COUNTRY_STORAGE_KEY, code);
-    } catch {
-      // Not remembered, still used for this checkout
-    }
+    setUnsupportedCountry(null);
+    storeCountry(code);
   };
 
   // Stripe's cancel_url (/?cart=open) brings the buyer back with the cart open
@@ -361,7 +360,7 @@ export function CartDrawer() {
                               <p className="uppercase">
                                 {common.productTypes[item.productType] ?? common.productTypes.tshirt}
                                 {" / "}
-                                {common.colors[item.color] ?? item.color}
+                                {colorName(item.color, locale, item.productType)}
                                 {" / "}
                                 {item.size}
                               </p>
@@ -441,7 +440,9 @@ export function CartDrawer() {
                                 {t.remove}
                               </button>
                             </div>
-                            {invalidLine === index && (
+                            {/* Rejected by checkout, or a colour no longer sold for this type
+                                (e.g. a white Memleket hoodie saved before the colour change) */}
+                            {(invalidLine === index || !colorsFor(item.slug, item.productType).includes(item.color)) && (
                               <p role="alert" className="sub-xs mt-3 text-sale">
                                 {t.itemInvalid}
                               </p>
@@ -458,6 +459,11 @@ export function CartDrawer() {
                   <label id="cart-shipping-country-label" htmlFor="cart-shipping-country" className="sub-xs mb-2 block">
                     {t.shippingCountry}
                   </label>
+                  {unsupportedCountry && !selectedCountry && (
+                    <p role="status" className="mb-2 text-[12px] leading-[1.5] tracking-[0.04em] text-ink">
+                      {t.cannotShip(getCountryName(unsupportedCountry, locale))}
+                    </p>
+                  )}
                   <CountryCombobox
                     id="cart-shipping-country"
                     value={selectedCountry}
@@ -472,9 +478,14 @@ export function CartDrawer() {
                       results: t.countryResults,
                     }}
                   />
-                  {days && (
+                  {timeline && (
                     <div className="mt-2 space-y-1 text-[12px] leading-[1.5] tracking-[0.04em] text-subdued">
-                      <p>{t.deliveryEstimate(days.min, days.max)}</p>
+                      <p>
+                        {t.deliveryEstimate(
+                          formatDeliveryDate(timeline.delivered.from, intlLocale),
+                          formatDeliveryDate(timeline.delivered.to, intlLocale)
+                        )}
+                      </p>
                       {!isEU(selectedCountry) && <p>{t.customsNote}</p>}
                     </div>
                   )}
@@ -513,6 +524,7 @@ export function CartDrawer() {
                       {t.alertSelectCountry}
                     </p>
                   )}
+                  <PaymentLogos className="mt-4 justify-center" />
                 </div>
               </>
             )}

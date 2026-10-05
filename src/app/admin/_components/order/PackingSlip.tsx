@@ -1,6 +1,6 @@
 "use client";
 
-import type { AdminOrder } from "@/lib/admin/orders";
+import { cloprodLabel, type AdminOrder } from "@/lib/admin/orders";
 import { formatDate } from "@/lib/admin/format";
 import { addressLines } from "./SideCards";
 
@@ -51,6 +51,7 @@ export function PackingSlip({ order, breakBefore = false }: { order: AdminOrder;
                                     <p className="text-zinc-800">
                                         {[item.color, item.size && `Size ${item.size}`].filter(Boolean).join(" · ") || (item.raw !== item.title ? item.raw : "")}
                                     </p>
+                                    {cloprodLabel(item) && <p className="text-xs text-zinc-700">Cloprod: {cloprodLabel(item)}</p>}
                                     {item.personalization && (
                                         <div className="mt-2 border-l-4 border-zinc-900 pl-3">
                                             <p className="text-xs font-semibold uppercase tracking-wide">Personalization · {item.personalization.method}</p>

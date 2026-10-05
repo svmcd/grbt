@@ -69,6 +69,7 @@ export function labelCsvRows(orders: AdminOrder[]) {
         "Email",
         "Phone",
         "Weight (grams)",
+        "Contents",
     ];
     const rows = orders.map((o) => {
         const s = o.shipping;
@@ -87,6 +88,10 @@ export function labelCsvRows(orders: AdminOrder[]) {
             o.customer.email,
             s.phone || o.customer.phone,
             "", // filled in per parcel
+            // What goes in the parcel: "1× Konya Hoodie · Midnight Navy · M"
+            o.items
+                .map((i) => `${i.quantity}× ${[[i.title, i.productType].filter(Boolean).join(" "), i.color, i.size].filter(Boolean).join(" · ")}`)
+                .join(", "),
         ];
     });
     return [head, ...rows];

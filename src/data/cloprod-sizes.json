@@ -1,0 +1,162 @@
+{
+ "tshirt": {
+  "spu": "TS0CI",
+  "sizes": [
+   {
+    "name": "S",
+    "Chest": 58,
+    "Length": 69.5,
+    "Shoulder": 55,
+    "Sleeve length": 21.5
+   },
+   {
+    "name": "M",
+    "Chest": 60,
+    "Length": 71.5,
+    "Shoulder": 56.5,
+    "Sleeve length": 22
+   },
+   {
+    "name": "L",
+    "Chest": 62,
+    "Length": 73.5,
+    "Shoulder": 58,
+    "Sleeve length": 22.5
+   },
+   {
+    "name": "XL",
+    "Chest": 64,
+    "Length": 75.5,
+    "Shoulder": 59.5,
+    "Sleeve length": 23
+   },
+   {
+    "name": "2XL",
+    "Chest": 66,
+    "Length": 77.5,
+    "Shoulder": 61,
+    "Sleeve length": 23.5
+   }
+  ]
+ },
+ "longsleeve": {
+  "spu": "LS0IS",
+  "sizes": [
+   {
+    "Bust": 61,
+    "name": "S",
+    "Length": 65.5,
+    "Sleeve Length": 55,
+    "Shoulder Length": 57.5
+   },
+   {
+    "Bust": 63,
+    "name": "M",
+    "Length": 67.5,
+    "Sleeve Length": 55.5,
+    "Shoulder Length": 59.5
+   },
+   {
+    "Bust": 65,
+    "name": "L",
+    "Length": 69.5,
+    "Sleeve Length": 56,
+    "Shoulder Length": 61.5
+   },
+   {
+    "Bust": 67,
+    "name": "XL",
+    "Length": 71.5,
+    "Sleeve Length": 56.5,
+    "Shoulder Length": 63.5
+   },
+   {
+    "Bust": 69,
+    "name": "2XL",
+    "Length": 73.5,
+    "Sleeve Length": 57,
+    "Shoulder Length": 65.5
+   }
+  ]
+ },
+ "sweater": {
+  "spu": "SS0C3",
+  "sizes": [
+   {
+    "name": "S",
+    "Chest": 64,
+    "length": 70,
+    "Shoulder": 59.5,
+    "Sleeve length": 58
+   },
+   {
+    "name": "M",
+    "Chest": 66,
+    "length": 72,
+    "Shoulder": 61.5,
+    "Sleeve length": 59
+   },
+   {
+    "name": "L",
+    "Chest": 68,
+    "length": 74,
+    "Shoulder": 63.5,
+    "Sleeve length": 60
+   },
+   {
+    "name": "XL",
+    "Chest": 70,
+    "length": 76,
+    "Shoulder": 65.5,
+    "Sleeve length": 61
+   },
+   {
+    "name": "2XL",
+    "Chest": 72,
+    "length": 78,
+    "Shoulder": 67.5,
+    "Sleeve length": 62
+   }
+  ]
+ },
+ "hoodie": {
+  "spu": "HD0C4",
+  "sizes": [
+   {
+    "name": "S",
+    "Chest": 64,
+    "length": 70,
+    "Shoulder": 59.5,
+    "Sleeve length": 58
+   },
+   {
+    "name": "M",
+    "Chest": 66,
+    "length": 72,
+    "Shoulder": 61.5,
+    "Sleeve length": 59
+   },
+   {
+    "name": "L",
+    "Chest": 68,
+    "length": 74,
+    "Shoulder": 63.5,
+    "Sleeve length": 60
+   },
+   {
+    "name": "XL",
+    "Chest": 70,
+    "length": 76,
+    "Shoulder": 65.5,
+    "Sleeve length": 61
+   },
+   {
+    "name": "2XL",
+    "Chest": 72,
+    "length": 78,
+    "Shoulder": 67.5,
+    "Sleeve length": 62
+   }
+  ]
+ }
+}

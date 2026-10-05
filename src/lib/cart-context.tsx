@@ -21,7 +21,7 @@ export type CartItem = {
   city: string;
   color: string;
   size: string;
-  productType: "tshirt" | "hoodie" | "sweater";
+  productType: "tshirt" | "longsleeve" | "hoodie" | "sweater";
   price: number;
   image: string;
   quantity: number;
@@ -54,7 +54,7 @@ type CartAction =
         slug: string;
         color: string;
         size: string;
-        productType: "tshirt" | "hoodie" | "sweater";
+        productType: "tshirt" | "longsleeve" | "hoodie" | "sweater";
         personalization?: any;
         giftPackage?: any;
       };
@@ -65,7 +65,7 @@ type CartAction =
         slug: string;
         color: string;
         size: string;
-        productType: "tshirt" | "hoodie" | "sweater";
+        productType: "tshirt" | "longsleeve" | "hoodie" | "sweater";
         quantity: number;
         personalization?: any;
         giftPackage?: any;
@@ -226,7 +226,7 @@ type CartContextType = {
     slug: string,
     color: string,
     size: string,
-    productType: "tshirt" | "hoodie" | "sweater",
+    productType: "tshirt" | "longsleeve" | "hoodie" | "sweater",
     personalization?: any,
     giftPackage?: any
   ) => void;
@@ -234,7 +234,7 @@ type CartContextType = {
     slug: string,
     color: string,
     size: string,
-    productType: "tshirt" | "hoodie" | "sweater",
+    productType: "tshirt" | "longsleeve" | "hoodie" | "sweater",
     quantity: number,
     personalization?: any,
     giftPackage?: any
@@ -274,7 +274,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     slug: string,
     color: string,
     size: string,
-    productType: "tshirt" | "hoodie" | "sweater",
+    productType: "tshirt" | "longsleeve" | "hoodie" | "sweater",
     personalization?: any,
     giftPackage?: any
   ) => {
@@ -288,7 +288,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     slug: string,
     color: string,
     size: string,
-    productType: "tshirt" | "hoodie" | "sweater",
+    productType: "tshirt" | "longsleeve" | "hoodie" | "sweater",
     quantity: number,
     personalization?: any,
     giftPackage?: any

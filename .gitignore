@@ -40,10 +40,11 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Memleket shirt images are generated from designs/ (npm run mockups)
-/public/products/collections/memleket/*/siyah/front.png
-/public/products/collections/memleket/*/siyah/back.png
-/public/products/collections/memleket/*/beyaz/front.png
-/public/products/collections/memleket/*/beyaz/back.png
+# Memleket product images are rendered on demand (src/app/api/mockup/); never commit
+# rendered copies. .mockups/ is the local check output of npm run mockups.
+/.mockups/
+/public/products/collections/memleket/*/*/front.png
+/public/products/collections/memleket/*/*/back.png
 /public/products/collections/memleket/*/*/hoodie_*.png
 /public/products/collections/memleket/*/*/sweater_*.png
+/public/products/collections/memleket/*/*/longsleeve_*.png

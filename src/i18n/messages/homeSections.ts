@@ -11,23 +11,23 @@ export default defineMessages({
             signals: [
                 {
                     title: "100% Cotton",
-                    description: "Premium 240 g/m² cotton fabric",
+                    description: "Premium 235 g/m² cotton fabric",
                     details: "High-quality cotton fabric provides durability and comfort.",
                 },
                 {
-                    title: "Shipped from the Netherlands",
-                    description: "Shipped directly from our workshop in the Netherlands",
-                    details: "All our products are made and shipped from our modern workshop in the Netherlands.",
+                    title: "Made to Order",
+                    description: "Made to order for you",
+                    details: "Every item is made to order for you and shipped directly to your address.",
                 },
                 {
-                    title: "Same-Day Dispatch",
-                    description: "Order before 20:00, shipped the same day",
-                    details: "Orders placed before 20:00 are handed to the carrier the same day.",
+                    title: "Production in 1-3 Days",
+                    description: "Produced within 1-3 business days",
+                    details: "Every order is produced within 1-3 business days and then handed to the carrier.",
                 },
                 {
-                    title: "Worldwide Shipping",
-                    description: "Shipped worldwide from the Netherlands",
-                    details: "Standard shipping €8, free from €100. Netherlands 1-3, EU 3-7, other countries 7-14 business days.",
+                    title: "International Shipping",
+                    description: "Shipped directly to your address",
+                    details: "Standard shipping €8, free from €100. Delivery times depend on the destination and are shown on the product page and at checkout.",
                 },
                 {
                     title: "Free Shipping",
@@ -85,23 +85,23 @@ export default defineMessages({
             signals: [
                 {
                     title: "100 % Baumwolle",
-                    description: "Baumwollstoff in Premiumqualität mit 240 g/m²",
+                    description: "Baumwollstoff in Premiumqualität mit 235 g/m²",
                     details: "Hochwertiger Baumwollstoff sorgt für Haltbarkeit und Komfort.",
                 },
                 {
-                    title: "Versand aus den Niederlanden",
-                    description: "Direktversand aus unserer Werkstatt in den Niederlanden",
-                    details: "Alle unsere Produkte werden in unserer modernen Werkstatt in den Niederlanden hergestellt und versendet.",
+                    title: "Auf Bestellung gefertigt",
+                    description: "Auf Bestellung für Sie gefertigt",
+                    details: "Jeder Artikel wird auf Bestellung für Sie gefertigt und direkt an Ihre Adresse versendet.",
                 },
                 {
-                    title: "Versand am selben Tag",
-                    description: "Bestellung vor 20:00 Uhr, Versand am selben Tag",
-                    details: "Bestellungen, die vor 20:00 Uhr eingehen, werden am selben Tag dem Versanddienst übergeben.",
+                    title: "Herstellung in 1-3 Tagen",
+                    description: "Herstellung innerhalb von 1-3 Werktagen",
+                    details: "Jede Bestellung wird innerhalb von 1-3 Werktagen hergestellt und danach dem Versanddienstleister übergeben.",
                 },
                 {
-                    title: "Weltweiter Versand",
-                    description: "Weltweiter Versand aus den Niederlanden",
-                    details: "Standardversand 8 €, ab 100 € kostenlos. Niederlande 1-3, EU 3-7, andere Länder 7-14 Werktage.",
+                    title: "Internationaler Versand",
+                    description: "Direkt an Ihre Adresse versendet",
+                    details: "Standardversand 8 €, ab 100 € kostenlos. Die Lieferzeit hängt vom Zielland ab und wird auf der Produktseite und an der Kasse angezeigt.",
                 },
                 {
                     title: "Kostenloser Versand",
@@ -159,23 +159,23 @@ export default defineMessages({
             signals: [
                 {
                     title: "100 % coton",
-                    description: "Tissu en coton premium de 240 g/m²",
+                    description: "Tissu en coton premium de 235 g/m²",
                     details: "Un tissu en coton de haute qualité, résistant et confortable.",
                 },
                 {
-                    title: "Expédié des Pays-Bas",
-                    description: "Expédition directe depuis notre atelier aux Pays-Bas",
-                    details: "Tous nos produits sont fabriqués et expédiés depuis notre atelier moderne aux Pays-Bas.",
+                    title: "Fabriqué à la commande",
+                    description: "Fabriqué à la commande pour vous",
+                    details: "Chaque article est fabriqué à la commande pour vous et expédié directement à votre adresse.",
                 },
                 {
-                    title: "Expédition le jour même",
-                    description: "Commandez avant 20h00, expédition le jour même",
-                    details: "Les commandes passées avant 20h00 sont remises au transporteur le jour même.",
+                    title: "Fabrication en 1 à 3 jours",
+                    description: "Fabriqué sous 1 à 3 jours ouvrés",
+                    details: "Chaque commande est fabriquée sous 1 à 3 jours ouvrés, puis remise au transporteur.",
                 },
                 {
-                    title: "Livraison dans le monde entier",
-                    description: "Expédié depuis les Pays-Bas dans le monde entier",
-                    details: "Livraison standard 8 €, offerte dès 100 €. Pays-Bas 1 à 3, UE 3 à 7, autres pays 7 à 14 jours ouvrés.",
+                    title: "Livraison internationale",
+                    description: "Expédié directement à votre adresse",
+                    details: "Livraison standard 8 €, offerte dès 100 €. Les délais dépendent de la destination et sont indiqués sur la page produit et lors du paiement.",
                 },
                 {
                     title: "Livraison gratuite",
@@ -233,23 +233,23 @@ export default defineMessages({
             signals: [
                 {
                     title: "100% Pamuk",
-                    description: "Premium kalitede 240 gram/m² pamuklu kumaş",
+                    description: "Premium kalitede 235 gram/m² pamuklu kumaş",
                     details: "Yüksek kaliteli pamuklu kumaş, dayanıklılık ve konfor sağlar.",
                 },
                 {
-                    title: "Hollanda'dan Gönderim",
-                    description: "Hollanda'daki atölyemizden direkt gönderim",
-                    details: "Tüm ürünlerimiz Hollanda'daki modern atölyemizde üretilir ve gönderilir.",
+                    title: "Siparişe Özel Üretim",
+                    description: "Size özel olarak siparişe göre üretilir",
+                    details: "Her ürün size özel olarak siparişe göre üretilir ve doğrudan adresinize gönderilir.",
                 },
                 {
-                    title: "Aynı Gün Gönderim",
-                    description: "20:00'dan önce sipariş ver, aynı gün gönder",
-                    details: "Saat 20:00'dan önce verilen siparişler aynı gün içinde kargoya verilir.",
+                    title: "1-3 Günde Üretim",
+                    description: "1-3 iş günü içinde üretilir",
+                    details: "Her sipariş 1-3 iş günü içinde üretilir ve ardından kargo firmasına teslim edilir.",
                 },
                 {
-                    title: "Dünyanın Her Yerine Kargo",
-                    description: "Hollanda'dan dünyanın her yerine gönderim",
-                    details: "Standart kargo €8, €100 üzeri ücretsiz. Hollanda 1-3, AB 3-7, diğer ülkeler 7-14 iş günü.",
+                    title: "Uluslararası Kargo",
+                    description: "Doğrudan adresinize gönderilir",
+                    details: "Standart kargo €8, €100 üzeri ücretsiz. Teslimat süresi varış ülkesine göre değişir ve ürün sayfasında ve ödeme sırasında gösterilir.",
                 },
                 {
                     title: "Ücretsiz Kargo",

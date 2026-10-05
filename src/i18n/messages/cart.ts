@@ -27,7 +27,8 @@ export default defineMessages({
         allCountries: "All countries",
         noCountryFound: "No country found",
         countryResults: (count: number) => (count === 1 ? "1 country found" : `${count} countries found`),
-        deliveryEstimate: (min: number, max: number) => `Estimated delivery: ${min}-${max} business days`,
+        deliveryEstimate: (from: string, to: string) => `Order today, delivered between ${from} and ${to}`,
+        cannotShip: (name: string) => `We cannot ship to your country (${name}) yet. Please choose another shipping country.`,
         // Same wording as the shipping policy (policies.ts, shipping.customsText)
         customsNote: "Orders outside the EU may be subject to import duties/customs fees payable by the recipient.",
         itemInvalid: "This item is no longer available in this version. Please remove it and add it again from the product page.",
@@ -57,7 +58,8 @@ export default defineMessages({
         allCountries: "Alle Länder",
         noCountryFound: "Kein Land gefunden",
         countryResults: (count: number) => (count === 1 ? "1 Land gefunden" : `${count} Länder gefunden`),
-        deliveryEstimate: (min: number, max: number) => `Voraussichtliche Lieferzeit: ${min}-${max} Werktage`,
+        deliveryEstimate: (from: string, to: string) => `Heute bestellt, Lieferung zwischen ${from} und ${to}`,
+        cannotShip: (name: string) => `Wir liefern noch nicht in Ihr Land (${name}). Bitte wählen Sie ein anderes Lieferland.`,
         customsNote:
             "Bei Bestellungen außerhalb der EU können Einfuhrabgaben/Zölle anfallen, die vom Empfänger zu tragen sind.",
         itemInvalid: "Dieser Artikel ist in dieser Ausführung nicht mehr verfügbar. Bitte entfernen Sie ihn und legen Sie ihn über die Produktseite erneut in den Warenkorb.",
@@ -88,7 +90,8 @@ export default defineMessages({
         allCountries: "Tous les pays",
         noCountryFound: "Aucun pays trouvé",
         countryResults: (count: number) => (count === 1 ? "1 pays trouvé" : `${count} pays trouvés`),
-        deliveryEstimate: (min: number, max: number) => `Délai de livraison estimé : ${min} à ${max} jours ouvrés`,
+        deliveryEstimate: (from: string, to: string) => `Commandé aujourd'hui, livré entre le ${from} et le ${to}`,
+        cannotShip: (name: string) => `Nous ne livrons pas encore dans votre pays (${name}). Veuillez choisir un autre pays de livraison.`,
         customsNote:
             "Les commandes hors UE peuvent être soumises à des taxes d'importation/droits de douane à la charge du destinataire.",
         itemInvalid: "Cet article n'est plus disponible dans cette version. Veuillez le retirer et l'ajouter à nouveau depuis la page produit.",
@@ -119,7 +122,8 @@ export default defineMessages({
         allCountries: "Tüm ülkeler",
         noCountryFound: "Ülke bulunamadı",
         countryResults: (count: number) => `${count} ülke bulundu`,
-        deliveryEstimate: (min: number, max: number) => `Tahmini teslimat süresi: ${min}-${max} iş günü`,
+        deliveryEstimate: (from: string, to: string) => `Bugün sipariş verin, ${from} ile ${to} arasında teslim edilsin`,
+        cannotShip: (name: string) => `Ülkenize (${name}) henüz gönderim yapamıyoruz. Lütfen başka bir kargo ülkesi seçin.`,
         customsNote:
             "AB dışı siparişler alıcı tarafından ödenmesi gereken ithalat vergileri/gümrük vergileri içerebilir.",
         itemInvalid: "Bu ürün bu seçeneklerle artık mevcut değil. Lütfen ürünü kaldırıp ürün sayfasından tekrar ekleyin.",

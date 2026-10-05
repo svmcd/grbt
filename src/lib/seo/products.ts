@@ -30,6 +30,7 @@ export function seoProduct(slug: string, locale: Locale) {
         .map(absolute);
     return {
         slug,
+        city: product.city,
         name,
         description: product.description,
         collection: c.collections[collectionOf(slug)],
@@ -37,7 +38,7 @@ export function seoProduct(slug: string, locale: Locale) {
         price: getPriceForSlug(slug),
         inStock: isAvailable(slug),
         url: productUrl(slug, locale),
-        colors: product.colors,
+        colorsByType: product.colorsByType,
         sizes: product.sizes,
     };
 }

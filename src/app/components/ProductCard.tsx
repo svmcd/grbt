@@ -3,15 +3,10 @@
 import Link from "@/i18n/LocaleLink";
 import Image from "next/image";
 import { getPriceForSlug } from "@/lib/pricing";
-import { getImagesForSlug, getPrimaryImageForSlug, getProductBySlug } from "@/lib/catalog";
+import { colorHex, colorsFor, getImagesForSlug, getPrimaryImageForSlug, isLightColor } from "@/lib/catalog";
+import { colorName } from "@/lib/garments";
 import { useFormatPrice, useLocale, useMessages } from "@/i18n/LocaleProvider";
-import commonMessages from "@/i18n/messages/common";
 import cardMessages from "@/i18n/messages/productCard";
-
-const swatchColors: Record<string, string> = {
-  siyah: "#000000",
-  beyaz: "#ffffff",
-};
 
 interface ProductCardProps {
   product: {
@@ -21,17 +16,15 @@ interface ProductCardProps {
 }
 
 // Product tile: image (second image on hover), "choose options" bar on hover,
-// then title, price and color dots underneath.
+// then title, price and the T-shirt colour dots underneath.
 export function ProductCard({ product }: ProductCardProps) {
   const { locale } = useLocale();
-  const common = useMessages(commonMessages);
   const t = useMessages(cardMessages);
   const price = useFormatPrice();
-  const productData = getProductBySlug(product.slug, locale);
 
   const primary = getPrimaryImageForSlug(product.slug);
   const secondary = getImagesForSlug(product.slug).find((src) => src !== primary);
-  const colors = productData?.colors ?? ["siyah", "beyaz"];
+  const colors = colorsFor(product.slug, "tshirt");
   const href = `/product/${product.slug}`;
 
   return (
@@ -69,15 +62,18 @@ export function ProductCard({ product }: ProductCardProps) {
           </Link>
           <span className="sub text-subdued">{price(getPriceForSlug(product.slug))}</span>
         </div>
-        <ul className="flex gap-2" aria-label={t.colorLegend}>
+        <ul className="flex flex-wrap gap-2" aria-label={t.colorLegend}>
           {colors.map((c) => (
             <li key={c}>
               <span
-                title={common.colors[c] ?? c}
-                className="block h-4 w-4 rounded-full border border-line-strong"
-                style={{ backgroundColor: swatchColors[c] ?? c }}
+                title={colorName(c, locale)}
+                className="block h-4 w-4 rounded-full border border-solid"
+                style={{
+                  backgroundColor: colorHex("tshirt", c),
+                  borderColor: isLightColor("tshirt", c) ? "rgba(28, 28, 28, 0.35)" : "rgba(28, 28, 28, 0.15)",
+                }}
               />
-              <span className="sr-only">{common.colors[c] ?? c}</span>
+              <span className="sr-only">{colorName(c, locale)}</span>
             </li>
           ))}
         </ul>

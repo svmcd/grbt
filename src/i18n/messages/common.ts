@@ -4,8 +4,7 @@ import { defineMessages } from "../define";
 export default defineMessages({
     en: {
         brand: "eğrikuyu",
-        productTypes: { tshirt: "T-shirt", hoodie: "Hoodie", sweater: "Sweater" },
-        colors: { siyah: "Black", beyaz: "White" } as Record<string, string>,
+        productTypes: { tshirt: "T-shirt", longsleeve: "Long Sleeve", hoodie: "Hoodie", sweater: "Sweater" },
         collections: {
             memleket: "Memleket Collection",
             hasret: "Hasret Collection",
@@ -13,6 +12,7 @@ export default defineMessages({
         },
         personalization: { printed: "Printed", embroidered: "Embroidered" },
         addToCart: "Add to cart",
+        acceptedPayments: "Accepted payment methods",
         size: "Size",
         color: "Color",
         quantity: "Quantity",
@@ -32,8 +32,7 @@ export default defineMessages({
     },
     de: {
         brand: "eğrikuyu",
-        productTypes: { tshirt: "T-Shirt", hoodie: "Hoodie", sweater: "Sweater" },
-        colors: { siyah: "Schwarz", beyaz: "Weiß" },
+        productTypes: { tshirt: "T-Shirt", longsleeve: "Langarmshirt", hoodie: "Hoodie", sweater: "Sweater" },
         collections: {
             memleket: "Memleket-Kollektion",
             hasret: "Hasret-Kollektion",
@@ -41,6 +40,7 @@ export default defineMessages({
         },
         personalization: { printed: "Bedruckt", embroidered: "Bestickt" },
         addToCart: "In den Warenkorb",
+        acceptedPayments: "Akzeptierte Zahlungsarten",
         size: "Größe",
         color: "Farbe",
         quantity: "Menge",
@@ -60,8 +60,7 @@ export default defineMessages({
     },
     fr: {
         brand: "eğrikuyu",
-        productTypes: { tshirt: "T-shirt", hoodie: "Hoodie", sweater: "Sweat" },
-        colors: { siyah: "Noir", beyaz: "Blanc" },
+        productTypes: { tshirt: "T-shirt", longsleeve: "Manches longues", hoodie: "Hoodie", sweater: "Sweat" },
         collections: {
             memleket: "Collection Memleket",
             hasret: "Collection Hasret",
@@ -69,6 +68,7 @@ export default defineMessages({
         },
         personalization: { printed: "Imprimé", embroidered: "Brodé" },
         addToCart: "Ajouter au panier",
+        acceptedPayments: "Moyens de paiement acceptés",
         size: "Taille",
         color: "Couleur",
         quantity: "Quantité",
@@ -88,8 +88,7 @@ export default defineMessages({
     },
     tr: {
         brand: "eğrikuyu",
-        productTypes: { tshirt: "Tişört", hoodie: "Hoodie", sweater: "Sweater" },
-        colors: { siyah: "Siyah", beyaz: "Beyaz" },
+        productTypes: { tshirt: "Tişört", longsleeve: "Uzun Kollu", hoodie: "Hoodie", sweater: "Sweater" },
         collections: {
             memleket: "Memleket Koleksiyonu",
             hasret: "Hasret Koleksiyonu",
@@ -97,6 +96,7 @@ export default defineMessages({
         },
         personalization: { printed: "Baskı", embroidered: "İşleme" },
         addToCart: "Sepete Ekle",
+        acceptedPayments: "Kabul edilen ödeme yöntemleri",
         size: "Beden",
         color: "Renk",
         quantity: "Adet",

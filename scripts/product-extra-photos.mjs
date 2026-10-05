@@ -1,7 +1,7 @@
 // Lists the optional extra photos of the product galleries (common1.png, common2.png, ...
 // next to the T-shirt mockups) in src/app/product/[slug]/extra-photos.json, so the product
 // page knows which of them exist without asking the browser to probe for them.
-// The front and back mockups always exist (committed, or built by npm run mockups).
+// The Memleket front and back images are rendered on demand (src/app/api/mockup/).
 //
 // Run after adding or removing an extra photo: node scripts/product-extra-photos.mjs
 

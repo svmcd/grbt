@@ -1,13 +1,15 @@
 // One clean order shape for the admin, built from the Firestore documents (which carry
 // several historical formats: Stripe line items, "GRBT Order" summaries, manual orders).
+import { cloprodColorFor, type ProductType } from "@/lib/catalog";
+import { GARMENTS } from "@/lib/garments";
 
 export type PaymentStatus = "paid" | "partially_refunded" | "refunded" | "unpaid";
 export type FulfillmentStatus = "unfulfilled" | "label_created" | "shipped";
 
 export type AdminOrderItem = {
     title: string; // e.g. "Konya"
-    productType: string; // "T-shirt" | "Hoodie" | "Sweater" | "Phone case" | ""
-    color: string; // "Black" | "White" | raw
+    productType: string; // "T-shirt" | "Long Sleeve" | "Hoodie" | "Sweater" | "Phone case" | ""
+    color: string; // English colour name from garments.ts ("Black", "Midnight Navy"), "White" for legacy beyaz, or raw
     size: string;
     quantity: number;
     unitAmount: number; // cents
@@ -71,20 +73,72 @@ const TYPE_LABELS: Record<string, string> = {
     "t-shirt": "T-shirt",
     hoodie: "Hoodie",
     sweater: "Sweater",
+    // Turkish is what checkout stores ("Konya Uzun Kollu - kırmızı, M"); the others are the
+    // customer-language labels from common.ts productTypes
+    "uzun kollu": "Long Sleeve",
+    "long sleeve": "Long Sleeve",
+    longsleeve: "Long Sleeve",
+    langarmshirt: "Long Sleeve",
+    "manches longues": "Long Sleeve",
     "telefon kılıfı": "Phone case",
     phonecase: "Phone case",
 };
-const COLOR_LABELS: Record<string, string> = { siyah: "Black", beyaz: "White", black: "Black", white: "White" };
+// Colour as stored in descriptions → English name. Keys ("gece-mavisi") and every localized name
+// (Turkish lines carry the lowercase Turkish name, "gece mavisi") map to garments.ts names.en.
+const COLOR_LABELS: Record<string, string> = { black: "Black", white: "White" };
+for (const g of Object.values(GARMENTS)) {
+    for (const col of g.colors) {
+        for (const label of [col.key, ...Object.values(col.names)]) COLOR_LABELS[label.toLocaleLowerCase("tr")] ??= col.names.en;
+    }
+}
 
 const typeLabel = (t: string) => TYPE_LABELS[t.trim().toLowerCase()] ?? t.trim();
-const colorLabel = (c: string) => COLOR_LABELS[c.trim().toLowerCase()] ?? c.trim();
+const colorLabel = (c: string) => COLOR_LABELS[c.trim().toLocaleLowerCase("tr")] ?? c.trim();
+
+const PRODUCT_TYPE_BY_LABEL: Record<string, ProductType> = {
+    "T-shirt": "tshirt",
+    "Long Sleeve": "longsleeve",
+    Hoodie: "hoodie",
+    Sweater: "sweater",
+};
+
+// Colour name for a known garment type: that garment's own English name first, so a long sleeve
+// "siyah" reads "Washed Black" and "lacivert" "Navy" (the T-shirt calls them Black and Dark Blue).
+const colorLabelFor = (typeLabelText: string | undefined, c: string) => {
+    const type = PRODUCT_TYPE_BY_LABEL[typeLabelText || "T-shirt"];
+    const wanted = c.trim().toLocaleLowerCase("tr");
+    const col = type
+        ? GARMENTS[type].colors.find((x) => [x.key, ...Object.values(x.names)].some((n) => n.toLocaleLowerCase("tr") === wanted))
+        : undefined;
+    return col ? col.names.en : colorLabel(c);
+};
+
+// garments.ts colour key for an admin item ("Hoodie" + "Midnight Navy" → "gece-mavisi"); legacy
+// "White" is "beyaz" (Hasret/Sinema). Undefined for phone cases and unknown colours.
+export function itemColorKey(item: Pick<AdminOrderItem, "productType" | "color">): { type: ProductType; key: string } | undefined {
+    const type = PRODUCT_TYPE_BY_LABEL[item.productType || "T-shirt"];
+    if (!type || !item.color) return undefined;
+    const col = GARMENTS[type].colors.find((c) => c.names.en === item.color);
+    if (col) return { type, key: col.key };
+    if (item.color === "White") return { type, key: "beyaz" };
+    return undefined;
+}
+
+// What to order from Cloprod for an item, e.g. "HD0C4 / Midnight Navy (colour 5)",
+// "LS0IS / Red (colour 2)". Legacy white
+// hoodies and sweaters (Hasret, Sinema) are Cream White.
+export function cloprodLabel(item: Pick<AdminOrderItem, "productType" | "color">): string | null {
+    const v = itemColorKey(item);
+    const c = v && cloprodColorFor(v.type, v.key);
+    return c ? `${c.spu} / ${c.name} (colour ${c.colorId})` : null;
+}
 
 // "Konya Tişört - siyah, M - Baskı: "Ali" - arka - Font: Serif - Renk: #fff - Hediye Mesajı: "..."
 function parseDescription(desc: string): Partial<AdminOrderItem> {
     const out: Partial<AdminOrderItem> = {};
     const parts = desc.split(" - ");
     const head = parts.shift() || "";
-    const typeMatch = head.match(/^(.*?)\s+(Tişört|Hoodie|Sweater|Telefon Kılıfı)$/i);
+    const typeMatch = head.match(/^(.*?)\s+(Tişört|Uzun Kollu|Long Sleeve|Langarmshirt|Manches longues|Hoodie|Sweater|Telefon Kılıfı)$/i);
     if (typeMatch) {
         out.title = typeMatch[1].trim();
         out.productType = typeLabel(typeMatch[2]);
@@ -97,7 +151,7 @@ function parseDescription(desc: string): Partial<AdminOrderItem> {
             out.size = variant.trim();
         } else {
             const [color, size] = variant.split(",").map((s) => s.trim());
-            if (color) out.color = colorLabel(color);
+            if (color) out.color = colorLabelFor(out.productType, color);
             if (size) out.size = size;
         }
     }

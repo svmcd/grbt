@@ -16,7 +16,7 @@ type TrackResult = {
   carrier: string | null;
   trackingCode: string | null;
   trackingUrl: string | null;
-  items: { title: string; type: "tshirt" | "hoodie" | "sweater" | null; quantity: number }[];
+  items: { title: string; type: "tshirt" | "longsleeve" | "hoodie" | "sweater" | null; quantity: number }[];
 };
 
 type ErrorKey = "notFound" | "invalidNumber" | "rateLimited" | "error";

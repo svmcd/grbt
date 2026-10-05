@@ -4,6 +4,8 @@ import common from "@/i18n/messages/common";
 import emails from "@/i18n/messages/emails";
 import { getCountryName } from "@/lib/shipping";
 import { orderNumber } from "@/lib/order-number";
+import { GARMENTS } from "@/lib/garments";
+import { colorLabel } from "./line-items";
 
 // Locale of a Checkout Session. Sessions created before localization have none: those customers
 // all used the Turkish site, so they fall back to "tr".
@@ -676,10 +678,15 @@ const STYLES: Record<OrderEmailVariant, string> = {
                         `,
 };
 
-// Values the description parsing looks for. Turkish keeps the original pattern.
+// Values the description parsing looks for: every garment colour name as the line item writes it
+// (colorLabel), longest first so "Heather Gray" wins over "Gray". Turkish also keeps the older words.
+const LEGACY_TR_COLORS = ["mavi", "kırmızı", "yeşil", "sarı", "mor", "pembe", "turuncu", "gri"];
 function colorPattern(locale: Locale): RegExp {
-    if (locale === "tr") return /(beyaz|siyah|mavi|kırmızı|yeşil|sarı|mor|pembe|turuncu|gri)/i;
-    return new RegExp(`(${Object.values(common[locale].colors).join("|")})`, "i");
+    const names = new Set<string>();
+    for (const g of Object.values(GARMENTS)) for (const col of g.colors) names.add(colorLabel(col.key, locale, g.type));
+    if (locale === "tr") LEGACY_TR_COLORS.forEach((n) => names.add(n));
+    const alternatives = [...names].sort((a, b) => b.length - a.length).map((n) => n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+    return new RegExp(`(${alternatives.join("|")})`, "i");
 }
 
 function sizePattern(locale: Locale): RegExp {
@@ -744,7 +751,7 @@ export function buildOrderConfirmationEmail(input: OrderEmailInput): { subject: 
             <div class="product-item">
                 <div class="product-name">${productName}</div>
                 <div class="product-details">
-                    ${colorMatch ? `<strong>${L(c.color)}</strong> ${colorMatch[1].toUpperCase()}` : ''}
+                    ${colorMatch ? `<strong>${L(c.color)}</strong> ${colorMatch[1].toLocaleUpperCase(intlLocales[locale])}` : ''}
                     ${sizeMatch ? ` • <strong>${L(c.size)}</strong> ${sizeMatch[1]}` : ''}
                 </div>
                 ${personalizationHtml}

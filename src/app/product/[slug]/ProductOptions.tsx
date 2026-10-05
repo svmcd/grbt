@@ -47,18 +47,16 @@ export function OptionBox({
   );
 }
 
-const swatchFill: Record<string, string> = {
-  siyah: "#1c1c1c",
-  beyaz: "#ffffff",
-};
-
+// Round colour swatch. Light garments get a darker outline so they stay visible on the white page.
 export function Swatch({
-  color,
+  hex,
+  light,
   label,
   selected,
   onClick,
 }: {
-  color: string;
+  hex: string;
+  light: boolean;
   label: string;
   selected: boolean;
   onClick: () => void;
@@ -71,13 +69,13 @@ export function Swatch({
       aria-label={label}
       title={label}
       className={
-        "flex h-10 w-10 items-center justify-center rounded-full border border-solid! transition-colors " +
+        "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-solid! transition-colors sm:h-10 sm:w-10 " +
         (selected ? "border-ink!" : "border-transparent! hover:border-line-strong!")
       }
     >
       <span
-        className="block h-8 w-8 rounded-full border border-line-strong"
-        style={{ backgroundColor: swatchFill[color] ?? color }}
+        className="block h-7 w-7 rounded-full border border-solid sm:h-8 sm:w-8"
+        style={{ backgroundColor: hex, borderColor: light ? "rgba(28, 28, 28, 0.35)" : "rgba(28, 28, 28, 0.15)" }}
       />
     </button>
   );

@@ -3,6 +3,9 @@ import type { CatalogTranslations } from "@/i18n/catalog/types";
 import enProducts from "@/i18n/catalog/en";
 import deProducts from "@/i18n/catalog/de";
 import frProducts from "@/i18n/catalog/fr";
+import { GARMENTS, garmentColor, garmentColors, type GarmentType } from "./garments";
+
+export type ProductType = GarmentType;
 
 const translatedProducts: Record<Exclude<Locale, "tr">, CatalogTranslations> = {
     en: enProducts,
@@ -15,7 +18,7 @@ export type Product = {
     city: string;
     image: string;
     images: string[];
-    colors: string[];
+    colorsByType: Record<ProductType, string[]>; // colour keys per garment type, first = default
     sizes: string[];
     description: string;
     donation: {
@@ -149,7 +152,56 @@ export function getPrimaryImageForSlug(slug: string): string {
     return `${base}/back.png`;
 }
 
-export function getImagesForSlug(slug: string, color: string = "siyah", productType: "tshirt" | "hoodie" | "sweater" = "tshirt"): string[] {
+// Hasret and Sinema designs only have black and white product photos, so they keep
+// "siyah" and "beyaz" on every garment type. On a hoodie or sweater their "beyaz" is
+// produced as Cloprod Cream White ("krem" in garments.ts); see cloprodColorFor.
+const LEGACY_COLORS = ["siyah", "beyaz"];
+const isLegacyColorSlug = (slug: string) => hasretSlugs.includes(slug) || recepIvedikSlugs.includes(slug);
+
+// Garment types in shop order. Hasret and Sinema have no long-sleeve artwork, so they are
+// not sold as a long sleeve (no colours for it; the checkout rejects it).
+export const ALL_PRODUCT_TYPES: readonly ProductType[] = ["tshirt", "longsleeve", "hoodie", "sweater"];
+const LEGACY_TYPES: readonly ProductType[] = ["tshirt", "hoodie", "sweater"];
+
+export function productTypesFor(slug: string): readonly ProductType[] {
+    return isLegacyColorSlug(slug) ? LEGACY_TYPES : ALL_PRODUCT_TYPES;
+}
+
+// Colour keys sold for a design on a garment type; the first one is the default.
+// Memleket designs come in every colour of garments.ts for that type. Empty when the design
+// is not sold on that type.
+export function colorsFor(slug: string, type: ProductType): string[] {
+    if (!productTypesFor(slug).includes(type)) return [];
+    return isLegacyColorSlug(slug) ? LEGACY_COLORS : garmentColors(type).map((c) => c.key);
+}
+
+// The colour key when this design is sold in it on this type, otherwise the type's default
+// ("siyah" when the design is not sold on that type at all)
+export function validColorFor(slug: string, type: ProductType, color: string | undefined): string {
+    const colors = colorsFor(slug, type);
+    return color && colors.includes(color) ? color : colors[0] ?? "siyah";
+}
+
+// Swatch colour for a key on a garment type (legacy "beyaz" on a hoodie/sweater shows as white,
+// like its product photos)
+export function colorHex(type: ProductType, key: string): string {
+    return garmentColor(type, key)?.hex ?? garmentColor("tshirt", key)?.hex ?? "#000000";
+}
+
+// True for light garments (dark print), which need a visible outline on a white page
+export function isLightColor(type: ProductType, key: string): boolean {
+    return (garmentColor(type, key) ?? garmentColor("tshirt", key))?.ink === "black";
+}
+
+// What Cloprod produces for a colour key on a garment type. Legacy "beyaz" on a hoodie or
+// sweater (Hasret, Sinema) is Cloprod Cream White.
+export function cloprodColorFor(type: ProductType, key: string): { spu: string; colorId: number; name: string } | null {
+    const resolved = type !== "tshirt" && key === "beyaz" ? "krem" : key;
+    const col = garmentColor(type, resolved);
+    return col ? { spu: GARMENTS[type].cloprodSpu, colorId: col.cloprodColorId, name: col.names.en } : null;
+}
+
+export function getImagesForSlug(slug: string, color: string = "siyah", productType: ProductType = "tshirt"): string[] {
     // Sinema collection - uses front images from product folder and default back images from yabanci
     if (recepIvedikSlugs.includes(slug)) {
         const colorKey = color === "beyaz" ? "white" : "black";
@@ -175,70 +227,36 @@ export function getImagesForSlug(slug: string, color: string = "siyah", productT
         ];
     }
 
-    // Determine collection based on slug
-    const collection = hasretSlugs.includes(slug) ? "hasret" : "memleket";
-
-    // Handle hoodie and sweater
-    if (productType === "hoodie" || productType === "sweater") {
-        const colorKey = color === "beyaz" ? "white" : "black";
-        const productKey = productType === "hoodie" ? "hoodie" : "sweater";
-
-        // Hasret collection has hoodie/sweater images in the product folder
-        if (collection === "hasret") {
-            return [
-                `/products/collections/hasret/${slug}/${productKey}_${colorKey}_front.png`,
-                `/products/collections/hasret/${slug}/${productKey}_${colorKey}_back.png`,
-            ];
-        }
-
-        // Memleket: generated per design (scripts/generate-mockups.mjs)
+    if (hasretSlugs.includes(slug)) {
         const colorFolder = color === "beyaz" ? "beyaz" : "siyah";
-        return [
-            `/products/collections/memleket/${slug}/${colorFolder}/${productKey}_front.png`,
-            `/products/collections/memleket/${slug}/${colorFolder}/${productKey}_back.png`,
-        ];
-    }
-
-    // T-shirt images
-    const base = `/products/collections/${collection}/${slug}/${color}`;
-    const commonBase = `/products/collections/${collection}/${slug}/siyah`;
-
-    if (collection === "hasret") {
-        // Special case for yabanci - uses front.png instead of front.png
-        if (slug === "yabanci") {
-            const candidates = [
-                `${base}/front.png`,
-                `${base}/back.png`,
+        // Hoodie and sweater images are in the product folder
+        if (productType === "hoodie" || productType === "sweater") {
+            const colorKey = colorFolder === "beyaz" ? "white" : "black";
+            return [
+                `/products/collections/hasret/${slug}/${productType}_${colorKey}_front.png`,
+                `/products/collections/hasret/${slug}/${productType}_${colorKey}_back.png`,
             ];
-            return candidates;
         }
-
-        // Other hasret products use front.png and back.png
-        const candidates = [
-            `${base}/front.png`,
-            `${base}/back.png`,
-        ];
-        return candidates;
+        const base = `/products/collections/hasret/${slug}/${colorFolder}`;
+        return [`${base}/front.png`, `${base}/back.png`];
     }
 
-    // Memleket collection
-    const candidates = [
+    // Memleket: one folder per colour key, rendered per design (mockup renderer)
+    const base = `/products/collections/memleket/${slug}/${validColorFor(slug, productType, color)}`;
+    if (productType === "hoodie" || productType === "sweater" || productType === "longsleeve") {
+        return [`${base}/${productType}_front.png`, `${base}/${productType}_back.png`];
+    }
+
+    // T-shirt: front and back, then the design's photos (kept in the siyah folder; the
+    // product page only shows the ones that exist)
+    const commonBase = `/products/collections/memleket/${slug}/siyah`;
+    return [
         `${base}/front.png`,
         `${base}/back.png`,
-    ];
-
-    // Add common images only if they exist (we'll check this on the frontend)
-    const commonImages = [
         `${commonBase}/common1.png`,
         `${commonBase}/common2.png`,
         `${commonBase}/common3.png`,
     ];
-
-    return [...candidates, ...commonImages];
-}
-
-export function getAvailableColors(): string[] {
-    return ["siyah", "beyaz"];
 }
 
 // Product data configuration
@@ -671,7 +689,12 @@ export function getProductBySlug(slug: string, locale: Locale = "tr"): Product |
         city,
         image,
         images,
-        colors: getAvailableColors(),
+        colorsByType: {
+            tshirt: colorsFor(decodedSlug, "tshirt"),
+            hoodie: colorsFor(decodedSlug, "hoodie"),
+            sweater: colorsFor(decodedSlug, "sweater"),
+            longsleeve: colorsFor(decodedSlug, "longsleeve"),
+        },
         sizes: ["S", "M", "L", "XL", "XXL"],
         description: copy?.description ?? data.description,
         donation: copy ? { ...data.donation, organization: copy.donationText } : data.donation,

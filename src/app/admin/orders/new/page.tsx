@@ -6,14 +6,16 @@ import { useAdmin } from "../../_components/AdminProvider";
 import { Button, Card, Field, PageHeader, PlusIcon, inputClass, selectClass, textareaClass } from "../../_components/ui";
 import { adminFetch } from "@/lib/admin/client";
 import { countryName, money } from "@/lib/admin/format";
-import { hasretSlugs, memleketSlugs, recepIvedikSlugs, titleCaseCity } from "@/lib/catalog";
+import { cloprodColorFor, colorsFor, hasretSlugs, memleketSlugs, productTypesFor, recepIvedikSlugs, titleCaseCity } from "@/lib/catalog";
+import { GARMENT_SURCHARGE_EUR } from "@/lib/cart-pricing";
+import { colorName } from "@/lib/garments";
 import { getPriceForSlug } from "@/lib/pricing";
 import { shippingCountries } from "@/lib/shipping";
 
 const EMPTY = { name: "", email: "", phone: "", line1: "", line2: "", postalCode: "", city: "", country: "NL", shippingEuros: "0", discountEuros: "", notes: "", locale: "tr" };
 
-type ProductType = "tshirt" | "hoodie" | "sweater";
-type Line = { slug: string; productType: ProductType; color: "siyah" | "beyaz"; size: string; quantity: string; unitPrice: string };
+type ProductType = "tshirt" | "longsleeve" | "hoodie" | "sweater";
+type Line = { slug: string; productType: ProductType; color: string; size: string; quantity: string; unitPrice: string };
 
 const DESIGNS = [
     { label: "Memleket", slugs: memleketSlugs },
@@ -22,12 +24,15 @@ const DESIGNS = [
 ];
 const TYPES: { value: ProductType; label: string }[] = [
     { value: "tshirt", label: "T-shirt" },
+    { value: "longsleeve", label: "Long Sleeve" },
     { value: "hoodie", label: "Hoodie" },
     { value: "sweater", label: "Sweater" },
 ];
 const SIZES = ["S", "M", "L", "XL", "XXL"];
-// Same prices as the shop: the design's price, hoodie and sweater €20 more
-const shopPrice = (slug: string, type: ProductType) => (slug ? getPriceForSlug(slug) + (type === "tshirt" ? 0 : 20) : 0);
+// Same prices as the shop: the design's price plus the garment surcharge (cart-pricing.ts)
+const shopPrice = (slug: string, type: ProductType) => (slug ? getPriceForSlug(slug) + GARMENT_SURCHARGE_EUR[type] : 0);
+// Types sold for the design (no long sleeve for Hasret/Sinema); every type before a design is picked
+const typesFor = (slug: string) => TYPES.filter((t) => !slug || productTypesFor(slug).includes(t.value));
 const euros = (v: string) => Number(v.replace(",", "."));
 const newLine = (): Line => ({ slug: "", productType: "tshirt", color: "siyah", size: "M", quantity: "1", unitPrice: "" });
 
@@ -47,6 +52,10 @@ export default function NewOrderPage() {
             cur.map((l, j) => {
                 if (j !== i) return l;
                 const next = { ...l, ...patch };
+                if (next.slug && !productTypesFor(next.slug).includes(next.productType)) next.productType = "tshirt";
+                // Colours are per design and type: keep the colour when the new choice has it
+                const colors = colorsFor(next.slug, next.productType);
+                if (!colors.includes(next.color)) next.color = colors[0];
                 // Follow the shop price until the price was typed by hand
                 const auto = l.unitPrice === "" || euros(l.unitPrice) === shopPrice(l.slug, l.productType);
                 if (auto && (patch.slug !== undefined || patch.productType !== undefined)) next.unitPrice = next.slug ? String(shopPrice(next.slug, next.productType)) : "";
@@ -123,7 +132,7 @@ export default function NewOrderPage() {
                                     </Field>
                                     <Field label="Product" className="sm:col-span-3">
                                         <select value={l.productType} onChange={(e) => setLine(i, { productType: e.target.value as ProductType })} className={selectClass}>
-                                            {TYPES.map((t) => (
+                                            {typesFor(l.slug).map((t) => (
                                                 <option key={t.value} value={t.value}>
                                                     {t.label}
                                                 </option>
@@ -131,9 +140,17 @@ export default function NewOrderPage() {
                                         </select>
                                     </Field>
                                     <Field label="Color" className="sm:col-span-2">
-                                        <select value={l.color} onChange={(e) => setLine(i, { color: e.target.value as Line["color"] })} className={selectClass}>
-                                            <option value="siyah">Black</option>
-                                            <option value="beyaz">White</option>
+                                        <select value={l.color} onChange={(e) => setLine(i, { color: e.target.value })} className={selectClass}>
+                                            {colorsFor(l.slug, l.productType).map((key) => {
+                                                // Legacy white on a hoodie or sweater is made in Cloprod Cream White
+                                                const cloprod = cloprodColorFor(l.productType, key);
+                                                const name = colorName(key, "en", l.productType);
+                                                return (
+                                                    <option key={key} value={key}>
+                                                        {cloprod && cloprod.name !== name ? `${name} (${cloprod.name})` : name}
+                                                    </option>
+                                                );
+                                            })}
                                         </select>
                                     </Field>
                                     <Field label="Size">

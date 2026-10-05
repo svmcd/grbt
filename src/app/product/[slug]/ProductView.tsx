@@ -4,9 +4,13 @@ import { useState, useEffect, useRef } from "react";
 import Link from "@/i18n/LocaleLink";
 import Image from "next/image";
 import {
+  colorHex,
+  colorsFor,
   getProductBySlug,
   getImagesForSlug,
+  isLightColor,
   memleketSlugs,
+  productTypesFor,
   hasretSlugs,
   recepIvedikSlugs,
 } from "@/lib/catalog";
@@ -22,7 +26,12 @@ import { ImageBand, RelatedProducts } from "./RelatedProducts";
 import { formatRating, ProductReviews, Stars, type ReviewData } from "./ProductReviews";
 import { CheckSquare, FieldLabel, OptionBox, OptionLabel, Panel, Swatch } from "./ProductOptions";
 import { variantKey, type ProductType } from "./gallery-images";
+import { SizeGuide } from "./SizeGuide";
+import { DeliveryTimeline, useDeliveryEstimate } from "./DeliveryTimeline";
+import { PaymentLogos } from "@/app/components/PaymentLogos";
+import { formatDeliveryRange } from "@/lib/shipping";
 import { track } from "@/lib/track";
+import { colorName } from "@/lib/garments";
 import {
   GARMENT_SURCHARGE_EUR,
   GIFT_PACKAGE_COST_EUR,
@@ -85,6 +94,7 @@ export function ProductView({
   const [personalizationOpen, setPersonalizationOpen] = useState(false);
   const [showStickyButton, setShowStickyButton] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const delivery = useDeliveryEstimate();
 
   // Show the sticky add-to-cart bar once the main button has scrolled out of view.
   useEffect(() => {
@@ -97,6 +107,15 @@ export function ProductView({
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // While the bar is shown, room under the footer so its last row (payment logos, ©) is not covered
+  useEffect(() => {
+    if (!showStickyButton) return;
+    document.body.style.paddingBottom = "72px";
+    return () => {
+      document.body.style.paddingBottom = "";
+    };
+  }, [showStickyButton]);
 
   useEffect(() => {
     let cancelled = false;
@@ -119,6 +138,16 @@ export function ProductView({
   const giftPackageCost = giftPackage ? GIFT_PACKAGE_COST_EUR : 0;
   const productTypeCost = GARMENT_SURCHARGE_EUR[selectedProductType];
   const totalPrice = getTestPrice(basePrice + productTypeCost + personalizationCost + giftPackageCost);
+
+  // Colours sold for the selected garment type (first = default)
+  const colors = colorsFor(product.slug, selectedProductType);
+  const colorLabel = (key: string) => colorName(key, locale, selectedProductType);
+  // Switching type keeps the colour when the new type has it, otherwise its first colour
+  const selectProductType = (type: ProductType) => {
+    setSelectedProductType(type);
+    const next = colorsFor(product.slug, type);
+    if (!next.includes(selectedColor)) setSelectedColor(next[0]);
+  };
 
   const isMemleket = memleketSlugs.includes(product.slug);
   const isHasret = hasretSlugs.includes(product.slug);
@@ -187,7 +216,7 @@ export function ProductView({
     });
   };
 
-  const garmentName = selectedProductType === "hoodie" ? t.garment.hoodie : t.garment.sweater;
+  const garmentName = selectedProductType === "tshirt" ? "" : t.garment[selectedProductType];
   const surcharges = [
     productTypeCost > 0 ? `+ ${price(productTypeCost)} ${garmentName}` : null,
     personalizationCost > 0 ? `+ ${price(personalizationCost)} ${t.surchargePersonalization}` : null,
@@ -253,11 +282,11 @@ export function ProductView({
                 <div>
                   <OptionLabel label={t.productType} value={common.productTypes[selectedProductType]} />
                   <div className="flex flex-wrap gap-2">
-                    {(["tshirt", "hoodie", "sweater"] as const).map((type) => (
+                    {productTypesFor(product.slug).map((type) => (
                       <OptionBox
                         key={type}
                         selected={selectedProductType === type}
-                        onClick={() => setSelectedProductType(type)}
+                        onClick={() => selectProductType(type)}
                       >
                         {common.productTypes[type]}
                         {type !== "tshirt" && <span className="ml-1.5 text-subdued">+{price(GARMENT_SURCHARGE_EUR[type])}</span>}
@@ -268,13 +297,14 @@ export function ProductView({
 
                 {/* Color */}
                 <div>
-                  <OptionLabel label={common.color} value={common.colors[selectedColor] ?? selectedColor} />
-                  <div className="-ml-1 flex gap-2">
-                    {product.colors.map((c) => (
+                  <OptionLabel label={common.color} value={colorLabel(selectedColor)} />
+                  <div role="group" aria-label={common.color} className="-ml-1 flex flex-wrap gap-x-1.5 gap-y-1 sm:gap-x-2">
+                    {colors.map((c) => (
                       <Swatch
-                        key={c}
-                        color={c}
-                        label={common.colors[c] ?? c}
+                        key={`${selectedProductType}-${c}`}
+                        hex={colorHex(selectedProductType, c)}
+                        light={isLightColor(selectedProductType, c)}
+                        label={colorLabel(c)}
                         selected={selectedColor === c}
                         onClick={() => setSelectedColor(c)}
                       />
@@ -284,7 +314,11 @@ export function ProductView({
 
                 {/* Size */}
                 <div>
-                  <OptionLabel label={common.size} value={selectedSize || undefined} />
+                  <OptionLabel
+                    label={common.size}
+                    value={selectedSize || undefined}
+                    aside={<SizeGuide type={selectedProductType} />}
+                  />
                   <div
                     ref={sizeGroupRef}
                     role="group"
@@ -527,7 +561,10 @@ export function ProductView({
                   >
                     {common.addToCart}
                   </button>
-                  <p className="sub-xs mt-3 text-center text-subdued">{t.productionNotice}</p>
+                  <div className="mt-4">
+                    <DeliveryTimeline estimate={delivery} />
+                  </div>
+                  <PaymentLogos className="mt-4" />
                 </div>
 
                 {/* Matching product (Sinema couple shirts) */}
@@ -578,8 +615,7 @@ export function ProductView({
       <ProductReviews data={reviews} />
       <RelatedProducts slug={product.slug} />
 
-      {/* Sticky add-to-cart bar (spacer keeps the footer end reachable) */}
-      {showStickyButton && <div aria-hidden className="h-[72px]" />}
+      {/* Sticky add-to-cart bar */}
       {showStickyButton && (
         <div className="fixed inset-x-0 bottom-0 z-50 border-t border-line bg-paper">
           <div className="mx-auto flex max-w-[1440px] items-center gap-4 px-4 py-3 sm:px-8 lg:px-12">
@@ -592,7 +628,7 @@ export function ProductView({
                 {[
                   price(totalPrice),
                   common.productTypes[selectedProductType],
-                  common.colors[selectedColor] ?? selectedColor,
+                  colorLabel(selectedColor),
                   selectedSize,
                   personalizationMethod !== "none" ? common.personalization[personalizationMethod] : null,
                   giftPackage ? common.giftPackage : null,
@@ -601,6 +637,13 @@ export function ProductView({
                   .join(" · ")}
               </p>
             </div>
+            {delivery.status === "ready" && (
+              <p className="sub-xs hidden shrink-0 text-right text-subdued md:block">
+                {t.delivery.sticky(
+                  formatDeliveryRange(delivery.timeline.delivered.from, delivery.timeline.delivered.to, intlLocale)
+                )}
+              </p>
+            )}
             <button
               type="button"
               onClick={handleAddToCart}

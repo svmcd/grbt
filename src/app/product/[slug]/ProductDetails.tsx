@@ -83,7 +83,7 @@ export function ProductDetails({
 }: {
   product: Product;
   isMemleket: boolean;
-  productType: "tshirt" | "hoodie" | "sweater";
+  productType: "tshirt" | "longsleeve" | "hoodie" | "sweater";
 }) {
   const t = useMessages(productPageMessages);
   const policies = useMessages(policyMessages);
@@ -118,9 +118,11 @@ export function ProductDetails({
 
         <Item icon="material" title={t.materialTitle}>
           <div>
-            {/* Fabric and weight are only documented for the T-shirt */}
-            {productType === "tshirt" && <Fact label={t.specFabric} value={`${t.specFabricValue}, 240 g/m²`} />}
-            <Fact label={t.specCut} value={t.specCutValue} />
+            {/* Fabric and weight are only documented for the T-shirt and the long sleeve (Cloprod
+                LS0IS, 100% cotton, 275 g/m²). The long sleeve is a boxy cut, so no "regular fit". */}
+            {productType === "tshirt" && <Fact label={t.specFabric} value={`${t.specFabricValue}, 235 g/m²`} />}
+            {productType === "longsleeve" && <Fact label={t.specFabric} value={`${t.specFabricValue}, 275 g/m²`} />}
+            {productType !== "longsleeve" && <Fact label={t.specCut} value={t.specCutValue} />}
             <Fact label={t.specPrint} value={t.specPrintValue} />
             <Fact label={t.specProduction} value={t.specProductionValue} />
           </div>

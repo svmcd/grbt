@@ -3,13 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "mockups": "node scripts/generate-mockups.mjs && node scripts/product-extra-photos.mjs",
-    "predev": "npm run mockups",
+    "mockups": "node --no-warnings scripts/generate-mockups.mjs",
+    "blanks": "node --no-warnings scripts/fetch-cloprod-blanks.mjs",
+    "predev": "node scripts/product-extra-photos.mjs",
     "dev": "next dev",
-    "prebuild": "npm run mockups",
+    "prebuild": "node scripts/product-extra-photos.mjs",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "payment-logos": "node scripts/payment-logos.mjs"
   },
   "dependencies": {
     "@vercel/analytics": "^1.5.0",
@@ -21,10 +23,12 @@
     "nodemailer": "^6.10.1",
     "react": "19.1.0",
     "react-dom": "19.1.0",
+    "sharp": "^0.34.5",
     "stripe": "^19.1.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@iconify-icons/logos": "^2.0.2",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/nodemailer": "^7.0.2",
@@ -32,7 +36,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.5.2",
-    "sharp": "^0.34.5",
+    "react-pay-icons": "^4.0.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

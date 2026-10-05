@@ -19,7 +19,7 @@ export default defineMessages({
             collections: "Collections",
         },
         trust: [
-            { title: "Worldwide Shipping", text: "Free from €100, standard €8" },
+            { title: "International Shipping", text: "Free from €100, standard €8" },
             { title: "Personal Support", text: "Questions? info@egrikuyu.com" },
             { title: "Secure Payment", text: "Your payment is processed securely by Stripe" },
         ],
@@ -55,7 +55,7 @@ export default defineMessages({
             collections: "Kollektionen",
         },
         trust: [
-            { title: "Weltweiter Versand", text: "Ab 100 € kostenlos, Standard 8 €" },
+            { title: "Internationaler Versand", text: "Ab 100 € kostenlos, Standard 8 €" },
             { title: "Persönlicher Support", text: "Fragen? info@egrikuyu.com" },
             { title: "Sichere Zahlung", text: "Ihre Zahlung wird sicher über Stripe abgewickelt" },
         ],
@@ -91,7 +91,7 @@ export default defineMessages({
             collections: "Collections",
         },
         trust: [
-            { title: "Livraison dans le monde entier", text: "Offerte dès 100 €, standard 8 €" },
+            { title: "Livraison internationale", text: "Offerte dès 100 €, standard 8 €" },
             { title: "Assistance personnalisée", text: "Une question ? info@egrikuyu.com" },
             { title: "Paiement sécurisé", text: "Votre paiement est traité de manière sécurisée par Stripe" },
         ],
@@ -127,7 +127,7 @@ export default defineMessages({
             collections: "Koleksiyonlar",
         },
         trust: [
-            { title: "Dünyanın Her Yerine Kargo", text: "€100 üzeri ücretsiz, standart €8" },
+            { title: "Uluslararası Kargo", text: "€100 üzeri ücretsiz, standart €8" },
             { title: "Kişisel Destek", text: "Sorunuz mu var? info@egrikuyu.com" },
             { title: "Güvenli Ödeme", text: "Ödemeniz Stripe üzerinden güvenle işlenir" },
         ],

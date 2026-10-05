@@ -3,13 +3,13 @@ import { getPriceForSlug } from "./pricing";
 import { getTestPrice } from "./dev-mode";
 
 // Price rules shared by the cart (what the customer sees) and /api/checkout (what Stripe charges).
-// They mirror the product page: base price per design, +€20 for a hoodie or sweater,
-// +€7.50 printed / +€10 embroidered personalization, +€5 gift packaging.
+// They mirror the product page: base price per design, +€20 for a long sleeve or sweater,
+// +€30 for a hoodie, +€7.50 printed / +€10 embroidered personalization, +€5 gift packaging.
 
-export const PRODUCT_TYPES = ["tshirt", "hoodie", "sweater"] as const;
+export const PRODUCT_TYPES = ["tshirt", "longsleeve", "hoodie", "sweater"] as const;
 export type ProductType = (typeof PRODUCT_TYPES)[number];
 
-export const GARMENT_SURCHARGE_EUR: Record<ProductType, number> = { tshirt: 0, hoodie: 20, sweater: 20 };
+export const GARMENT_SURCHARGE_EUR: Record<ProductType, number> = { tshirt: 0, longsleeve: 20, hoodie: 30, sweater: 20 };
 export const PERSONALIZATION_COST_EUR = { printed: 7.5, embroidered: 10 } as const;
 export type PersonalizationMethod = keyof typeof PERSONALIZATION_COST_EUR;
 export const GIFT_PACKAGE_COST_EUR = 5;

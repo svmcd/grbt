@@ -27,7 +27,7 @@ function rateLimited(ip: string) {
     return entry.count > MAX_ATTEMPTS;
 }
 
-const TYPE_KEYS: Record<string, "tshirt" | "hoodie" | "sweater"> = { "T-shirt": "tshirt", Hoodie: "hoodie", Sweater: "sweater" };
+const TYPE_KEYS: Record<string, "tshirt" | "longsleeve" | "hoodie" | "sweater"> = { "T-shirt": "tshirt", "Long Sleeve": "longsleeve", Hoodie: "hoodie", Sweater: "sweater" };
 
 // Every order stores its order_number (new orders at checkout and on Stripe import, older ones by
 // scripts/backfill-order-number.mjs), so one indexed query finds it; the email is compared

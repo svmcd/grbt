@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import type { AdminOrder, AdminOrderItem } from "@/lib/admin/orders";
+import { cloprodLabel, type AdminOrder, type AdminOrderItem } from "@/lib/admin/orders";
 import { designImage } from "@/lib/admin/design-image";
 import { money } from "@/lib/admin/format";
 import { Card, FulfillmentBadge, GiftIcon, PenIcon } from "../ui";
@@ -23,6 +23,7 @@ function ItemRow({ item }: { item: AdminOrderItem }) {
     const img = designImage(item.title, item.productType, item.color);
     const variant = [item.productType, item.color, item.size].filter(Boolean).join(" · ");
     const parsed = Boolean(item.productType || item.color || item.size);
+    const cloprod = cloprodLabel(item);
     return (
         <li className="px-4 py-3.5 sm:px-5">
             <div className="flex gap-3">
@@ -34,6 +35,7 @@ function ItemRow({ item }: { item: AdminOrderItem }) {
                         <div className="min-w-0">
                             <p className="text-sm font-semibold text-zinc-900">{item.title}</p>
                             {variant && <p className="mt-0.5 text-[13px] text-zinc-700">{variant}</p>}
+                            {cloprod && <p className="mt-0.5 text-xs text-zinc-600">Cloprod: {cloprod}</p>}
                             {!parsed && item.raw && item.raw !== item.title && <p className="mt-0.5 text-[13px] text-zinc-700">{item.raw}</p>}
                         </div>
                         <div className="flex flex-shrink-0 gap-4 text-sm tabular-nums sm:text-right">

@@ -4,7 +4,7 @@ import { adminDb } from "@/lib/firebase-admin";
 import { requireAdmin } from "@/lib/admin/auth";
 import { addressTooLong, normalizeOrder, type AdminActivity } from "@/lib/admin/orders";
 import { lastSync } from "@/lib/admin/stripe-sync";
-import { hasretSlugs, memleketSlugs, recepIvedikSlugs, titleCaseCity } from "@/lib/catalog";
+import { colorsFor, hasretSlugs, memleketSlugs, recepIvedikSlugs, titleCaseCity, type ProductType } from "@/lib/catalog";
 import { describeCheckoutItem } from "@/lib/emails/line-items";
 import { isLocale } from "@/i18n/config";
 import { orderNumber } from "@/lib/order-number";
@@ -27,8 +27,7 @@ export async function GET(request: NextRequest) {
 const EDITABLE = new Set(["notes", "custom_flag", "customer_name", "customer_phone", "customer_email", "archived"]);
 
 const CATALOG_SLUGS = new Set([...memleketSlugs, ...hasretSlugs, ...recepIvedikSlugs]);
-const PRODUCT_TYPES = new Set(["tshirt", "hoodie", "sweater"]);
-const COLORS = new Set(["siyah", "beyaz"]);
+const PRODUCT_TYPES = new Set(["tshirt", "longsleeve", "hoodie", "sweater"]);
 const SIZES = new Set(["XS", "S", "M", "L", "XL", "XXL", "3XL"]);
 const MAX_BULK = 200;
 
@@ -202,14 +201,16 @@ export async function POST(request: NextRequest) {
         }
         case "create": {
             // Manual order (e.g. sold in person). Items come from the catalog and are stored in the
-            // same Turkish description format as checkout orders ("Konya Tişört - siyah, M"), so
-            // analytics count them by design, type, color and size. Prices in euros from the form.
+            // same Turkish description format as checkout orders ("Konya Tişört - siyah, M",
+            // "Konya Hoodie - gece mavisi, M", "Konya Uzun Kollu - kırmızı, M"), so analytics count them by
+            // design, type, color and size. Colours must be sold for that design and type (colorsFor: none
+            // for a Hasret/Sinema long sleeve). Prices in euros from the form.
             const d = body.data || {};
             const raw: ManualItem[] = Array.isArray(d.items) ? d.items : [];
             if (!raw.length) return NextResponse.json({ error: "Add at least one item" }, { status: 400 });
             for (const it of raw) {
                 if (!CATALOG_SLUGS.has(it?.slug)) return NextResponse.json({ error: `Unknown design: ${it?.slug}` }, { status: 400 });
-                if (!PRODUCT_TYPES.has(it.productType) || !COLORS.has(it.color) || !SIZES.has(it.size))
+                if (!PRODUCT_TYPES.has(it.productType) || !colorsFor(it.slug, it.productType as ProductType).includes(it.color) || !SIZES.has(it.size))
                     return NextResponse.json({ error: "Every item needs a product type, color and size" }, { status: 400 });
                 if (!(Number(it.quantity) >= 1) || !(Number(it.unitPriceEuros) >= 0)) return NextResponse.json({ error: "Check the quantities and prices" }, { status: 400 });
             }

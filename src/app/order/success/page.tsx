@@ -7,7 +7,7 @@ import { useCart } from "@/lib/cart-context";
 import { useFormatPrice, useLocale, useMessages } from "@/i18n/LocaleProvider";
 import orderSuccessMessages from "@/i18n/messages/orderSuccess";
 import commonMessages from "@/i18n/messages/common";
-import { deliveryDays, getCountryName } from "@/lib/shipping";
+import { deliveryTimeline, formatDeliveryDate, getCountryName } from "@/lib/shipping";
 import { orderNumber } from "@/lib/order-number";
 
 // What /api/order/[sessionId] returns
@@ -83,7 +83,9 @@ function OrderSuccessContent() {
   const reference = orderDetails?.id ?? sessionId;
   const orderRef = reference ? orderNumber(reference) : t.notAvailable;
   const countryCode = orderDetails?.shipping_details?.address?.country || "";
-  const days = countryCode ? deliveryDays(countryCode) : null;
+  // Same dates as the product page and the cart showed, counted from the day the order was placed
+  const timeline =
+    countryCode && orderDetails?.created ? deliveryTimeline(countryCode, new Date(orderDetails.created * 1000)) : null;
 
   if (!orderDetails || !confirmed) {
     return (
@@ -254,10 +256,15 @@ function OrderSuccessContent() {
               <div>
                 <h3 className="sub mb-3">{t.faqTitle}</h3>
                 <dl className="space-y-1.5 text-[14px] leading-[1.6]">
-                  {days && (
+                  {timeline && (
                     <div className="flex flex-wrap gap-x-2">
                       <dt className="text-subdued">{t.deliveryTimeLabel}</dt>
-                      <dd>{t.deliveryTimeValue(days.min, days.max)}</dd>
+                      <dd>
+                        {t.deliveryTimeValue(
+                          formatDeliveryDate(timeline.delivered.from, intlLocale),
+                          formatDeliveryDate(timeline.delivered.to, intlLocale)
+                        )}
+                      </dd>
                     </div>
                   )}
                   <div className="flex flex-wrap gap-x-2">

@@ -4,9 +4,9 @@ import { isLocale, localizePath, type Locale } from "@/i18n/config";
 import { getLocale } from "@/i18n/server";
 import common from "@/i18n/messages/common";
 import emails from "@/i18n/messages/emails";
-import { checkoutItemMetadata, describeCheckoutItem, truncate, type CheckoutItemInput } from "@/lib/emails/line-items";
+import { checkoutItemMetadata, colorLabel, describeCheckoutItem, truncate, type CheckoutItemInput } from "@/lib/emails/line-items";
 import { recordEvent, visitorFromRequest } from "@/lib/traffic";
-import { getProductBySlug, memleketSlugs } from "@/lib/catalog";
+import { colorsFor, getProductBySlug, memleketSlugs, productTypesFor } from "@/lib/catalog";
 import { isAvailable } from "@/lib/pricing";
 import {
     MAX_GIFT_MESSAGE,
@@ -56,7 +56,12 @@ function parseLine(raw: unknown): CheckoutLine {
     if (typeof productType !== "string" || !(PRODUCT_TYPES as readonly string[]).includes(productType)) {
         throw new BadRequest("Unknown product type");
     }
-    if (typeof item.color !== "string" || !product.colors.includes(item.color)) throw new BadRequest("Unknown color");
+    // Hasret and Sinema are not sold as a long sleeve
+    if (!productTypesFor(slug).includes(productType as ProductType)) throw new BadRequest("Product type not available");
+    // Colours are per design and garment type (Memleket: garments.ts; Hasret/Sinema: siyah/beyaz)
+    if (typeof item.color !== "string" || !colorsFor(slug, productType as ProductType).includes(item.color)) {
+        throw new BadRequest("Unknown color");
+    }
     if (typeof item.size !== "string" || !product.sizes.includes(item.size)) throw new BadRequest("Unknown size");
 
     const rawQuantity = Number(item.quantity);
@@ -184,13 +189,14 @@ export async function POST(request: Request) {
         const trTypes = common.tr.productTypes;
         const giftMessages = lines
             .filter((l) => l.giftPackage?.message)
-            .map((l) => `${l.city} ${trTypes[l.productType]} (${l.color}, ${l.size}): "${l.giftPackage!.message}"`);
+            .map((l) => `${l.city} ${trTypes[l.productType]} (${colorLabel(l.color, "tr", l.productType)}, ${l.size}): "${l.giftPackage!.message}"`);
 
         // Store analytics: anonymous daily visitor id, so the purchase can be linked to the visit
         const trackHost = (request.headers.get("host") || "").endsWith("egrikuyu.com");
         const visitor = trackHost ? visitorFromRequest(request.headers) : null;
 
-        const days = deliveryDays(shippingCountry);
+        // Production plus transit in business days; isShippingCountry() above guarantees a value
+        const days = deliveryDays(shippingCountry)!;
         const countryName = getCountryName(shippingCountry, locale);
         const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
 

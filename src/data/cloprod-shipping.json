@@ -1,0 +1,1531 @@
+[
+ {
+  "code": "AL",
+  "name": "Albania",
+  "vat": 0,
+  "method": "fast",
+  "days": "21-23",
+  "channels": {
+   "fast": {
+    "days": "21-23",
+    "base": 434,
+    "perKg": 2250
+   }
+  }
+ },
+ {
+  "code": "AO",
+  "name": "Angola",
+  "vat": 0,
+  "method": "fast",
+  "days": "15-17",
+  "channels": {
+   "fast": {
+    "days": "15-17",
+    "base": 384,
+    "perKg": 2317
+   }
+  }
+ },
+ {
+  "code": "AU",
+  "name": "Australia",
+  "vat": 0,
+  "method": "express",
+  "days": "5-9",
+  "channels": {
+   "fast": {
+    "days": "7-15",
+    "base": 1934,
+    "perKg": 1300
+   },
+   "express": {
+    "days": "5-9",
+    "base": 1934,
+    "perKg": 1334
+   }
+  }
+ },
+ {
+  "code": "AT",
+  "name": "Austria",
+  "vat": 20,
+  "method": "fast",
+  "days": "8-10",
+  "channels": {
+   "standard": {
+    "days": "8-10",
+    "base": 384,
+    "perKg": 1517
+   },
+   "fast": {
+    "days": "8-10",
+    "base": 384,
+    "perKg": 1600
+   },
+   "sea": {
+    "days": "22-25",
+    "base": 0,
+    "perKg": 366
+   }
+  }
+ },
+ {
+  "code": "BH",
+  "name": "Bahrain",
+  "vat": 0,
+  "method": "fast",
+  "days": "8-12",
+  "channels": {
+   "fast": {
+    "days": "8-12",
+    "base": 667,
+    "perKg": 1284
+   }
+  }
+ },
+ {
+  "code": "BE",
+  "name": "Belgium",
+  "vat": 21,
+  "method": "express",
+  "days": "5-7",
+  "channels": {
+   "standard": {
+    "days": "8-10",
+    "base": 384,
+    "perKg": 1767
+   },
+   "fast": {
+    "days": "6-8",
+    "base": 384,
+    "perKg": 1784
+   },
+   "express": {
+    "days": "5-7",
+    "base": 484,
+    "perKg": 2000
+   },
+   "sea": {
+    "days": "22-25",
+    "base": 0,
+    "perKg": 366
+   }
+  }
+ },
+ {
+  "code": "BO",
+  "name": "Bolivia(Plurinational State of)",
+  "vat": 0,
+  "method": "fast",
+  "days": "30-40",
+  "channels": {
+   "fast": {
+    "days": "30-40",
+    "base": 400,
+    "perKg": 4100
+   }
+  }
+ },
+ {
+  "code": "BA",
+  "name": "Bosnia and Herzegovina",
+  "vat": 0,
+  "method": "fast",
+  "days": "21-23",
+  "channels": {
+   "fast": {
+    "days": "21-23",
+    "base": 334,
+    "perKg": 2250
+   }
+  }
+ },
+ {
+  "code": "BR",
+  "name": "Brazil",
+  "vat": 0,
+  "method": "fast",
+  "days": "7-10",
+  "channels": {
+   "fast": {
+    "days": "7-10",
+    "base": 1000,
+    "perKg": 1467
+   }
+  }
+ },
+ {
+  "code": "BG",
+  "name": "Bulgaria",
+  "vat": 20,
+  "method": "fast",
+  "days": "8-10",
+  "channels": {
+   "standard": {
+    "days": "8-10",
+    "base": 284,
+    "perKg": 1467
+   },
+   "fast": {
+    "days": "8-10",
+    "base": 284,
+    "perKg": 1617
+   },
+   "sea": {
+    "days": "22-25",
+    "base": 0,
+    "perKg": 366
+   }
+  }
+ },
+ {
+  "code": "CA",
+  "name": "Canada",
+  "vat": 20,
+  "method": "express",
+  "days": "7-10",
+  "channels": {
+   "standard": {
+    "days": "10-15",
+    "base": 100,
+    "perKg": 1800
+   },
+   "fast": {
+    "days": "10-15",
+    "base": 384,
+    "perKg": 2000
+   },
+   "express": {
+    "days": "7-10",
+    "base": 500,
+    "perKg": 2334
+   },
+   "sea": {
+    "days": "22-25",
+    "base": 0,
+    "perKg": 572
+   }
+  }
+ },
+ {
+  "code": "CL",
+  "name": "Chile",
+  "vat": 0,
+  "method": "fast",
+  "days": "10-12",
+  "channels": {
+   "fast": {
+    "days": "10-12",
+    "base": 2167,
+    "perKg": 1467
+   }
+  }
+ },
+ {
+  "code": "CO",
+  "name": "Colombia",
+  "vat": 19,
+  "method": "fast",
+  "days": "10-20",
+  "channels": {
+   "fast": {
+    "days": "10-20",
+    "base": 400,
+    "perKg": 2034
+   }
+  }
+ },
+ {
+  "code": "CR",
+  "name": "Costa Rica",
+  "vat": 0,
+  "method": "fast",
+  "days": "20-30",
+  "channels": {
+   "fast": {
+    "days": "20-30",
+    "base": 400,
+    "perKg": 3167
+   }
+  }
+ },
+ {
+  "code": "HR",
+  "name": "Croatia",
+  "vat": 25,
+  "method": "fast",
+  "days": "8-10",
+  "channels": {
+   "standard": {
+    "days": "8-10",
+    "base": 367,
+    "perKg": 1984
+   },
+   "fast": {
+    "days": "8-10",
+    "base": 400,
+    "perKg": 2167
+   },
+   "sea": {
+    "days": "22-25",
+    "base": 0,
+    "perKg": 366
+   }
+  }
+ },
+ {
+  "code": "CY",
+  "name": "Cyprus",
+  "vat": 19,
+  "method": "fast",
+  "days": "6-8",
+  "channels": {
+   "fast": {
+    "days": "6-8",
+    "base": 450,
+    "perKg": 2467
+   },
+   "sea": {
+    "days": "22-25",
+    "base": 0,
+    "perKg": 366
+   }
+  }
+ },
+ {
+  "code": "CZ",
+  "name": "Czechia",
+  "vat": 21,
+  "method": "fast",
+  "days": "8-10",
+  "channels": {
+   "standard": {
+    "days": "8-10",
+    "base": 334,
+    "perKg": 1267
+   },
+   "fast": {
+    "days": "8-10",
+    "base": 334,
+    "perKg": 1384
+   },
+   "sea": {
+    "days": "22-25",
+    "base": 0,
+    "perKg": 366
+   }
+  }
+ },
+ {
+  "code": "DK",
+  "name": "Denmark",
+  "vat": 25,
+  "method": "fast",
+  "days": "8-10",
+  "channels": {
+   "standard": {
+    "days": "8-10",
+    "base": 400,
+    "perKg": 1600
+   },
+   "fast": {
+    "days": "8-10",
+    "base": 400,
+    "perKg": 1917
+   },
+   "sea": {
+    "days": "22-25",
+    "base": 0,
+    "perKg": 366
+   }
+  }
+ },
+ {
+  "code": "EC",
+  "name": "Ecuador",
+  "vat": 0,
+  "method": "fast",
+  "days": "17-22",
+  "channels": {
+   "fast": {
+    "days": "17-22",
+    "base": 417,
+    "perKg": 3917
+   }
+  }
+ },
+ {
+  "code": "SV",
+  "name": "El Salvador",
+  "vat": 0,
+  "method": "fast",
+  "days": "20-30",
+  "channels": {
+   "fast": {
+    "days": "20-30",
+    "base": 367,
+    "perKg": 3350
+   }
+  }
+ },
+ {
+  "code": "EE",
+  "name": "Estonia",
+  "vat": 22,
+  "method": "fast",
+  "days": "8-10",
+  "channels": {
+   "fast": {
+    "days": "8-10",
+    "base": 334,
+    "perKg": 1550
+   },
+   "sea": {
+    "days": "22-25",
+    "base": 0,
+    "perKg": 366
+   }
+  }
+ },
+ {
+  "code": "FI",
+  "name": "Finland",
+  "vat": 24,
+  "method": "fast",
+  "days": "8-10",
+  "channels": {
+   "fast": {
+    "days": "8-10",
+    "base": 434,
+    "perKg": 1600
+   },
+   "sea": {
+    "days": "22-25",
+    "base": 0,
+    "perKg": 366
+   }
+  }
+ },
+ {
+  "code": "FR",
+  "name": "France",
+  "vat": 20,
+  "method": "fast",
+  "days": "5-7",
+  "channels": {
+   "standard": {
+    "days": "6-10",
+    "base": 384,
+    "perKg": 1450
+   },
+   "fast": {
+    "days": "5-7",
+    "base": 417,
+    "perKg": 1667
+   },
+   "sea": {
+    "days": "22-25",
+    "base": 0,
+    "perKg": 366
+   }
+  }
+ },
+ {
+  "code": "DE",
+  "name": "Germany",
+  "vat": 20,
+  "method": "express",
+  "days": "4-6",
+  "channels": {
+   "standard": {
+    "days": "6-10",
+    "base": 367,
+    "perKg": 1517
+   },
+   "fast": {
+    "days": "5-7",
+    "base": 417,
+    "perKg": 2034
+   },
+   "express": {
+    "days": "4-6",
+    "base": 417,
+    "perKg": 2017
+   },
+   "sea": {
+    "days": "22-25",
+    "base": 0,
+    "perKg": 366
+   }
+  }
+ },
+ {
+  "code": "GH",
+  "name": "Ghana",
+  "vat": 0,
+  "method": "fast",
+  "days": "15-17",
+  "channels": {
+   "fast": {
+    "days": "15-17",
+    "base": 367,
+    "perKg": 2667
+   }
+  }
+ },
+ {
+  "code": "GR",
+  "name": "Greece",
+  "vat": 24,
+  "method": "fast",
+  "days": "8-10",
+  "channels": {
+   "fast": {
+    "days": "8-10",
+    "base": 284,
+    "perKg": 1784
+   },
+   "sea": {
+    "days": "22-25",
+    "base": 0,
+    "perKg": 366
+   }
+  }
+ },
+ {
+  "code": "GT",
+  "name": "Guatemala",
+  "vat": 0,
+  "method": "fast",
+  "days": "47-50",
+  "channels": {
+   "fast": {
+    "days": "47-50",
+    "base": 667,
+    "perKg": 2084
+   }
+  }
+ },
+ {
+  "code": "HN",
+  "name": "Honduras",
+  "vat": 0,
+  "method": "fast",
+  "days": "30-40",
+  "channels": {
+   "fast": {
+    "days": "30-40",
+    "base": 367,
+    "perKg": 3484
+   }
+  }
+ },
+ {
+  "code": "HU",
+  "name": "Hungary",
+  "vat": 27,
+  "method": "fast",
+  "days": "8-10",
+  "channels": {
+   "standard": {
+    "days": "8-10",
+    "base": 350,
+    "perKg": 1567
+   },
+   "fast": {
+    "days": "8-10",
+    "base": 350,
+    "perKg": 1734
+   },
+   "sea": {
+    "days": "22-25",
+    "base": 0,
+    "perKg": 366
+   }
+  }
+ },
+ {
+  "code": "IS",
+  "name": "Iceland",
+  "vat": 24,
+  "method": "fast",
+  "days": "10-14",
+  "channels": {
+   "fast": {
+    "days": "10-14",
+    "base": 1300,
+    "perKg": 2317
+   }
+  }
+ },
+ {
+  "code": "IN",
+  "name": "India",
+  "vat": 0,
+  "method": "express",
+  "days": "3-4",
+  "channels": {
+   "standard": {
+    "days": "20-30",
+    "base": 316,
+    "perKg": 784
+   },
+   "express": {
+    "days": "3-4",
+    "base": 1926,
+    "perKg": 2201
+   }
+  }
+ },
+ {
+  "code": "IQ",
+  "name": "Iraq",
+  "vat": 0,
+  "method": "fast",
+  "days": "10-12",
+  "channels": {
+   "fast": {
+    "days": "10-12",
+    "base": 500,
+    "perKg": 1700
+   }
+  }
+ },
+ {
+  "code": "IE",
+  "name": "Ireland",
+  "vat": 23,
+  "method": "fast",
+  "days": "8-10",
+  "channels": {
+   "fast": {
+    "days": "8-10",
+    "base": 384,
+    "perKg": 2200
+   },
+   "sea": {
+    "days": "22-25",
+    "base": 0,
+    "perKg": 366
+   }
+  }
+ },
+ {
+  "code": "IL",
+  "name": "Israel",
+  "vat": 0,
+  "method": "fast",
+  "days": "6-10",
+  "channels": {
+   "fast": {
+    "days": "6-10",
+    "base": 1000,
+    "perKg": 3034
+   }
+  }
+ },
+ {
+  "code": "IT",
+  "name": "Italy",
+  "vat": 22,
+  "method": "express",
+  "days": "6-8",
+  "channels": {
+   "standard": {
+    "days": "6-10",
+    "base": 417,
+    "perKg": 1484
+   },
+   "fast": {
+    "days": "6-10",
+    "base": 417,
+    "perKg": 1517
+   },
+   "express": {
+    "days": "6-8",
+    "base": 434,
+    "perKg": 1884
+   },
+   "sea": {
+    "days": "22-25",
+    "base": 0,
+    "perKg": 366
+   }
+  }
+ },
+ {
+  "code": "JP",
+  "name": "Japan",
+  "vat": 0,
+  "method": "standard",
+  "days": "4-7",
+  "channels": {
+   "standard": {
+    "days": "4-7",
+    "base": 364,
+    "perKg": 620
+   }
+  }
+ },
+ {
+  "code": "KZ",
+  "name": "Kazakhstan",
+  "vat": 0,
+  "method": "standard",
+  "days": "9-15",
+  "channels": {
+   "standard": {
+    "days": "9-15",
+    "base": 91,
+    "perKg": 485
+   }
+  }
+ },
+ {
+  "code": "KE",
+  "name": "Kenya",
+  "vat": 0,
+  "method": "fast",
+  "days": "15-17",
+  "channels": {
+   "fast": {
+    "days": "15-17",
+    "base": 367,
+    "perKg": 1717
+   }
+  }
+ },
+ {
+  "code": "KR",
+  "name": "Korea(Republic of)",
+  "vat": 10,
+  "method": "express",
+  "days": "6-8",
+  "channels": {
+   "fast": {
+    "days": "8-10",
+    "base": 392,
+    "perKg": 250
+   },
+   "express": {
+    "days": "6-8",
+    "base": 384,
+    "perKg": 234
+   }
+  }
+ },
+ {
+  "code": "KW",
+  "name": "Kuwait",
+  "vat": 0,
+  "method": "fast",
+  "days": "8-12",
+  "channels": {
+   "fast": {
+    "days": "8-12",
+    "base": 667,
+    "perKg": 1300
+   }
+  }
+ },
+ {
+  "code": "LV",
+  "name": "Latvia",
+  "vat": 21,
+  "method": "fast",
+  "days": "8-10",
+  "channels": {
+   "fast": {
+    "days": "8-10",
+    "base": 334,
+    "perKg": 1584
+   },
+   "sea": {
+    "days": "22-25",
+    "base": 0,
+    "perKg": 366
+   }
+  }
+ },
+ {
+  "code": "LT",
+  "name": "Lithuania",
+  "vat": 21,
+  "method": "fast",
+  "days": "8-10",
+  "channels": {
+   "fast": {
+    "days": "8-10",
+    "base": 334,
+    "perKg": 1450
+   },
+   "sea": {
+    "days": "22-25",
+    "base": 0,
+    "perKg": 366
+   }
+  }
+ },
+ {
+  "code": "LU",
+  "name": "Luxembourg",
+  "vat": 17,
+  "method": "fast",
+  "days": "8-10",
+  "channels": {
+   "fast": {
+    "days": "8-10",
+    "base": 417,
+    "perKg": 2400
+   },
+   "sea": {
+    "days": "22-25",
+    "base": 0,
+    "perKg": 366
+   }
+  }
+ },
+ {
+  "code": "MT",
+  "name": "Malta",
+  "vat": 18,
+  "method": "fast",
+  "days": "12-15",
+  "channels": {
+   "fast": {
+    "days": "12-15",
+    "base": 500,
+    "perKg": 2800
+   },
+   "sea": {
+    "days": "22-25",
+    "base": 0,
+    "perKg": 366
+   }
+  }
+ },
+ {
+  "code": "MX",
+  "name": "Mexico",
+  "vat": 19,
+  "method": "fast",
+  "days": "10-20",
+  "channels": {
+   "standard": {
+    "days": "10-20",
+    "base": 334,
+    "perKg": 1500
+   },
+   "fast": {
+    "days": "10-20",
+    "base": 334,
+    "perKg": 1750
+   }
+  }
+ },
+ {
+  "code": "MD",
+  "name": "Moldova(Republic of)",
+  "vat": 0,
+  "method": "fast",
+  "days": "10-25",
+  "channels": {
+   "fast": {
+    "days": "10-25",
+    "base": 834,
+    "perKg": 1184
+   }
+  }
+ },
+ {
+  "code": "ME",
+  "name": "Montenegro",
+  "vat": 0,
+  "method": "fast",
+  "days": "17-19",
+  "channels": {
+   "fast": {
+    "days": "17-19",
+    "base": 284,
+    "perKg": 2017
+   }
+  }
+ },
+ {
+  "code": "MA",
+  "name": "Morocco",
+  "vat": 0,
+  "method": "fast",
+  "days": "15-17",
+  "channels": {
+   "fast": {
+    "days": "15-17",
+    "base": 784,
+    "perKg": 1584
+   }
+  }
+ },
+ {
+  "code": "NL",
+  "name": "Netherlands",
+  "vat": 21,
+  "method": "express",
+  "days": "4-6",
+  "channels": {
+   "standard": {
+    "days": "8-10",
+    "base": 384,
+    "perKg": 1650
+   },
+   "fast": {
+    "days": "7-10",
+    "base": 384,
+    "perKg": 1717
+   },
+   "express": {
+    "days": "4-6",
+    "base": 417,
+    "perKg": 1984
+   },
+   "sea": {
+    "days": "22-25",
+    "base": 0,
+    "perKg": 366
+   }
+  }
+ },
+ {
+  "code": "NZ",
+  "name": "New Zealand",
+  "vat": 0,
+  "method": "fast",
+  "days": "7-12",
+  "channels": {
+   "fast": {
+    "days": "7-12",
+    "base": 267,
+    "perKg": 1567
+   }
+  }
+ },
+ {
+  "code": "NI",
+  "name": "Nicaragua",
+  "vat": 0,
+  "method": "fast",
+  "days": "30-40",
+  "channels": {
+   "fast": {
+    "days": "30-40",
+    "base": 367,
+    "perKg": 3434
+   }
+  }
+ },
+ {
+  "code": "NG",
+  "name": "Nigeria",
+  "vat": 0,
+  "method": "fast",
+  "days": "15-17",
+  "channels": {
+   "fast": {
+    "days": "15-17",
+    "base": 400,
+    "perKg": 1817
+   }
+  }
+ },
+ {
+  "code": "MK",
+  "name": "North Macedonia",
+  "vat": 0,
+  "method": "fast",
+  "days": "17-19",
+  "channels": {
+   "fast": {
+    "days": "17-19",
+    "base": 300,
+    "perKg": 2100
+   }
+  }
+ },
+ {
+  "code": "NO",
+  "name": "Norway",
+  "vat": 25,
+  "method": "fast",
+  "days": "8-10",
+  "channels": {
+   "fast": {
+    "days": "8-10",
+    "base": 350,
+    "perKg": 1900
+   }
+  }
+ },
+ {
+  "code": "OM",
+  "name": "Oman",
+  "vat": 0,
+  "method": "fast",
+  "days": "15-17",
+  "channels": {
+   "fast": {
+    "days": "15-17",
+    "base": 634,
+    "perKg": 1467
+   }
+  }
+ },
+ {
+  "code": "PA",
+  "name": "Panama",
+  "vat": 0,
+  "method": "fast",
+  "days": "54-57",
+  "channels": {
+   "fast": {
+    "days": "54-57",
+    "base": 684,
+    "perKg": 3800
+   }
+  }
+ },
+ {
+  "code": "PY",
+  "name": "Paraguay",
+  "vat": 0,
+  "method": "fast",
+  "days": "20-30",
+  "channels": {
+   "fast": {
+    "days": "20-30",
+    "base": 400,
+    "perKg": 3967
+   }
+  }
+ },
+ {
+  "code": "PE",
+  "name": "Peru",
+  "vat": 0,
+  "method": "fast",
+  "days": "20-25",
+  "channels": {
+   "fast": {
+    "days": "20-25",
+    "base": 500,
+    "perKg": 2917
+   }
+  }
+ },
+ {
+  "code": "PH",
+  "name": "Philippines",
+  "vat": 0,
+  "method": "fast",
+  "days": "6-10",
+  "channels": {
+   "fast": {
+    "days": "6-10",
+    "base": 834,
+    "perKg": 817
+   }
+  }
+ },
+ {
+  "code": "PL",
+  "name": "Poland",
+  "vat": 23,
+  "method": "express",
+  "days": "5-7",
+  "channels": {
+   "standard": {
+    "days": "8-10",
+    "base": 234,
+    "perKg": 1284
+   },
+   "fast": {
+    "days": "8-10",
+    "base": 234,
+    "perKg": 1367
+   },
+   "express": {
+    "days": "5-7",
+    "base": 250,
+    "perKg": 1767
+   },
+   "sea": {
+    "days": "22-25",
+    "base": 0,
+    "perKg": 366
+   }
+  }
+ },
+ {
+  "code": "PT",
+  "name": "Portugal",
+  "vat": 23,
+  "method": "fast",
+  "days": "10-14",
+  "channels": {
+   "standard": {
+    "days": "10-14",
+    "base": 317,
+    "perKg": 1717
+   },
+   "fast": {
+    "days": "10-14",
+    "base": 317,
+    "perKg": 1817
+   },
+   "sea": {
+    "days": "22-25",
+    "base": 0,
+    "perKg": 366
+   }
+  }
+ },
+ {
+  "code": "QA",
+  "name": "Qatar",
+  "vat": 0,
+  "method": "fast",
+  "days": "8-12",
+  "channels": {
+   "fast": {
+    "days": "8-12",
+    "base": 750,
+    "perKg": 1234
+   }
+  }
+ },
+ {
+  "code": "RO",
+  "name": "Romania",
+  "vat": 19,
+  "method": "fast",
+  "days": "8-10",
+  "channels": {
+   "standard": {
+    "days": "8-10",
+    "base": 334,
+    "perKg": 1567
+   },
+   "fast": {
+    "days": "8-10",
+    "base": 334,
+    "perKg": 1634
+   },
+   "sea": {
+    "days": "22-25",
+    "base": 0,
+    "perKg": 366
+   }
+  }
+ },
+ {
+  "code": "RU",
+  "name": "Russian Federation",
+  "vat": 0,
+  "method": "express",
+  "days": "10-15",
+  "channels": {
+   "fast": {
+    "days": "25-30",
+    "base": 300,
+    "perKg": 750
+   },
+   "express": {
+    "days": "10-15",
+    "base": 300,
+    "perKg": 967
+   }
+  }
+ },
+ {
+  "code": "RW",
+  "name": "Rwanda",
+  "vat": 0,
+  "method": "fast",
+  "days": "15-17",
+  "channels": {
+   "fast": {
+    "days": "15-17",
+    "base": 300,
+    "perKg": 2084
+   }
+  }
+ },
+ {
+  "code": "RE",
+  "name": "Réunion",
+  "vat": 0,
+  "method": "fast",
+  "days": "21-23",
+  "channels": {
+   "fast": {
+    "days": "21-23",
+    "base": 1150,
+    "perKg": 2000
+   }
+  }
+ },
+ {
+  "code": "SA",
+  "name": "Saudi Arabia",
+  "vat": 15,
+  "method": "fast",
+  "days": "6-10",
+  "channels": {
+   "fast": {
+    "days": "6-10",
+    "base": 600,
+    "perKg": 1434
+   }
+  }
+ },
+ {
+  "code": "RS",
+  "name": "Serbia",
+  "vat": 20,
+  "method": "fast",
+  "days": "15-17",
+  "channels": {
+   "fast": {
+    "days": "15-17",
+    "base": 834,
+    "perKg": 1800
+   }
+  }
+ },
+ {
+  "code": "SG",
+  "name": "Singapore",
+  "vat": 0,
+  "method": "fast",
+  "days": "4-7",
+  "channels": {
+   "fast": {
+    "days": "4-7",
+    "base": 250,
+    "perKg": 600
+   }
+  }
+ },
+ {
+  "code": "SK",
+  "name": "Slovakia",
+  "vat": 20,
+  "method": "fast",
+  "days": "8-10",
+  "channels": {
+   "standard": {
+    "days": "8-10",
+    "base": 334,
+    "perKg": 1800
+   },
+   "fast": {
+    "days": "8-10",
+    "base": 334,
+    "perKg": 1934
+   },
+   "sea": {
+    "days": "22-25",
+    "base": 0,
+    "perKg": 366
+   }
+  }
+ },
+ {
+  "code": "SI",
+  "name": "Slovenia",
+  "vat": 22,
+  "method": "fast",
+  "days": "8-10",
+  "channels": {
+   "standard": {
+    "days": "8-10",
+    "base": 400,
+    "perKg": 1950
+   },
+   "fast": {
+    "days": "8-10",
+    "base": 400,
+    "perKg": 2050
+   },
+   "sea": {
+    "days": "22-25",
+    "base": 0,
+    "perKg": 366
+   }
+  }
+ },
+ {
+  "code": "ZA",
+  "name": "South Africa",
+  "vat": 0,
+  "method": "standard",
+  "days": "20-30",
+  "channels": {
+   "standard": {
+    "days": "20-30",
+    "base": 316,
+    "perKg": 1403
+   }
+  }
+ },
+ {
+  "code": "ES",
+  "name": "Spain",
+  "vat": 21,
+  "method": "fast",
+  "days": "6-10",
+  "channels": {
+   "standard": {
+    "days": "6-10",
+    "base": 300,
+    "perKg": 1434
+   },
+   "fast": {
+    "days": "6-10",
+    "base": 300,
+    "perKg": 1500
+   },
+   "sea": {
+    "days": "22-25",
+    "base": 0,
+    "perKg": 366
+   }
+  }
+ },
+ {
+  "code": "LK",
+  "name": "Sri Lanka",
+  "vat": 0,
+  "method": "fast",
+  "days": "12-20",
+  "channels": {
+   "fast": {
+    "days": "12-20",
+    "base": 250,
+    "perKg": 884
+   }
+  }
+ },
+ {
+  "code": "SE",
+  "name": "Sweden",
+  "vat": 25,
+  "method": "express",
+  "days": "5-8",
+  "channels": {
+   "standard": {
+    "days": "8-10",
+    "base": 350,
+    "perKg": 1417
+   },
+   "fast": {
+    "days": "8-10",
+    "base": 350,
+    "perKg": 1467
+   },
+   "express": {
+    "days": "5-8",
+    "base": 350,
+    "perKg": 1767
+   },
+   "sea": {
+    "days": "22-25",
+    "base": 0,
+    "perKg": 366
+   }
+  }
+ },
+ {
+  "code": "CH",
+  "name": "Switzerland",
+  "vat": 22,
+  "method": "fast",
+  "days": "8-10",
+  "channels": {
+   "fast": {
+    "days": "8-10",
+    "base": 367,
+    "perKg": 2534
+   }
+  }
+ },
+ {
+  "code": "TZ",
+  "name": "Tanzania, United Republic of",
+  "vat": 0,
+  "method": "fast",
+  "days": "15-17",
+  "channels": {
+   "fast": {
+    "days": "15-17",
+    "base": 300,
+    "perKg": 1884
+   }
+  }
+ },
+ {
+  "code": "TH",
+  "name": "Thailand",
+  "vat": 0,
+  "method": "fast",
+  "days": "5-8",
+  "channels": {
+   "fast": {
+    "days": "5-8",
+    "base": 117,
+    "perKg": 467
+   }
+  }
+ },
+ {
+  "code": "TT",
+  "name": "Trinidad and Tobago",
+  "vat": 0,
+  "method": "fast",
+  "days": "30-40",
+  "channels": {
+   "fast": {
+    "days": "30-40",
+    "base": 767,
+    "perKg": 3800
+   }
+  }
+ },
+ {
+  "code": "UG",
+  "name": "Uganda",
+  "vat": 0,
+  "method": "fast",
+  "days": "15-17",
+  "channels": {
+   "fast": {
+    "days": "15-17",
+    "base": 367,
+    "perKg": 2367
+   }
+  }
+ },
+ {
+  "code": "UA",
+  "name": "Ukraine",
+  "vat": 0,
+  "method": "fast",
+  "days": "10-12",
+  "channels": {
+   "fast": {
+    "days": "10-12",
+    "base": 200,
+    "perKg": 1800
+   }
+  }
+ },
+ {
+  "code": "AE",
+  "name": "United Arab Emirates",
+  "vat": 5,
+  "method": "fast",
+  "days": "6-10",
+  "channels": {
+   "fast": {
+    "days": "6-10",
+    "base": 334,
+    "perKg": 1400
+   }
+  }
+ },
+ {
+  "code": "GB",
+  "name": "United Kingdom of Great Britain and Northern Ireland",
+  "vat": 0,
+  "method": "express",
+  "days": "3-5",
+  "channels": {
+   "standard": {
+    "days": "8-10",
+    "base": 100,
+    "perKg": 1300
+   },
+   "fast": {
+    "days": "6- 8",
+    "base": 300,
+    "perKg": 1334
+   },
+   "express": {
+    "days": "3-5",
+    "base": 300,
+    "perKg": 1434
+   },
+   "sea": {
+    "days": "22-25",
+    "base": 0,
+    "perKg": 366
+   }
+  }
+ },
+ {
+  "code": "US",
+  "name": "United States of America",
+  "vat": 0,
+  "method": "express",
+  "days": "5-8",
+  "channels": {
+   "standard": {
+    "days": "10-15",
+    "base": 100,
+    "perKg": 2000
+   },
+   "fast": {
+    "days": "7-12",
+    "base": 334,
+    "perKg": 2717
+   },
+   "express": {
+    "days": "5-8",
+    "base": 634,
+    "perKg": 2650
+   },
+   "sea": {
+    "days": "22-25",
+    "base": 0,
+    "perKg": 489
+   }
+  }
+ },
+ {
+  "code": "UY",
+  "name": "Uruguay",
+  "vat": 0,
+  "method": "fast",
+  "days": "30-40",
+  "channels": {
+   "fast": {
+    "days": "30-40",
+    "base": 400,
+    "perKg": 4050
+   }
+  }
+ },
+ {
+  "code": "VN",
+  "name": "Viet Nam",
+  "vat": 0,
+  "method": "fast",
+  "days": "3-8",
+  "channels": {
+   "fast": {
+    "days": "3-8",
+    "base": 150,
+    "perKg": 450
+   }
+  }
+ }
+]

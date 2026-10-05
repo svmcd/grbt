@@ -1,6 +1,6 @@
 import { getTestPrice } from "./dev-mode";
 
-export const defaultPriceEur = 40;
+export const defaultPriceEur = 45;
 
 // Optional: manage per-product overrides here
 const perProductOverrides: Record<string, { price?: number; available?: boolean }> = {
