@@ -207,13 +207,6 @@ export function ProductView({
     });
   };
 
-  const garmentName = selectedProductType === "tshirt" ? "" : t.garment[selectedProductType];
-  const surcharges = [
-    productTypeCost > 0 ? `+ ${price(productTypeCost)} ${garmentName}` : null,
-    personalizationCost > 0 ? `+ ${price(personalizationCost)} ${t.surchargePersonalization}` : null,
-    giftPackageCost > 0 ? `+ ${price(giftPackageCost)} ${t.surchargeGift}` : null,
-  ].filter(Boolean);
-
   const personalizationVisible = personalizationOpen || personalizationMethod !== "none";
   const fontFamily = FONTS.find((f) => f.name === personalizationFont)?.font ?? "Arial";
   const matchingSlug =
@@ -261,11 +254,6 @@ export function ProductView({
               {/* Price */}
               <div className="mt-3">
                 <p className="text-[18px] tracking-[0.02em] text-ink">{price(totalPrice)}</p>
-                {surcharges.length > 0 && (
-                  <p className="sub-xs mt-1 text-subdued">
-                    {price(basePrice)} {surcharges.join(" ")}
-                  </p>
-                )}
               </div>
 
               <div className="mt-6 space-y-6">
