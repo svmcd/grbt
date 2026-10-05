@@ -4,7 +4,8 @@ import { BRAND, SITE_URL, absolute, allProductSlugs, collectionOf, seoProduct } 
 import { getImagesForSlug } from "@/lib/catalog";
 
 // Google Merchant Center product feed (RSS 2.0). One item per T-shirt colour and size,
-// grouped per design. Language with ?lang=en|de|fr|tr (default en).
+// grouped per design. Language with ?lang=en|de|fr|tr (default en); links go to the
+// page in that language (/de/product/…) with the colour and size preselected.
 // Add in Merchant Center as a scheduled fetch of https://egrikuyu.com/feed.xml?lang=…
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -28,12 +29,14 @@ export async function GET(request: Request) {
             for (const size of p.sizes) {
                 const id = `${slug}-${color}-${size}`.toLowerCase();
                 const colorName = c.colors[color] ?? color;
+                // Opens the product page with this variant selected (in the feed's language)
+                const link = `${p.url}?${new URLSearchParams({ type: "tshirt", color, size })}`;
                 items.push(`    <item>
       <g:id>${esc(id)}</g:id>
       <g:item_group_id>${esc(slug)}</g:item_group_id>
       <g:title>${esc(`${p.name} ${colorName} ${size}`)}</g:title>
       <g:description>${esc(p.description)}</g:description>
-      <g:link>${esc(p.url)}</g:link>
+      <g:link>${esc(link)}</g:link>
       <g:image_link>${esc(images[0])}</g:image_link>
 ${images.slice(1, 6).map((img) => `      <g:additional_image_link>${esc(img)}</g:additional_image_link>`).join("\n")}
       <g:availability>${p.inStock ? "in_stock" : "out_of_stock"}</g:availability>

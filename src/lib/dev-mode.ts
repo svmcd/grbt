@@ -9,7 +9,3 @@ export function getTestPrice(originalPrice: number): number {
     return (DEV_MODE && ENABLE_DEV_PRICING) ? 0.01 : originalPrice;
 }
 
-// Helper function to get shipping price based on mode
-export function getTestShippingPrice(originalPrice: number): number {
-    return (DEV_MODE && ENABLE_DEV_PRICING) ? 0 : originalPrice;
-}

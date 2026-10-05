@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import Image from "next/image";
+import Link from "@/i18n/LocaleLink";
+import { getImageProps } from "next/image";
 import { memleketSlugs, hasretSlugs, recepIvedikSlugs } from "@/lib/catalog";
 import { FamilyOffer } from "@/app/components/FamilyOffer";
 import { ProductGrid } from "@/app/components/home/ProductGrid";
@@ -27,6 +27,9 @@ export default function Home() {
   const common = useMessages(commonMessages);
   const family = useMessages(sectionMessages).family;
   const eur = useFormatPrice();
+  const heroImage = { alt: t.heroAlt, fill: true, sizes: "100vw", loading: "eager", fetchPriority: "high" } as const;
+  const heroDesktop = getImageProps({ ...heroImage, src: "/media/hero-desktop.png" }).props.srcSet;
+  const heroMobile = getImageProps({ ...heroImage, src: "/media/hero-mobile.png" }).props;
 
   return (
     <div className="bg-paper text-ink">
@@ -37,22 +40,11 @@ export default function Home() {
           HERO_HEIGHT
         }
       >
-        <Image
-          src="/media/hero-desktop.png"
-          alt={t.heroAlt}
-          fill
-          priority
-          sizes="100vw"
-          className="-z-10 hidden object-cover sm:block"
-        />
-        <Image
-          src="/media/hero-mobile.png"
-          alt={t.heroAlt}
-          fill
-          priority
-          sizes="100vw"
-          className="-z-10 block object-cover sm:hidden"
-        />
+        {/* Art direction: the browser downloads only the hero for its screen width */}
+        <picture>
+          <source media="(min-width: 640px)" srcSet={heroDesktop} sizes="100vw" />
+          <img {...heroMobile} alt={t.heroAlt} className="-z-10 object-cover" />
+        </picture>
         <div aria-hidden className="absolute inset-0 -z-10 bg-ink/20" />
 
         <div className="flex max-w-5xl flex-col items-center">

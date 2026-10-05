@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Button, Card, DownloadIcon, EmptyState, LoadingBlock, PageHeader, SearchIcon, inputClass } from "../_components/ui";
 import { adminFetch } from "@/lib/admin/client";
 import { formatDate } from "@/lib/admin/format";
-import { downloadCsv } from "@/lib/admin/metrics";
+import { csvDateTime, csvToday, downloadCsv } from "@/lib/admin/metrics";
 
 type Subscriber = { email: string; createdAt: string | null; source: string };
 
@@ -29,9 +29,9 @@ export default function SubscribersPage() {
     const last30 = (subs || []).filter((s) => s.createdAt && Date.now() - new Date(s.createdAt).getTime() < 30 * 86400000).length;
 
     const exportCsv = () =>
-        downloadCsv(`egrikuyu-subscribers-${new Date().toISOString().slice(0, 10)}.csv`, [
-            ["Email", "Signed up", "Source"],
-            ...shown.map((s) => [s.email, s.createdAt ? s.createdAt.slice(0, 10) : "", s.source]),
+        downloadCsv(`egrikuyu-subscribers-${csvToday()}.csv`, [
+            ["Email", "Signed up (Amsterdam time)", "Source"],
+            ...shown.map((s) => [s.email, csvDateTime(s.createdAt), s.source]),
         ]);
 
     return (

@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import type { AdminOrder } from "@/lib/admin/orders";
-import { adminFetch } from "@/lib/admin/client";
 import { formatDateTime } from "@/lib/admin/format";
 import { useAdmin } from "../AdminProvider";
 import { Button, Card, Dialog, ExternalIcon, Field, FulfillmentBadge, inputClass, selectClass } from "../ui";
@@ -10,9 +9,12 @@ import { Button, Card, Dialog, ExternalIcon, Field, FulfillmentBadge, inputClass
 type Provider = "PostNL" | "DHL";
 
 export function FulfillmentCard({ order }: { order: AdminOrder }) {
-    const { orderAction, toast } = useAdmin();
+    const { orderAction, sendCustomerEmail, toast } = useAdmin();
     const f = order.fulfillment;
-    const [emailCustomer, setEmailCustomer] = useState(true);
+    // Emailing is the default the first time an order moves on; editing the tracking of an order that
+    // is already shipped does not email unless asked (there is "Resend tracking email" for that)
+    const [emailCustomer, setEmailCustomer] = useState(f.status !== "shipped");
+    const [confirmResend, setConfirmResend] = useState(false);
     const [shipForm, setShipForm] = useState(false);
     const [provider, setProvider] = useState<Provider>((f.trackingProvider as Provider) || "PostNL");
     const [code, setCode] = useState(f.trackingCode || "");
@@ -21,27 +23,17 @@ export function FulfillmentCard({ order }: { order: AdminOrder }) {
     const canEmail = Boolean(order.customer.email);
     const willEmail = emailCustomer && canEmail;
 
-    const sendEmail = async (status: "label_created" | "shipped_out", updated: AdminOrder) => {
+    const sendEmail = async (status: "label_created" | "shipped_out", updated: AdminOrder, resend = false) => {
         try {
-            await adminFetch("/api/admin/send-status-email", {
-                method: "POST",
-                body: {
-                    orderId: updated.id,
-                    status,
-                    email: updated.customer.email,
-                    ...(status === "shipped_out"
-                        ? {
-                              trackingProvider: updated.fulfillment.trackingProvider,
-                              trackingCode: updated.fulfillment.trackingCode,
-                              postalCode: updated.shipping.postalCode,
-                              country: updated.shipping.country || "NL",
-                          }
-                        : {}),
-                },
-            });
+            await sendCustomerEmail(updated.id, status, { resend });
             return true;
         } catch {
-            toast("Status saved, but the email to the customer failed. Try again or email them yourself.", "error");
+            toast(
+                resend && updated === order
+                    ? "The email could not be sent. Try again or email the customer yourself."
+                    : "Saved, but the email to the customer failed. Try again or email them yourself.",
+                "error",
+            );
             return false;
         }
     };
@@ -63,16 +55,26 @@ export function FulfillmentCard({ order }: { order: AdminOrder }) {
         e.preventDefault();
         if (!code.trim()) return;
         setBusy("ship");
+        const editing = f.status === "shipped";
         try {
             const updated = await orderAction("mark_shipped", order.id, { trackingProvider: provider, trackingCode: code.trim() });
-            const sent = willEmail ? await sendEmail("shipped_out", updated) : false;
+            const sent = willEmail ? await sendEmail("shipped_out", updated, editing) : false;
             setShipForm(false);
-            toast(sent ? "Marked as shipped. Customer emailed the tracking link." : "Marked as shipped.");
+            if (editing) toast(sent ? "Tracking saved. Customer emailed the new tracking link." : "Tracking saved. The customer was not emailed.");
+            else toast(sent ? "Marked as shipped. Customer emailed the tracking link." : "Marked as shipped.");
         } catch (err) {
             toast(err instanceof Error ? err.message : "Could not update the order", "error");
         } finally {
             setBusy(null);
         }
+    };
+
+    const resendTracking = async () => {
+        setBusy("resend");
+        const sent = await sendEmail("shipped_out", order, true);
+        setBusy(null);
+        setConfirmResend(false);
+        if (sent) toast(`Tracking email sent to ${order.customer.email}.`);
     };
 
     const markUnfulfilled = async () => {
@@ -179,6 +181,11 @@ export function FulfillmentCard({ order }: { order: AdminOrder }) {
                                 Change tracking
                             </button>
                         )}
+                        {f.status === "shipped" && !shipForm && f.trackingCode && canEmail && (
+                            <button className="font-medium text-zinc-800 hover:text-zinc-950 hover:underline" onClick={() => setConfirmResend(true)}>
+                                Resend tracking email
+                            </button>
+                        )}
                         <button className="font-medium text-zinc-800 hover:text-zinc-950 hover:underline" onClick={() => setConfirmUndo(true)}>
                             Mark as unfulfilled
                         </button>
@@ -200,6 +207,22 @@ export function FulfillmentCard({ order }: { order: AdminOrder }) {
                 }
             >
                 The order goes back to “To ship”. The customer is not emailed. The saved tracking code stays on the order.
+            </Dialog>
+
+            <Dialog
+                open={confirmResend}
+                onClose={() => setConfirmResend(false)}
+                title="Resend the tracking email?"
+                footer={
+                    <>
+                        <Button onClick={() => setConfirmResend(false)}>Cancel</Button>
+                        <Button variant="primary" loading={busy === "resend"} onClick={resendTracking}>
+                            Send email
+                        </Button>
+                    </>
+                }
+            >
+                {order.customer.email} gets the shipping email again with {f.trackingProvider} tracking code {f.trackingCode}. The order status does not change.
             </Dialog>
         </Card>
     );

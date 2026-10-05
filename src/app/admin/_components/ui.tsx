@@ -315,6 +315,7 @@ export const MenuIcon = icon(<path d="M3.5 6h13M3.5 10h13M3.5 14h13" />);
 export const CloseIcon = icon(<path d="m5 5 10 10M15 5 5 15" />);
 export const ChevronLeft = icon(<path d="m12 5-5 5 5 5" />);
 export const ChevronRight = icon(<path d="m8 5 5 5-5 5" />);
+export const ChevronDown = icon(<path d="m5 8 5 5 5-5" />);
 export const PlusIcon = icon(<path d="M10 4v12M4 10h12" />);
 export const DownloadIcon = icon(<path d="M10 3.5v9m0 0-3.5-3.5M10 12.5l3.5-3.5M4 15.5h12" />);
 export const PrintIcon = icon(

@@ -25,14 +25,13 @@
  *   opens through toggleCart() from useCart() (CartDrawer renders it).
  */
 
-import Link from "next/link";
+import Link from "@/i18n/LocaleLink";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { useMessages, usePlainPathname } from "@/i18n/LocaleProvider";
 import { useCallback, useEffect, useState } from "react";
 import { useCart } from "@/lib/cart-context";
 import { SearchDrawer } from "./SearchBar";
 import { LanguageList, LanguageSwitcher } from "@/i18n/LanguageSwitcher";
-import { useMessages } from "@/i18n/LocaleProvider";
 import commonMessages from "@/i18n/messages/common";
 import chromeMessages from "@/i18n/messages/siteChrome";
 
@@ -58,7 +57,7 @@ function useScrollLock(locked: boolean) {
 }
 
 export function Header() {
-  const pathname = usePathname();
+  const pathname = usePlainPathname();
   const isHome = pathname === "/";
   const [scrolled, setScrolled] = useState(false);
   const [hovered, setHovered] = useState(false);

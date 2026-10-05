@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/i18n/LocaleLink";
 import Image from "next/image";
 import { useMessages } from "@/i18n/LocaleProvider";
 import commonMessages from "@/i18n/messages/common";

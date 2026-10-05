@@ -5,11 +5,13 @@ import { signOut as firebaseSignOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import { AdminApiError, DEV_BYPASS, adminFetch } from "@/lib/admin/client";
-import type { AdminOrder } from "@/lib/admin/orders";
+import type { AdminEmailType, AdminOrder } from "@/lib/admin/orders";
 
 const AUTO_SYNC_AFTER_MS = 10 * 60 * 1000;
 
-type AccessState = "loading" | "signed_out" | "no_access" | "ready";
+// "unverified": an admin address whose email is not verified yet (the API answers 403)
+type AccessState = "loading" | "signed_out" | "no_access" | "unverified" | "ready";
+type SyncMeta = { syncedAt?: string; partial?: boolean } | null;
 type Toast = { id: number; message: string; tone: "success" | "error" };
 
 export type ReviewStatus = "pending" | "approved" | "hidden";
@@ -36,11 +38,17 @@ type AdminContextValue = {
     ordersLoaded: boolean;
     loadError: string | null;
     lastSync: string | null;
+    lastSyncPartial: boolean; // the last run stopped early (time limit)
     syncing: boolean;
     reload: () => Promise<void>;
-    sync: () => Promise<void>;
+    // full: every Stripe checkout ever made (slow); default: only what changed since the last sync
+    sync: (opts?: { full?: boolean }) => Promise<void>;
     // Runs a POST /api/admin/orders action and puts the returned order in the store
     orderAction: (action: string, orderId: string, extra?: Record<string, unknown>) => Promise<AdminOrder>;
+    // Puts updated orders (e.g. from a bulk action) in the store
+    upsertOrders: (list: AdminOrder[]) => void;
+    // Sends a customer email for an order and records it on the order; returns the updated order
+    sendCustomerEmail: (orderId: string, type: AdminEmailType, opts?: { resend?: boolean }) => Promise<AdminOrder>;
     removeOrder: (id: string) => void;
     signOut: () => Promise<void>;
     toast: (message: string, tone?: Toast["tone"]) => void;
@@ -64,6 +72,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     const [ordersLoaded, setOrdersLoaded] = useState(false);
     const [loadError, setLoadError] = useState<string | null>(null);
     const [lastSync, setLastSync] = useState<string | null>(null);
+    const [lastSyncPartial, setLastSyncPartial] = useState(false);
     const [syncing, setSyncing] = useState(false);
     const [toasts, setToasts] = useState<Toast[]>([]);
     const autoSynced = useRef(false);
@@ -80,9 +89,10 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
 
     const reload = useCallback(async () => {
         try {
-            const data = await adminFetch<{ orders: AdminOrder[]; lastSync: { syncedAt?: string } | null }>("/api/admin/orders");
+            const data = await adminFetch<{ orders: AdminOrder[]; lastSync: SyncMeta }>("/api/admin/orders");
             setOrders(data.orders);
             setLastSync(data.lastSync?.syncedAt || null);
+            setLastSyncPartial(Boolean(data.lastSync?.partial));
             setOrdersLoaded(true);
             setLoadError(null);
             setAccess("ready");
@@ -91,16 +101,23 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
                 setAccess("no_access");
                 return;
             }
+            if (e instanceof AdminApiError && e.status === 403 && e.code === "email_unverified") {
+                setAccess("unverified");
+                return;
+            }
             setLoadError(e instanceof Error ? e.message : "Could not load orders");
             setAccess("ready");
         }
     }, []);
 
-    const sync = useCallback(async () => {
+    const sync = useCallback(async (opts: { full?: boolean } = {}) => {
         setSyncing(true);
         try {
-            const res = await adminFetch<{ syncedAt: string }>("/api/admin/sync", { method: "POST" });
+            const res = await adminFetch<{ syncedAt: string; partial?: boolean }>("/api/admin/sync", { method: "POST", body: { full: Boolean(opts.full) } });
             setLastSync(res.syncedAt);
+            setLastSyncPartial(Boolean(res.partial));
+            if (res.partial) toast("The Stripe sync stopped early (time limit). Sync again to finish it.", "error");
+            else if (opts.full) toast("Full resync with Stripe finished.");
             await reload();
         } catch (e) {
             toast(e instanceof Error ? e.message : "Stripe sync failed", "error");
@@ -127,13 +144,27 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         if (access !== "ready" || !ordersLoaded || autoSynced.current) return;
         autoSynced.current = true;
-        if (!lastSync || Date.now() - new Date(lastSync).getTime() > AUTO_SYNC_AFTER_MS) sync();
-    }, [access, ordersLoaded, lastSync, sync]);
+        if (!lastSync || lastSyncPartial || Date.now() - new Date(lastSync).getTime() > AUTO_SYNC_AFTER_MS) sync();
+    }, [access, ordersLoaded, lastSync, lastSyncPartial, sync]);
 
     const orderAction = useCallback(async (action: string, orderId: string, extra: Record<string, unknown> = {}) => {
         const res = await adminFetch<{ ok: boolean; order: AdminOrder }>("/api/admin/orders", {
             method: "POST",
             body: { action, orderId, ...extra },
+        });
+        setOrders((list) => list.map((o) => (o.id === res.order.id ? res.order : o)));
+        return res.order;
+    }, []);
+
+    const upsertOrders = useCallback((list: AdminOrder[]) => {
+        const byId = new Map(list.map((o) => [o.id, o]));
+        setOrders((cur) => cur.map((o) => byId.get(o.id) ?? o));
+    }, []);
+
+    const sendCustomerEmail = useCallback(async (orderId: string, type: AdminEmailType, opts: { resend?: boolean } = {}) => {
+        const res = await adminFetch<{ success: boolean; order: AdminOrder }>("/api/admin/send-status-email", {
+            method: "POST",
+            body: { orderId, status: type, resend: Boolean(opts.resend) },
         });
         setOrders((list) => list.map((o) => (o.id === res.order.id ? res.order : o)));
         return res.order;
@@ -167,8 +198,48 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     const value = useMemo<AdminContextValue>(
-        () => ({ access, email, orders, ordersLoaded, loadError, lastSync, syncing, reload, sync, orderAction, removeOrder, signOut, toast, reviews, reloadReviews, setReviewStatus }),
-        [access, email, orders, ordersLoaded, loadError, lastSync, syncing, reload, sync, orderAction, removeOrder, signOut, toast, reviews, reloadReviews, setReviewStatus],
+        () => ({
+            access,
+            email,
+            orders,
+            ordersLoaded,
+            loadError,
+            lastSync,
+            lastSyncPartial,
+            syncing,
+            reload,
+            sync,
+            orderAction,
+            upsertOrders,
+            sendCustomerEmail,
+            removeOrder,
+            signOut,
+            toast,
+            reviews,
+            reloadReviews,
+            setReviewStatus,
+        }),
+        [
+            access,
+            email,
+            orders,
+            ordersLoaded,
+            loadError,
+            lastSync,
+            lastSyncPartial,
+            syncing,
+            reload,
+            sync,
+            orderAction,
+            upsertOrders,
+            sendCustomerEmail,
+            removeOrder,
+            signOut,
+            toast,
+            reviews,
+            reloadReviews,
+            setReviewStatus,
+        ],
     );
 
     return (

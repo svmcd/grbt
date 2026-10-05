@@ -19,12 +19,24 @@ export type AdminOrderItem = {
 
 export type AdminRefund = { id: string; amount: number; created: number; reason: string | null; status: string };
 
+// Customer emails sent from the admin, newest last (stored on the order doc as `emails`)
+export type AdminEmailType = "label_created" | "shipped_out" | "order_confirmation";
+export type AdminEmailLog = { type: AdminEmailType; to: string; at: string; by: string; resend?: boolean };
+export const EMAIL_TYPE_LABEL: Record<AdminEmailType, string> = {
+    label_created: "Packing email",
+    shipped_out: "Tracking email",
+    order_confirmation: "Order confirmation",
+};
+
+// Audit notes for admin edits that are not a status change (stored on the order doc as `activity`)
+export type AdminActivity = { at: string; by: string; title: string; detail?: string };
+
 export type AdminOrder = {
     id: string;
     number: string; // short display number
     created: number; // unix seconds
     customer: { email: string; name: string; phone: string };
-    shipping: { name: string; line1: string; line2: string; city: string; postalCode: string; country: string };
+    shipping: { name: string; line1: string; line2: string; city: string; postalCode: string; country: string; phone: string };
     locale: string;
     items: AdminOrderItem[];
     itemCount: number;
@@ -44,6 +56,8 @@ export type AdminOrder = {
     };
     notes: string;
     flag: string;
+    emails: AdminEmailLog[];
+    activity: AdminActivity[];
     manual: boolean;
     importedFromStripe: boolean;
     archived: boolean; // kept out of the to-do queues (e.g. old imported orders)
@@ -184,6 +198,27 @@ function normalizeItem(li: any): AdminOrderItem {
     };
 }
 
+// Longest values the admin address editor accepts (the API refuses longer ones rather than cutting them)
+export const ADDRESS_FIELD_LIMITS = { name: 200, line1: 200, line2: 200, postalCode: 20, city: 200, phone: 40 } as const;
+const ADDRESS_FIELD_NAMES: Record<keyof typeof ADDRESS_FIELD_LIMITS, string> = {
+    name: "Name",
+    line1: "Address",
+    line2: "Apartment, suite",
+    postalCode: "Postal code",
+    city: "City",
+    phone: "Phone",
+};
+
+// "Address is 214 characters; the limit is 200." for the first field that is too long, else null
+export function addressTooLong(a: Partial<Record<keyof typeof ADDRESS_FIELD_LIMITS, unknown>>): string | null {
+    for (const [key, max] of Object.entries(ADDRESS_FIELD_LIMITS) as [keyof typeof ADDRESS_FIELD_LIMITS, number][]) {
+        const v = a[key];
+        const len = typeof v === "string" ? v.trim().length : 0;
+        if (len > max) return `${ADDRESS_FIELD_NAMES[key]} is ${len} characters; the limit is ${max}.`;
+    }
+    return null;
+}
+
 export function trackingUrl(provider: string | null | undefined, code: string | null | undefined, country?: string, postalCode?: string) {
     if (!provider || !code) return null;
     if (provider === "DHL") return `https://www.dhl.com/content/gb/en/express/tracking.html?AWB=${encodeURIComponent(code)}`;
@@ -191,6 +226,11 @@ export function trackingUrl(provider: string | null | undefined, code: string | 
         return `https://jouw.postnl.nl/track-and-trace/${encodeURIComponent(code)}-${country || "NL"}-${(postalCode || "").replace(/\s+/g, "")}`;
     return null;
 }
+
+// Stripe payment_status values that mean the order is paid. "no_payment_required" is a checkout a
+// 100% promotion code brought to zero: a real order, shipped like any other. ("complete" is on a
+// few early documents.)
+export const isPaidStatus = (v: unknown) => v === "paid" || v === "no_payment_required" || v === "complete";
 
 export function normalizeOrder(id: string, o: any): AdminOrder {
     const ship = o.shipping_details || {};
@@ -206,7 +246,7 @@ export function normalizeOrder(id: string, o: any): AdminOrder {
     const refundedAmount = Number(o.refunded_amount ?? refunds.filter((r) => r.status === "succeeded").reduce((s, r) => s + r.amount, 0)) || 0;
     const amountTotal = Number(o.amount_total) || 0;
 
-    let paymentStatus: PaymentStatus = o.payment_status === "paid" || o.payment_status === "complete" ? "paid" : "unpaid";
+    let paymentStatus: PaymentStatus = isPaidStatus(o.payment_status) ? "paid" : "unpaid";
     if (refundedAmount > 0) paymentStatus = refundedAmount >= amountTotal ? "refunded" : "partially_refunded";
 
     const shipped = Boolean(o.shipped_out || o.shipped);
@@ -231,6 +271,7 @@ export function normalizeOrder(id: string, o: any): AdminOrder {
             city: addr.city || "",
             postalCode,
             country,
+            phone: ship.phone || "",
         },
         locale: o.locale || "tr",
         items,
@@ -251,6 +292,12 @@ export function normalizeOrder(id: string, o: any): AdminOrder {
         },
         notes: o.notes || "",
         flag: o.custom_flag || "",
+        emails: [
+            // The confirmation the checkout webhook sent (it records the time, not a log entry)
+            ...(o.confirmation_email_sent_at ? [{ type: "order_confirmation" as const, to: o.customer_email || "", at: o.confirmation_email_sent_at, by: "" }] : []),
+            ...(Array.isArray(o.emails) ? o.emails.filter((e: any) => e && e.type && e.at) : []),
+        ],
+        activity: Array.isArray(o.activity) ? o.activity.filter((a: any) => a && a.title && a.at) : [],
         manual: Boolean(o.manual),
         importedFromStripe: Boolean(o.imported_from_stripe),
         archived: Boolean(o.archived),

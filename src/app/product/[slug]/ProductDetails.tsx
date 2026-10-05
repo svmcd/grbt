@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/i18n/LocaleLink";
 import type { ReactNode } from "react";
 import type { Product } from "@/lib/catalog";
 import { useFormatPrice, useMessages } from "@/i18n/LocaleProvider";
@@ -76,7 +76,15 @@ function Fact({ label, value }: { label: string; value: string }) {
   );
 }
 
-export function ProductDetails({ product, isMemleket }: { product: Product; isMemleket: boolean }) {
+export function ProductDetails({
+  product,
+  isMemleket,
+  productType,
+}: {
+  product: Product;
+  isMemleket: boolean;
+  productType: "tshirt" | "hoodie" | "sweater";
+}) {
   const t = useMessages(productPageMessages);
   const policies = useMessages(policyMessages);
   const price = useFormatPrice();
@@ -110,7 +118,8 @@ export function ProductDetails({ product, isMemleket }: { product: Product; isMe
 
         <Item icon="material" title={t.materialTitle}>
           <div>
-            <Fact label={t.specFabric} value={`${t.specFabricValue}, 240 g/m²`} />
+            {/* Fabric and weight are only documented for the T-shirt */}
+            {productType === "tshirt" && <Fact label={t.specFabric} value={`${t.specFabricValue}, 240 g/m²`} />}
             <Fact label={t.specCut} value={t.specCutValue} />
             <Fact label={t.specPrint} value={t.specPrintValue} />
             <Fact label={t.specProduction} value={t.specProductionValue} />

@@ -31,11 +31,13 @@ export default defineMessages({
         },
         shipping: {
             title: "Shipping Policy",
-            intro: "We ship from the Netherlands to the EU and to selected international destinations.",
+            intro:
+                "We ship worldwide from the Netherlands. Standard shipping costs €8 per order. Shipping is free for orders with items totalling €100 or more.",
             processingTitle: "Processing",
             processingText: "Orders are processed within 1-3 business days.",
             deliveryTitle: "Delivery times",
-            deliveryText: "Netherlands 1-3 days, EU 3-7 days, International 7-14 days. Times are estimates.",
+            deliveryText:
+                "Netherlands 1-3 business days, EU 3-7 business days, all other countries 7-14 business days after dispatch. Times are estimates.",
             customsTitle: "Customs and Duties",
             customsText:
                 "EU VAT is included where applicable. Orders outside the EU may be subject to import duties/customs fees payable by the recipient.",
@@ -63,8 +65,18 @@ export default defineMessages({
             intro:
                 "Need help? You can reach us at info@egrikuyu.com or +31 6 2881 2182. For order updates, see the Track My Order page.",
             faqTitle: "Frequently Asked Questions",
-            faqText:
-                "Shipping times, returns, sizes and care instructions can be found in our policies and on our product pages.",
+            faq: [
+                { q: "Where do you ship to and what does it cost?", a: "We ship worldwide from the Netherlands. Standard shipping costs €8 and is free for orders from €100." },
+                { q: "How long does delivery take?", a: "Orders are produced and dispatched within 1-3 business days. Delivery then takes 1-3 business days in the Netherlands, 3-7 business days within the EU and 7-14 business days to all other countries." },
+                { q: "Do I pay import duties?", a: "EU VAT is included in our prices. Orders outside the EU may be subject to import duties or customs fees, which are paid by the recipient." },
+                { q: "How can I track my order?", a: "Your order number is in the confirmation email. Enter it together with your email address on the Track My Order page. Once your order has shipped, you will also receive an email with the tracking link." },
+                { q: "Which sizes are available?", a: "All garments are available in S, M, L, XL and XXL. If you are unsure about your size, contact us at info@egrikuyu.com and we will help you choose." },
+                { q: "Can I personalize a garment?", a: "Yes. You can add a name or short text of up to 20 characters, printed for €7.50 or embroidered for €10. You choose the font, colour and placement on the product page." },
+                { q: "Do you offer gift packaging?", a: "Yes. Gift packaging costs €5 per item and can include a personal message of up to 100 characters." },
+                { q: "Is there a discount for several Memleket designs?", a: "Yes. With two Memleket items you receive €5 off, and with three or more €10 off. The discount is applied automatically in your cart." },
+                { q: "Which payment methods can I use?", a: "You can pay by card, Apple Pay, PayPal, iDEAL, Bancontact or Klarna. The methods shown at checkout depend on your country." },
+                { q: "Can I return my order?", a: "Yes, within 60 days of delivery. Items must be unworn, unwashed and have their tags attached. Contact us with your order number and we will send you the return instructions. Personalized items may be excluded to the extent permitted by law." },
+            ],
         },
     },
     de: {
@@ -95,12 +107,13 @@ export default defineMessages({
         },
         shipping: {
             title: "Versandrichtlinie",
-            intro: "Wir versenden aus den Niederlanden in die EU und an ausgewählte internationale Ziele.",
+            intro:
+                "Wir versenden weltweit aus den Niederlanden. Der Standardversand kostet 8 € pro Bestellung. Ab einem Warenwert von 100 € ist der Versand kostenlos.",
             processingTitle: "Bearbeitung",
             processingText: "Bestellungen werden innerhalb von 1-3 Werktagen bearbeitet.",
             deliveryTitle: "Lieferzeiten",
             deliveryText:
-                "Niederlande 1-3 Tage, EU 3-7 Tage, international 7-14 Tage. Die Angaben sind Schätzungen.",
+                "Niederlande 1-3 Werktage, EU 3-7 Werktage, alle anderen Länder 7-14 Werktage nach dem Versand. Die Angaben sind Schätzungen.",
             customsTitle: "Zölle und Steuern",
             customsText:
                 "Die EU-Mehrwertsteuer ist, sofern anwendbar, enthalten. Bei Bestellungen außerhalb der EU können Einfuhrabgaben/Zölle anfallen, die vom Empfänger zu tragen sind.",
@@ -128,8 +141,18 @@ export default defineMessages({
             intro:
                 "Benötigen Sie Hilfe? Sie erreichen uns unter info@egrikuyu.com oder +31 6 2881 2182. Informationen zu Ihrer Bestellung finden Sie auf der Seite „Bestellung verfolgen“.",
             faqTitle: "Häufig gestellte Fragen",
-            faqText:
-                "Informationen zu Lieferzeiten, Rücksendungen, Größen und Pflegehinweisen finden Sie in unseren Richtlinien und auf unseren Produktseiten.",
+            faq: [
+                { q: "Wohin liefern Sie und was kostet der Versand?", a: "Wir versenden weltweit aus den Niederlanden. Der Standardversand kostet 8 € und ist ab einem Bestellwert von 100 € kostenlos." },
+                { q: "Wie lange dauert die Lieferung?", a: "Bestellungen werden innerhalb von 1-3 Werktagen hergestellt und versandt. Die Lieferung dauert anschließend 1-3 Werktage in die Niederlande, 3-7 Werktage innerhalb der EU und 7-14 Werktage in alle anderen Länder." },
+                { q: "Fallen Einfuhrabgaben an?", a: "Die EU-Mehrwertsteuer ist in unseren Preisen enthalten. Bei Bestellungen außerhalb der EU können Einfuhrabgaben oder Zollgebühren anfallen, die vom Empfänger zu tragen sind." },
+                { q: "Wie kann ich meine Bestellung verfolgen?", a: "Ihre Bestellnummer finden Sie in der Bestätigungs-E-Mail. Geben Sie sie zusammen mit Ihrer E-Mail-Adresse auf der Seite „Bestellung verfolgen“ ein. Nach dem Versand erhalten Sie außerdem eine E-Mail mit dem Sendungslink." },
+                { q: "Welche Größen gibt es?", a: "Alle Kleidungsstücke sind in S, M, L, XL und XXL erhältlich. Wenn Sie bei Ihrer Größe unsicher sind, schreiben Sie uns an info@egrikuyu.com, wir helfen Ihnen gerne bei der Auswahl." },
+                { q: "Kann ich ein Kleidungsstück personalisieren?", a: "Ja. Sie können einen Namen oder einen kurzen Text mit bis zu 20 Zeichen hinzufügen, gedruckt für 7,50 € oder bestickt für 10 €. Schriftart, Farbe und Position wählen Sie auf der Produktseite." },
+                { q: "Bieten Sie eine Geschenkverpackung an?", a: "Ja. Die Geschenkverpackung kostet 5 € pro Artikel und kann eine persönliche Nachricht mit bis zu 100 Zeichen enthalten." },
+                { q: "Gibt es einen Rabatt für mehrere Memleket-Designs?", a: "Ja. Bei zwei Memleket-Artikeln erhalten Sie 5 € Rabatt, ab drei Artikeln 10 €. Der Rabatt wird im Warenkorb automatisch abgezogen." },
+                { q: "Welche Zahlungsarten kann ich nutzen?", a: "Sie können mit Karte, Apple Pay, PayPal, iDEAL, Bancontact oder Klarna bezahlen. Welche Zahlungsarten angezeigt werden, hängt von Ihrem Land ab." },
+                { q: "Kann ich meine Bestellung zurücksenden?", a: "Ja, innerhalb von 60 Tagen nach Lieferung. Die Artikel müssen ungetragen, ungewaschen und mit Etiketten versehen sein. Kontaktieren Sie uns mit Ihrer Bestellnummer, wir senden Ihnen die Rücksendeanweisungen. Personalisierte Artikel können, soweit gesetzlich zulässig, ausgeschlossen sein." },
+            ],
         },
     },
     fr: {
@@ -161,12 +184,13 @@ export default defineMessages({
         },
         shipping: {
             title: "Politique de livraison",
-            intro: "Nous expédions depuis les Pays-Bas vers l'UE et vers certaines destinations internationales.",
+            intro:
+                "Nous expédions dans le monde entier depuis les Pays-Bas. La livraison standard coûte 8 € par commande. Elle est gratuite à partir de 100 € d'articles.",
             processingTitle: "Traitement",
             processingText: "Les commandes sont traitées sous 1 à 3 jours ouvrés.",
             deliveryTitle: "Délais de livraison",
             deliveryText:
-                "Pays-Bas 1 à 3 jours, UE 3 à 7 jours, international 7 à 14 jours. Ces délais sont donnés à titre indicatif.",
+                "Pays-Bas 1 à 3 jours ouvrés, UE 3 à 7 jours ouvrés, autres pays 7 à 14 jours ouvrés après l'expédition. Ces délais sont donnés à titre indicatif.",
             customsTitle: "Douanes et taxes",
             customsText:
                 "La TVA de l'UE est incluse lorsqu'elle s'applique. Les commandes hors UE peuvent être soumises à des taxes d'importation/droits de douane à la charge du destinataire.",
@@ -194,8 +218,18 @@ export default defineMessages({
             intro:
                 "Besoin d'aide ? Vous pouvez nous joindre à l'adresse info@egrikuyu.com ou au +31 6 2881 2182. Pour le suivi de votre commande, consultez la page « Suivre ma commande ».",
             faqTitle: "Questions fréquentes",
-            faqText:
-                "Les délais de livraison, les retours, les tailles et les instructions d'entretien figurent dans nos politiques et sur nos pages produits.",
+            faq: [
+                { q: "Où livrez-vous et combien coûte la livraison ?", a: "Nous expédions dans le monde entier depuis les Pays-Bas. La livraison standard coûte 8 € et est offerte dès 100 € de commande." },
+                { q: "Quel est le délai de livraison ?", a: "Les commandes sont fabriquées et expédiées sous 1 à 3 jours ouvrés. La livraison prend ensuite 1 à 3 jours ouvrés aux Pays-Bas, 3 à 7 jours ouvrés dans l'UE et 7 à 14 jours ouvrés vers tous les autres pays." },
+                { q: "Dois-je payer des droits de douane ?", a: "La TVA de l'UE est incluse dans nos prix. Les commandes hors UE peuvent être soumises à des droits d'importation ou frais de douane, à la charge du destinataire." },
+                { q: "Comment suivre ma commande ?", a: "Votre numéro de commande figure dans l'e-mail de confirmation. Saisissez-le avec votre adresse e-mail sur la page « Suivre ma commande ». Une fois votre commande expédiée, vous recevrez également un e-mail avec le lien de suivi." },
+                { q: "Quelles tailles sont disponibles ?", a: "Tous les vêtements sont disponibles en S, M, L, XL et XXL. Si vous hésitez sur votre taille, écrivez-nous à info@egrikuyu.com et nous vous aiderons à choisir." },
+                { q: "Puis-je personnaliser un vêtement ?", a: "Oui. Vous pouvez ajouter un prénom ou un court texte de 20 caractères maximum, imprimé pour 7,50 € ou brodé pour 10 €. Vous choisissez la police, la couleur et l'emplacement sur la page produit." },
+                { q: "Proposez-vous un emballage cadeau ?", a: "Oui. L'emballage cadeau coûte 5 € par article et peut contenir un message personnel de 100 caractères maximum." },
+                { q: "Y a-t-il une réduction pour plusieurs créations Memleket ?", a: "Oui. Pour deux articles Memleket, vous bénéficiez de 5 € de réduction, et de 10 € à partir de trois articles. La réduction est appliquée automatiquement dans votre panier." },
+                { q: "Quels moyens de paiement puis-je utiliser ?", a: "Vous pouvez payer par carte, Apple Pay, PayPal, iDEAL, Bancontact ou Klarna. Les moyens proposés au paiement dépendent de votre pays." },
+                { q: "Puis-je retourner ma commande ?", a: "Oui, dans un délai de 60 jours après la livraison. Les articles doivent être non portés, non lavés et avec leurs étiquettes. Contactez-nous avec votre numéro de commande et nous vous enverrons les instructions de retour. Les articles personnalisés peuvent être exclus dans la mesure permise par la loi." },
+            ],
         },
     },
     tr: {
@@ -226,11 +260,13 @@ export default defineMessages({
         },
         shipping: {
             title: "Kargo Politikası",
-            intro: "Hollanda'dan AB'ye ve seçili uluslararası destinasyonlara kargo yapıyoruz.",
+            intro:
+                "Hollanda'dan dünyanın her yerine kargo gönderiyoruz. Standart kargo ücreti sipariş başına 8 €'dur. Ürün tutarı 100 € ve üzeri olan siparişlerde kargo ücretsizdir.",
             processingTitle: "İşleme",
             processingText: "Siparişler 1-3 iş günü içinde işlenir.",
             deliveryTitle: "Teslimat süreleri",
-            deliveryText: "Hollanda 1-3 gün, AB 3-7 gün, Uluslararası 7-14 gün. Süreler tahminidir.",
+            deliveryText:
+                "Kargoya verildikten sonra Hollanda 1-3 iş günü, AB 3-7 iş günü, diğer tüm ülkeler 7-14 iş günü. Süreler tahminidir.",
             customsTitle: "Gümrük ve Vergiler",
             customsText:
                 "AB KDV'si uygulanabilir olduğunda dahildir. AB dışı siparişler alıcı tarafından ödenmesi gereken ithalat vergileri/gümrük vergileri içerebilir.",
@@ -258,8 +294,18 @@ export default defineMessages({
             intro:
                 "Yardıma mı ihtiyacınız var? Bize info@egrikuyu.com veya +31 6 2881 2182 numarasından ulaşabilirsiniz. Sipariş güncellemeleri için Siparişimi Takip Et sayfasına bakın.",
             faqTitle: "Sık Sorulan Sorular",
-            faqText:
-                "Kargo süreleri, iadeler, bedenler ve bakım talimatları politikalarımız ve ürün sayfalarımızda yer almaktadır.",
+            faq: [
+                { q: "Nereye gönderim yapıyorsunuz ve kargo ücreti nedir?", a: "Hollanda'dan dünyanın her yerine gönderim yapıyoruz. Standart kargo €8'dir ve €100 ve üzeri siparişlerde ücretsizdir." },
+                { q: "Teslimat ne kadar sürer?", a: "Siparişler 1-3 iş günü içinde üretilir ve kargoya verilir. Teslimat ardından Hollanda'ya 1-3 iş günü, AB içine 3-7 iş günü ve diğer tüm ülkelere 7-14 iş günü sürer." },
+                { q: "Gümrük vergisi öder miyim?", a: "AB KDV'si fiyatlarımıza dahildir. AB dışındaki siparişlerde alıcı tarafından ödenmesi gereken ithalat vergileri veya gümrük ücretleri çıkabilir." },
+                { q: "Siparişimi nasıl takip edebilirim?", a: "Sipariş numaranız onay e-postasında yer alır. Bu numarayı e-posta adresinizle birlikte Siparişimi Takip Et sayfasına girin. Siparişiniz kargoya verildiğinde ayrıca takip bağlantısını içeren bir e-posta alırsınız." },
+                { q: "Hangi bedenler mevcut?", a: "Tüm ürünler S, M, L, XL ve XXL bedenlerde mevcuttur. Bedeninizden emin değilseniz info@egrikuyu.com adresinden bize yazın, seçiminizde yardımcı olalım." },
+                { q: "Ürünü kişiselleştirebilir miyim?", a: "Evet. En fazla 20 karakterlik bir isim veya kısa bir metin ekleyebilirsiniz; baskı €7,50, nakış €10'dur. Yazı tipini, rengi ve yerleşimi ürün sayfasında seçersiniz." },
+                { q: "Hediye paketi sunuyor musunuz?", a: "Evet. Hediye paketi ürün başına €5'tir ve en fazla 100 karakterlik kişisel bir mesaj içerebilir." },
+                { q: "Birden fazla Memleket tasarımı için indirim var mı?", a: "Evet. İki Memleket ürününde €5, üç ve daha fazla üründe €10 indirim kazanırsınız. İndirim sepetinizde otomatik olarak uygulanır." },
+                { q: "Hangi ödeme yöntemlerini kullanabilirim?", a: "Kart, Apple Pay, PayPal, iDEAL, Bancontact veya Klarna ile ödeme yapabilirsiniz. Ödeme sırasında gösterilen yöntemler ülkenize göre değişir." },
+                { q: "Siparişimi iade edebilir miyim?", a: "Evet, teslimattan itibaren 60 gün içinde. Ürünler giyilmemiş, yıkanmamış ve etiketleri üzerinde olmalıdır. Sipariş numaranızla bize ulaşın, size iade talimatlarını gönderelim. Kişiselleştirilmiş ürünler yasaların izin verdiği ölçüde iade kapsamı dışında tutulabilir." },
+            ],
         },
     },
 });

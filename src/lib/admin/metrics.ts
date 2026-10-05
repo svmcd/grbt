@@ -259,14 +259,41 @@ export function searchOrder(o: AdminOrder, q: string) {
     return needle.split(/\s+/).every((w) => hay.includes(w));
 }
 
-// CSV with a BOM so Excel opens accents (ğ, ş, ü) correctly
+// A cell starting with one of these is run as a formula by Excel / Sheets / Numbers
+const FORMULA_START = /^[=+\-@\t\r]/;
+// A phone number ("+31 6 12345678", "+90 (532) 123-45-67"): only digits, spaces and + ( ) . -,
+// which cannot form a formula, so it keeps its leading + for the label tools
+const PHONE = /^\+?[\d\s().-]{6,}$/;
+
+// CSV with a BOM so Excel opens accents (ğ, ş, ü) correctly. Text that a spreadsheet would read as a
+// formula (=, +, -, @, tab, CR at the start: customer names, notes, addresses) gets a leading ' so it
+// stays plain text. Numbers and phone numbers are written as they are.
 export function toCsv(rows: (string | number)[][]) {
     const esc = (v: string | number) => {
-        const s = String(v ?? "");
-        return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+        let s = String(v ?? "");
+        if (typeof v !== "number" && FORMULA_START.test(s) && !PHONE.test(s)) s = `'${s}`;
+        return /[",\n\r;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
     };
-    return "﻿" + rows.map((r) => r.map(esc).join(",")).join("\n");
+    return "\uFEFF" + rows.map((r) => r.map(esc).join(",")).join("\n");
 }
+
+// Exports use the shop's local time (Amsterdam), whatever the browser's timezone: "2026-10-05 14:05"
+const AMS_DATE_TIME = new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "Europe/Amsterdam",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+});
+const AMS_DATE = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Amsterdam", year: "numeric", month: "2-digit", day: "2-digit" });
+const toDate = (v: number | string) => (typeof v === "number" ? new Date(v * 1000) : new Date(v));
+// Unix seconds or ISO string → local Amsterdam time
+export const csvDateTime = (v: number | string | null | undefined) => (v ? AMS_DATE_TIME.format(toDate(v)) : "");
+export const csvDate = (v: number | string | null | undefined) => (v ? AMS_DATE.format(toDate(v)) : "");
+// Today's date in Amsterdam, for file names
+export const csvToday = () => AMS_DATE.format(new Date());
 
 export function downloadCsv(filename: string, rows: (string | number)[][]) {
     const blob = new Blob([toCsv(rows)], { type: "text/csv;charset=utf-8" });
@@ -280,10 +307,19 @@ export function downloadCsv(filename: string, rows: (string | number)[][]) {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+const eur = (cents: number | null | undefined) => ((cents || 0) / 100).toFixed(2);
+
+// Item value before discount and shipping. Stripe orders: total - shipping + discount; when the
+// shipping amount is unknown (old orders), the sum of the line items.
+export function orderSubtotal(o: AdminOrder) {
+    if (o.amountShipping !== null) return o.amountTotal - (o.amountShipping || 0) + (o.amountDiscount || 0);
+    return o.items.reduce((s, i) => s + i.totalAmount, 0);
+}
+
 export function ordersCsvRows(orders: AdminOrder[]) {
     const head = [
         "Order",
-        "Date",
+        "Date (Amsterdam time)",
         "Customer",
         "Email",
         "Phone",
@@ -292,21 +328,26 @@ export function ordersCsvRows(orders: AdminOrder[]) {
         "City",
         "Country",
         "Items",
-        "Total (EUR)",
-        "Refunded (EUR)",
-        "Net (EUR)",
+        "Currency",
+        "Subtotal",
+        "Shipping",
+        "Discount",
+        "Total",
+        "Refunded",
+        "Net",
         "Payment",
         "Fulfillment",
+        "Shipped (Amsterdam time)",
         "Tracking",
         "Tag",
         "Notes",
     ];
     const rows = orders.map((o) => [
         o.number,
-        new Date(o.created * 1000).toISOString().slice(0, 16).replace("T", " "),
+        csvDateTime(o.created),
         o.customer.name || o.shipping.name,
         o.customer.email,
-        o.customer.phone,
+        o.customer.phone || o.shipping.phone,
         [o.shipping.line1, o.shipping.line2].filter(Boolean).join(", "),
         o.shipping.postalCode,
         o.shipping.city,
@@ -314,11 +355,16 @@ export function ordersCsvRows(orders: AdminOrder[]) {
         o.items
             .map((i) => [i.quantity > 1 ? `${i.quantity}x` : "", i.title, i.productType, i.color, i.size].filter(Boolean).join(" "))
             .join(" | "),
-        (o.amountTotal / 100).toFixed(2),
-        (o.payment.refundedAmount / 100).toFixed(2),
-        (o.netAmount / 100).toFixed(2),
+        o.currency.toUpperCase(),
+        eur(orderSubtotal(o)),
+        o.amountShipping === null ? "" : eur(o.amountShipping),
+        o.amountDiscount === null ? "" : eur(o.amountDiscount),
+        eur(o.amountTotal),
+        eur(o.payment.refundedAmount),
+        eur(o.netAmount),
         o.payment.status,
         o.fulfillment.status,
+        csvDateTime(o.fulfillment.shippedAt),
         [o.fulfillment.trackingProvider, o.fulfillment.trackingCode].filter(Boolean).join(" "),
         o.flag,
         o.notes,

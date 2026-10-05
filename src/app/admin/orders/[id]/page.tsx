@@ -4,11 +4,12 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { useAdmin } from "../../_components/AdminProvider";
+import { LoadErrorCard } from "../../_components/LoadErrorCard";
 import { FulfillmentCard } from "../../_components/order/FulfillmentCard";
 import { ItemsCard } from "../../_components/order/ItemsCard";
 import { PaymentCard } from "../../_components/order/PaymentCard";
 import { AddressCard, CustomerCard, NotesCard, Timeline } from "../../_components/order/SideCards";
-import { Badge, Button, Card, Dialog, EmptyState, FulfillmentBadge, PageHeader, PaymentBadge, PrintIcon, buttonClass } from "../../_components/ui";
+import { Badge, Button, Card, Dialog, EmptyState, FulfillmentBadge, LoadingBlock, MailIcon, PageHeader, PaymentBadge, PrintIcon, buttonClass } from "../../_components/ui";
 import { adminFetch } from "@/lib/admin/client";
 import { formatDateTime } from "@/lib/admin/format";
 import { customerKey } from "@/lib/admin/metrics";
@@ -16,16 +17,28 @@ import { customerKey } from "@/lib/admin/metrics";
 export default function OrderPage() {
     const { id } = useParams<{ id: string }>();
     const router = useRouter();
-    const { orders, orderAction, removeOrder, toast } = useAdmin();
+    const { orders, ordersLoaded, loadError, orderAction, sendCustomerEmail, removeOrder, toast } = useAdmin();
     const order = orders.find((o) => o.id === decodeURIComponent(id));
     const [busy, setBusy] = useState<string | null>(null);
     const [confirmDelete, setConfirmDelete] = useState(false);
+    const [confirmResend, setConfirmResend] = useState(false);
 
     const otherOrders = useMemo(() => {
         if (!order) return [];
         const key = customerKey(order.customer.email, order.customer.name || order.shipping.name);
         return orders.filter((o) => o.id !== order.id && customerKey(o.customer.email, o.customer.name || o.shipping.name) === key);
     }, [orders, order]);
+
+    if (!order && (loadError || !ordersLoaded)) {
+        // The orders could not be loaded: say so, instead of claiming the order does not exist
+        return (
+            <>
+                <PageHeader title="Order" back={{ href: "/admin/orders", label: "Orders" }} />
+                <LoadErrorCard />
+                {!loadError && <LoadingBlock label="Loading order" />}
+            </>
+        );
+    }
 
     if (!order) {
         return (
@@ -45,6 +58,19 @@ export default function OrderPage() {
             toast(order.archived ? "Order unarchived." : "Order archived.");
         } catch (e) {
             toast(e instanceof Error ? e.message : "Could not update the order", "error");
+        } finally {
+            setBusy(null);
+        }
+    };
+
+    const resendConfirmation = async () => {
+        setBusy("resend");
+        try {
+            await sendCustomerEmail(order.id, "order_confirmation", { resend: true });
+            toast(`Order confirmation sent to ${order.customer.email}.`);
+            setConfirmResend(false);
+        } catch (e) {
+            toast(e instanceof Error ? e.message : "Could not send the order confirmation", "error");
         } finally {
             setBusy(null);
         }
@@ -83,6 +109,12 @@ export default function OrderPage() {
                             <PrintIcon className="h-4 w-4" />
                             Packing slip
                         </Link>
+                        {order.customer.email && (
+                            <Button onClick={() => setConfirmResend(true)}>
+                                <MailIcon className="h-4 w-4" />
+                                Resend confirmation
+                            </Button>
+                        )}
                         <Button loading={busy === "archive"} onClick={toggleArchive}>
                             {order.archived ? "Unarchive" : "Archive"}
                         </Button>
@@ -112,6 +144,23 @@ export default function OrderPage() {
                     <Timeline order={order} />
                 </div>
             </div>
+
+            <Dialog
+                open={confirmResend}
+                onClose={() => setConfirmResend(false)}
+                title="Resend the order confirmation?"
+                footer={
+                    <>
+                        <Button onClick={() => setConfirmResend(false)}>Cancel</Button>
+                        <Button variant="primary" loading={busy === "resend"} onClick={resendConfirmation}>
+                            Send email
+                        </Button>
+                    </>
+                }
+            >
+                {order.customer.email} gets the order confirmation again, in the order&apos;s language ({order.locale.toUpperCase()}), with the shipping address
+                saved on this order.
+            </Dialog>
 
             <Dialog
                 open={confirmDelete}

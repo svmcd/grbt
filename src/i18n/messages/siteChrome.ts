@@ -19,8 +19,8 @@ export default defineMessages({
             collections: "Collections",
         },
         trust: [
-            { title: "Fast Shipping", text: "Delivery within Europe in 2-6 days" },
-            { title: "24/7 Support", text: "Customer support 24 hours a day, 7 days a week" },
+            { title: "Worldwide Shipping", text: "Free from €100, standard €8" },
+            { title: "Personal Support", text: "Questions? info@egrikuyu.com" },
             { title: "Secure Payment", text: "Your payment is processed securely by Stripe" },
         ],
         footer: {
@@ -42,7 +42,7 @@ export default defineMessages({
         },
     },
     de: {
-        announcement: "Kostenloser Versand bei Bestellungen über 100 €",
+        announcement: "Kostenloser Versand ab 100 €",
         header: {
             menu: "Menü",
             search: "Suche",
@@ -55,8 +55,8 @@ export default defineMessages({
             collections: "Kollektionen",
         },
         trust: [
-            { title: "Schneller Versand", text: "Lieferung innerhalb Europas in 2-6 Tagen" },
-            { title: "Support rund um die Uhr", text: "Kundensupport an 7 Tagen, 24 Stunden" },
+            { title: "Weltweiter Versand", text: "Ab 100 € kostenlos, Standard 8 €" },
+            { title: "Persönlicher Support", text: "Fragen? info@egrikuyu.com" },
             { title: "Sichere Zahlung", text: "Ihre Zahlung wird sicher über Stripe abgewickelt" },
         ],
         footer: {
@@ -91,8 +91,8 @@ export default defineMessages({
             collections: "Collections",
         },
         trust: [
-            { title: "Livraison rapide", text: "Livraison en Europe en 2 à 6 jours" },
-            { title: "Assistance 24h/24, 7j/7", text: "Service client 7 jours sur 7, 24 heures sur 24" },
+            { title: "Livraison dans le monde entier", text: "Offerte dès 100 €, standard 8 €" },
+            { title: "Assistance personnalisée", text: "Une question ? info@egrikuyu.com" },
             { title: "Paiement sécurisé", text: "Votre paiement est traité de manière sécurisée par Stripe" },
         ],
         footer: {
@@ -127,8 +127,8 @@ export default defineMessages({
             collections: "Koleksiyonlar",
         },
         trust: [
-            { title: "Hızlı Kargo", text: "Avrupa içi 2-6 gün teslimat" },
-            { title: "7/24 Destek", text: "7 gün 24 saat müşteri desteği" },
+            { title: "Dünyanın Her Yerine Kargo", text: "€100 üzeri ücretsiz, standart €8" },
+            { title: "Kişisel Destek", text: "Sorunuz mu var? info@egrikuyu.com" },
             { title: "Güvenli Ödeme", text: "Ödemeniz Stripe üzerinden güvenle işlenir" },
         ],
         footer: {

@@ -3,6 +3,7 @@
 import { useParams } from "next/navigation";
 import { useMemo } from "react";
 import { useAdmin } from "../../_components/AdminProvider";
+import { LoadErrorCard } from "../../_components/LoadErrorCard";
 import { OrderList } from "../../_components/OrderList";
 import { addressLines } from "../../_components/order/SideCards";
 import { Badge, Card, EmptyState, PageHeader } from "../../_components/ui";
@@ -11,8 +12,17 @@ import { groupCustomers } from "@/lib/admin/metrics";
 
 export default function CustomerPage() {
     const { key } = useParams<{ key: string }>();
-    const { orders } = useAdmin();
+    const { orders, loadError } = useAdmin();
     const customer = useMemo(() => groupCustomers(orders).find((c) => c.key === key), [orders, key]);
+
+    if (!customer && loadError) {
+        return (
+            <>
+                <PageHeader title="Customer" back={{ href: "/admin/customers", label: "Customers" }} />
+                <LoadErrorCard />
+            </>
+        );
+    }
 
     if (!customer) {
         return (

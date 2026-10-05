@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/i18n/LocaleLink";
 import { NewsletterSignup } from "./NewsletterSignup";
 import { LanguageSwitcher } from "@/i18n/LanguageSwitcher";
 import { useMessages } from "@/i18n/LocaleProvider";

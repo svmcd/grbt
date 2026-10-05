@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/i18n/LocaleLink";
 import { getMessages } from "@/i18n/server";
 import notFoundMessages from "@/i18n/messages/notFound";
 

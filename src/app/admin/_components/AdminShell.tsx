@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { sendEmailVerification } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 import { DEV_BYPASS } from "@/lib/admin/client";
 import { timeAgo } from "@/lib/admin/format";
 import { isToShip } from "@/lib/admin/metrics";
@@ -12,6 +14,7 @@ import {
     AnalyticsIcon,
     Button,
     CartIcon,
+    ChevronDown,
     CloseIcon,
     CustomersIcon,
     HomeIcon,
@@ -64,9 +67,63 @@ function Gate({ children }: { children: React.ReactNode }) {
             </div>
         );
     }
+    if (access === "unverified") return <VerifyEmail email={email} signOut={signOut} />;
     // Packing slips print without the admin chrome
-    if (pathname?.endsWith("/slip")) return <>{children}</>;
+    if (pathname?.endsWith("/slip") || pathname?.endsWith("/orders/slips")) return <>{children}</>;
     return <Frame>{children}</Frame>;
+}
+
+// Admin accounts must have a verified email address (the API refuses unverified ones)
+function VerifyEmail({ email, signOut }: { email: string; signOut: () => Promise<void> }) {
+    const { reload } = useAdmin();
+    const [busy, setBusy] = useState<"send" | "check" | null>(null);
+    const [message, setMessage] = useState("");
+    const send = async () => {
+        if (!auth.currentUser) return;
+        setBusy("send");
+        try {
+            await sendEmailVerification(auth.currentUser);
+            setMessage(`Verification email sent to ${email}. Open the link in it, then come back here.`);
+        } catch (e) {
+            setMessage(e instanceof Error ? e.message : "Could not send the verification email");
+        } finally {
+            setBusy(null);
+        }
+    };
+    const check = async () => {
+        if (!auth.currentUser) return;
+        setBusy("check");
+        try {
+            await auth.currentUser.reload();
+            await auth.currentUser.getIdToken(true); // new token carries email_verified
+            await reload();
+            if (!auth.currentUser.emailVerified) setMessage("This email address is not verified yet.");
+        } finally {
+            setBusy(null);
+        }
+    };
+    return (
+        <div className="flex min-h-screen items-center justify-center bg-zinc-100 px-4">
+            <div className="w-full max-w-sm rounded-xl border border-zinc-200 bg-paper p-6 text-center shadow-sm">
+                <h1 className="text-lg font-semibold text-zinc-900">Verify your email address</h1>
+                <p className="mt-2 text-sm text-zinc-700">
+                    <span className="font-medium">{email}</span> has admin access, but its email address is not verified yet. Verify it once to open the admin.
+                </p>
+                {message && <p className="mt-3 rounded-lg bg-zinc-100 px-3 py-2 text-[13px] text-zinc-800">{message}</p>}
+                <div className="mt-5 space-y-2">
+                    <Button variant="primary" className="w-full" loading={busy === "send"} onClick={send}>
+                        Send verification email
+                    </Button>
+                    <Button className="w-full" loading={busy === "check"} onClick={check}>
+                        I verified it
+                    </Button>
+                    <Button variant="ghost" className="w-full" onClick={signOut}>
+                        Sign out
+                    </Button>
+                </div>
+            </div>
+        </div>
+    );
 }
 
 const NAV = [
@@ -216,28 +273,74 @@ function MobileSearch() {
 }
 
 function SyncButton({ compact = false }: { compact?: boolean }) {
-    const { lastSync, syncing, sync } = useAdmin();
+    const { lastSync, lastSyncPartial, syncing, sync } = useAdmin();
     const [, tick] = useState(0);
+    const [menu, setMenu] = useState(false);
+    const box = useRef<HTMLDivElement>(null);
     useEffect(() => {
         const t = setInterval(() => tick((n) => n + 1), 30000);
         return () => clearInterval(t);
     }, []);
-    const label = syncing ? "Syncing…" : lastSync ? `Synced ${timeAgo(lastSync)}` : "Not synced yet";
+    useEffect(() => {
+        if (!menu) return;
+        const close = (e: MouseEvent) => !box.current?.contains(e.target as Node) && setMenu(false);
+        document.addEventListener("mousedown", close);
+        return () => document.removeEventListener("mousedown", close);
+    }, [menu]);
+    const label = syncing
+        ? "Syncing…"
+        : lastSync
+          ? lastSyncPartial
+              ? `Sync incomplete · ${timeAgo(lastSync)}`
+              : `Synced ${timeAgo(lastSync)}`
+          : "Not synced yet";
     return (
-        <button
-            onClick={sync}
-            disabled={syncing}
-            title="Pull refunds and payment details from Stripe"
-            className="inline-flex h-9 items-center gap-2 rounded-lg border border-zinc-300 bg-paper px-3 text-[13px] font-medium text-zinc-800 hover:bg-zinc-50 disabled:opacity-70"
-        >
-            {syncing ? <Spinner className="h-4 w-4" /> : <SyncIcon className="h-4 w-4" />}
-            {compact ? <span>{label}</span> : (
-                <span>
-                    <span className="hidden xl:inline">Sync with Stripe · </span>
-                    <span className="text-zinc-600">{label}</span>
-                </span>
+        <div ref={box} className="relative inline-flex">
+            <button
+                onClick={() => sync()}
+                disabled={syncing}
+                title={
+                    lastSyncPartial
+                        ? "The last sync stopped early. Click to continue."
+                        : "Pull new orders, refunds and payment details from Stripe (changes since the last sync)"
+                }
+                className={cx(
+                    "inline-flex h-9 items-center gap-2 rounded-l-lg border px-3 text-[13px] font-medium hover:bg-zinc-50 disabled:opacity-70",
+                    lastSyncPartial && !syncing ? "border-amber-400 bg-amber-50 text-amber-950" : "border-zinc-300 bg-paper text-zinc-800",
+                )}
+            >
+                {syncing ? <Spinner className="h-4 w-4" /> : <SyncIcon className="h-4 w-4" />}
+                {compact ? <span>{label}</span> : (
+                    <span>
+                        <span className="hidden xl:inline">Sync with Stripe · </span>
+                        <span className={lastSyncPartial && !syncing ? "" : "text-zinc-600"}>{label}</span>
+                    </span>
+                )}
+            </button>
+            <button
+                onClick={() => setMenu((m) => !m)}
+                disabled={syncing}
+                aria-label="More sync options"
+                aria-expanded={menu}
+                className="-ml-px inline-flex h-9 w-7 items-center justify-center rounded-r-lg border border-zinc-300 bg-paper text-zinc-700 hover:bg-zinc-50 disabled:opacity-70"
+            >
+                <ChevronDown className="h-3.5 w-3.5" />
+            </button>
+            {menu && (
+                <div className="absolute right-0 top-10 z-40 w-64 rounded-lg border border-zinc-200 bg-paper p-1 shadow-lg">
+                    <button
+                        className="w-full rounded-md px-3 py-2 text-left text-[13px] hover:bg-zinc-100"
+                        onClick={() => {
+                            setMenu(false);
+                            sync({ full: true });
+                        }}
+                    >
+                        <span className="block font-medium text-zinc-900">Full resync</span>
+                        <span className="block text-xs text-zinc-600">Checks every Stripe checkout ever made. Slow; only needed when something looks off.</span>
+                    </button>
+                </div>
             )}
-        </button>
+        </div>
     );
 }
 

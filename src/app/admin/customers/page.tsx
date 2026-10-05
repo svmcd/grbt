@@ -5,7 +5,8 @@ import { useMemo, useState } from "react";
 import { useAdmin } from "../_components/AdminProvider";
 import { Badge, Card, DownloadIcon, EmptyState, PageHeader, SearchIcon, Button, inputClass, selectClass } from "../_components/ui";
 import { countryName, formatDate, money } from "@/lib/admin/format";
-import { downloadCsv, groupCustomers, type Customer } from "@/lib/admin/metrics";
+import { csvDate, csvToday, downloadCsv, groupCustomers, type Customer } from "@/lib/admin/metrics";
+import { LoadErrorCard } from "../_components/LoadErrorCard";
 
 type SortKey = "last" | "spent" | "orders" | "first" | "name";
 const SORTS: Record<SortKey, { label: string; fn: (a: Customer, b: Customer) => number }> = {
@@ -33,7 +34,7 @@ export default function CustomersPage() {
     const returning = customers.filter((c) => c.orderCount > 1).length;
 
     const exportCsv = () =>
-        downloadCsv(`egrikuyu-customers-${new Date().toISOString().slice(0, 10)}.csv`, [
+        downloadCsv(`egrikuyu-customers-${csvToday()}.csv`, [
             ["Name", "Email", "Phone", "Country", "Orders", "Total spent (EUR)", "First order", "Last order"],
             ...shown.map((c) => [
                 c.name,
@@ -42,8 +43,8 @@ export default function CustomersPage() {
                 c.country,
                 c.orderCount,
                 (c.totalSpent / 100).toFixed(2),
-                new Date(c.firstOrder * 1000).toISOString().slice(0, 10),
-                new Date(c.lastOrder * 1000).toISOString().slice(0, 10),
+                csvDate(c.firstOrder),
+                csvDate(c.lastOrder),
             ]),
         ]);
 
@@ -59,6 +60,7 @@ export default function CustomersPage() {
                     </Button>
                 }
             />
+            <LoadErrorCard />
             <Card>
                 <div className="flex flex-col gap-2 border-b border-zinc-200 p-3 sm:flex-row sm:items-center">
                     <div className="relative flex-1">

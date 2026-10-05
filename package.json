@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "mockups": "node scripts/generate-mockups.mjs",
+    "mockups": "node scripts/generate-mockups.mjs && node scripts/product-extra-photos.mjs",
     "predev": "npm run mockups",
     "dev": "next dev",
     "prebuild": "npm run mockups",

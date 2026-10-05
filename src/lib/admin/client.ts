@@ -10,6 +10,7 @@ export class AdminApiError extends Error {
     constructor(
         message: string,
         public status: number,
+        public code?: string,
     ) {
         super(message);
     }
@@ -37,8 +38,8 @@ export async function adminFetch<T>(path: string, init: { method?: "GET" | "POST
         // empty body
     }
     if (!res.ok) {
-        const message = (data as { error?: string } | null)?.error || `Request failed (${res.status})`;
-        throw new AdminApiError(message, res.status);
+        const err = data as { error?: string; code?: string } | null;
+        throw new AdminApiError(err?.error || `Request failed (${res.status})`, res.status, err?.code);
     }
     return data as T;
 }

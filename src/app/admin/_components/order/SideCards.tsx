@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import type { AdminOrder } from "@/lib/admin/orders";
+import { addressTooLong, EMAIL_TYPE_LABEL, type AdminOrder } from "@/lib/admin/orders";
 import { countryName, formatDateTime, languageName, money } from "@/lib/admin/format";
 import { customerKey } from "@/lib/admin/metrics";
 import { useAdmin } from "../AdminProvider";
-import { Badge, Button, Card, CopyIcon, Field, inputClass, textareaClass } from "../ui";
+import { shippingCountries } from "@/lib/shipping";
+import { Badge, Button, Card, CopyIcon, Field, inputClass, selectClass, textareaClass } from "../ui";
 
 /* ---------- Customer ---------- */
 
@@ -109,8 +110,103 @@ export function addressLines(o: AdminOrder) {
     return [s.name || o.customer.name, s.line1, s.line2, [s.postalCode, s.city].filter(Boolean).join(" "), s.country ? countryName(s.country) : ""].filter(Boolean);
 }
 
+type AddressForm = { name: string; line1: string; line2: string; postalCode: string; city: string; country: string; phone: string };
+
+function AddressEditor({ order, onDone }: { order: AdminOrder; onDone: () => void }) {
+    const { orderAction, toast } = useAdmin();
+    const s = order.shipping;
+    const [form, setForm] = useState<AddressForm>({
+        name: s.name || order.customer.name,
+        line1: s.line1,
+        line2: s.line2,
+        postalCode: s.postalCode,
+        city: s.city,
+        // No country on the order: the admin picks one (never a silent default)
+        country: (s.country || "").toUpperCase(),
+        phone: s.phone || order.customer.phone,
+    });
+    const [busy, setBusy] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const set = (k: keyof AddressForm) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        setForm({ ...form, [k]: e.target.value });
+        setError(null);
+    };
+    // Keep a country the shop no longer ships to selectable, so saving does not change it silently
+    const codes = shippingCountries.map((c) => c.code);
+    const countries = !form.country || codes.includes(form.country) ? codes : [form.country, ...codes];
+
+    const save = async (e: React.FormEvent) => {
+        e.preventDefault();
+        // Too long is refused, not cut: a shortened street would end up on the label
+        const tooLong = addressTooLong(form);
+        if (tooLong) {
+            setError(tooLong);
+            return;
+        }
+        setBusy(true);
+        try {
+            await orderAction("update_address", order.id, { address: form });
+            toast(order.fulfillment.status === "unfulfilled" ? "Address saved." : "Address saved. Check the label: it may still have the old address.");
+            onDone();
+        } catch (err) {
+            toast(err instanceof Error ? err.message : "Could not save the address", "error");
+        } finally {
+            setBusy(false);
+        }
+    };
+
+    return (
+        <form onSubmit={save} className="grid gap-3 px-4 pb-4 pt-3 sm:grid-cols-2 sm:px-5">
+            <Field label="Name" className="sm:col-span-2">
+                <input type="text" required value={form.name} onChange={set("name")} className={inputClass} />
+            </Field>
+            <Field label="Address" className="sm:col-span-2">
+                <input type="text" required value={form.line1} onChange={set("line1")} placeholder="Street and house number" className={inputClass} />
+            </Field>
+            <Field label="Apartment, suite (optional)" className="sm:col-span-2">
+                <input type="text" value={form.line2} onChange={set("line2")} className={inputClass} />
+            </Field>
+            <Field label="Postal code">
+                <input type="text" value={form.postalCode} onChange={set("postalCode")} className={inputClass} />
+            </Field>
+            <Field label="City">
+                <input type="text" required value={form.city} onChange={set("city")} className={inputClass} />
+            </Field>
+            <Field label="Country" className="sm:col-span-2">
+                <select value={form.country} onChange={set("country")} required className={selectClass}>
+                    <option value="" disabled>
+                        Choose a country
+                    </option>
+                    {countries.map((c) => (
+                        <option key={c} value={c}>
+                            {countryName(c)}
+                        </option>
+                    ))}
+                </select>
+            </Field>
+            <Field label="Phone" className="sm:col-span-2">
+                <input type="tel" value={form.phone} onChange={set("phone")} className={inputClass} />
+            </Field>
+            {error && (
+                <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800 sm:col-span-2">
+                    {error}
+                </p>
+            )}
+            <div className="flex gap-2 sm:col-span-2">
+                <Button type="submit" variant="primary" size="sm" loading={busy}>
+                    Save address
+                </Button>
+                <Button size="sm" variant="ghost" onClick={onDone}>
+                    Cancel
+                </Button>
+            </div>
+        </form>
+    );
+}
+
 export function AddressCard({ order }: { order: AdminOrder }) {
     const { toast } = useAdmin();
+    const [editing, setEditing] = useState(false);
     const lines = addressLines(order);
     const copy = async () => {
         try {
@@ -124,17 +220,29 @@ export function AddressCard({ order }: { order: AdminOrder }) {
         <Card
             title="Shipping address"
             action={
-                lines.length > 0 && (
-                    <button onClick={copy} className="inline-flex items-center gap-1 text-[13px] font-medium text-zinc-700 hover:text-zinc-900">
-                        <CopyIcon className="h-4 w-4" />
-                        Copy address
-                    </button>
+                !editing && (
+                    <span className="flex items-center gap-3">
+                        {lines.length > 0 && (
+                            <button onClick={copy} className="inline-flex items-center gap-1 text-[13px] font-medium text-zinc-700 hover:text-zinc-900">
+                                <CopyIcon className="h-4 w-4" />
+                                Copy
+                            </button>
+                        )}
+                        <button onClick={() => setEditing(true)} className="text-[13px] font-medium text-zinc-700 hover:text-zinc-900">
+                            Edit
+                        </button>
+                    </span>
                 )
             }
         >
-            <div className="px-4 pb-4 pt-3 text-sm leading-6 text-zinc-900 sm:px-5">
-                {lines.length ? lines.map((l, i) => <p key={i}>{l}</p>) : <p className="text-zinc-600">No shipping address</p>}
-            </div>
+            {editing ? (
+                <AddressEditor order={order} onDone={() => setEditing(false)} />
+            ) : (
+                <div className="px-4 pb-4 pt-3 text-sm leading-6 text-zinc-900 sm:px-5">
+                    {lines.length ? lines.map((l, i) => <p key={i}>{l}</p>) : <p className="text-zinc-600">No shipping address</p>}
+                    {order.shipping.phone && <p className="text-zinc-700">{order.shipping.phone}</p>}
+                </div>
+            )}
         </Card>
     );
 }
@@ -196,6 +304,14 @@ export function Timeline({ order }: { order: AdminOrder }) {
     if (f.shippedAt)
         events.push({ at: new Date(f.shippedAt).getTime(), title: "Shipped", detail: [f.trackingProvider, f.trackingCode].filter(Boolean).join(" ") || undefined });
     for (const r of order.payment.refunds) if (r.created) events.push({ at: r.created * 1000, title: "Refunded", detail: money(r.amount) });
+    for (const m of order.emails)
+        events.push({
+            at: new Date(m.at).getTime(),
+            title: `${EMAIL_TYPE_LABEL[m.type] || "Email"} ${m.resend ? "resent" : "sent"}`,
+            detail: `to ${m.to}${m.by ? ` · by ${m.by}` : ""}`,
+        });
+    for (const a of order.activity)
+        events.push({ at: new Date(a.at).getTime(), title: a.title, detail: [a.detail, a.by && `by ${a.by}`].filter(Boolean).join(" · ") || undefined });
     events.sort((a, b) => b.at - a.at);
     const missing = (f.status !== "unfulfilled" && !f.labelCreatedAt) || (f.status === "shipped" && !f.shippedAt);
 

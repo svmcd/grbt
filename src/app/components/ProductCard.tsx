@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/i18n/LocaleLink";
 import Image from "next/image";
 import { getPriceForSlug } from "@/lib/pricing";
 import { getImagesForSlug, getPrimaryImageForSlug, getProductBySlug } from "@/lib/catalog";

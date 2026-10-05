@@ -56,8 +56,19 @@ export function describeCheckoutItem(item: CheckoutItemInput, locale: Locale): {
     };
 }
 
+// Cuts text to at most `max` UTF-16 units without splitting a character made of two units (emoji).
+export function truncate(value: string, max: number): string {
+    if (value.length <= max) return value;
+    let out = "";
+    for (const char of value) {
+        if (out.length + char.length > max) break;
+        out += char;
+    }
+    return out;
+}
+
 // Stripe metadata values are limited to 500 characters.
-const meta = (value: unknown) => String(value).slice(0, 500);
+const meta = (value: unknown) => truncate(String(value), 500);
 
 // Structured copy of the item, stored on the Stripe product so the webhook can rebuild the
 // Turkish name for Firestore / the admin dashboard whatever language the customer used.
@@ -116,17 +127,4 @@ export function lineItemsForStorage(items: Stripe.LineItem[]): Stripe.LineItem[]
         if (item) stored.description = describeCheckoutItem(item, "tr").name;
         return stored;
     });
-}
-
-// Country name for the Stripe shipping option, in the customer's language.
-export function countryName(code: string | undefined, fallback: string | undefined, intlLocale: string): string | undefined {
-    if (code) {
-        try {
-            const name = new Intl.DisplayNames([intlLocale], { type: "region" }).of(code);
-            if (name && name !== code) return name;
-        } catch {
-            // fall through to the stored name
-        }
-    }
-    return fallback;
 }

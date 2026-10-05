@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { getMessages } from "@/i18n/server";
+import { getMessages, getUrlLocale } from "@/i18n/server";
 import common from "@/i18n/messages/common";
 import collections from "@/i18n/messages/collections";
-import { SITE_URL } from "@/lib/seo/products";
+import { alternatesFor } from "@/lib/seo/locales";
 
 export async function generateMetadata(): Promise<Metadata> {
     const c = await getMessages(common);
@@ -10,7 +10,7 @@ export async function generateMetadata(): Promise<Metadata> {
     return {
         title: c.collections.sinema,
         description: t.sinemaSubtitle,
-        alternates: { canonical: `${SITE_URL}/collection/sinema` },
+        alternates: alternatesFor("/collection/sinema", await getUrlLocale()),
     };
 }
 

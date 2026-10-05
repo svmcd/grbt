@@ -5,6 +5,9 @@ export default defineMessages({
     en: {
         loadingDetails: "Loading order details...",
         title: "Your Order Is Confirmed",
+        checkingTitle: "We Are Checking Your Payment",
+        checkingText:
+            "We could not confirm your payment yet. If you have completed the payment and do not receive a confirmation email, please contact us at info@egrikuyu.com and mention your reference so that we can check your order.",
         intro: "Thank you for your purchase. Your order has been processed successfully and will be shipped shortly.",
         summaryTitle: "Order Summary",
         orderNumber: "Order number",
@@ -34,7 +37,7 @@ export default defineMessages({
         referenceLabel: "Reference:",
         faqTitle: "Frequently Asked Questions",
         deliveryTimeLabel: "Delivery time:",
-        deliveryTimeValue: "3-5 business days",
+        deliveryTimeValue: (min: number, max: number) => `${min}-${max} business days`,
         returnPolicyLabel: "Return policy:",
         returnPolicyValue: "Within 60 days",
         trackingLabel: "Shipment tracking:",
@@ -44,6 +47,9 @@ export default defineMessages({
     de: {
         loadingDetails: "Bestelldetails werden geladen...",
         title: "Ihre Bestellung ist bestätigt",
+        checkingTitle: "Wir prüfen Ihre Zahlung",
+        checkingText:
+            "Ihre Zahlung konnte noch nicht bestätigt werden. Wenn Sie die Zahlung abgeschlossen haben und keine Bestätigungs-E-Mail erhalten, kontaktieren Sie uns bitte unter info@egrikuyu.com und geben Sie Ihre Referenz an, damit wir Ihre Bestellung prüfen können.",
         intro: "Vielen Dank für Ihren Einkauf. Ihre Bestellung wurde erfolgreich bearbeitet und wird in Kürze versendet.",
         summaryTitle: "Bestellübersicht",
         orderNumber: "Bestellnummer",
@@ -73,7 +79,7 @@ export default defineMessages({
         referenceLabel: "Referenz:",
         faqTitle: "Häufig gestellte Fragen",
         deliveryTimeLabel: "Lieferzeit:",
-        deliveryTimeValue: "3-5 Werktage",
+        deliveryTimeValue: (min: number, max: number) => `${min}-${max} Werktage`,
         returnPolicyLabel: "Rückgabe:",
         returnPolicyValue: "Innerhalb von 60 Tagen",
         trackingLabel: "Sendungsverfolgung:",
@@ -83,6 +89,9 @@ export default defineMessages({
     fr: {
         loadingDetails: "Chargement des détails de la commande...",
         title: "Votre commande est confirmée",
+        checkingTitle: "Nous vérifions votre paiement",
+        checkingText:
+            "Votre paiement n'a pas encore pu être confirmé. Si vous avez finalisé le paiement et ne recevez pas d'e-mail de confirmation, veuillez nous contacter à l'adresse info@egrikuyu.com en indiquant votre référence afin que nous puissions vérifier votre commande.",
         intro: "Merci pour votre achat. Votre commande a bien été traitée et sera expédiée prochainement.",
         summaryTitle: "Récapitulatif de la commande",
         orderNumber: "Numéro de commande",
@@ -112,7 +121,7 @@ export default defineMessages({
         referenceLabel: "Référence :",
         faqTitle: "Questions fréquentes",
         deliveryTimeLabel: "Délai de livraison :",
-        deliveryTimeValue: "3 à 5 jours ouvrés",
+        deliveryTimeValue: (min: number, max: number) => `${min} à ${max} jours ouvrés`,
         returnPolicyLabel: "Politique de retour :",
         returnPolicyValue: "Sous 60 jours",
         trackingLabel: "Suivi du colis :",
@@ -122,6 +131,9 @@ export default defineMessages({
     tr: {
         loadingDetails: "Sipariş detayları yükleniyor...",
         title: "Siparişiniz Onaylandı",
+        checkingTitle: "Ödemenizi Kontrol Ediyoruz",
+        checkingText:
+            "Ödemeniz henüz onaylanamadı. Ödemeyi tamamladıysanız ve onay e-postası almadıysanız, siparişinizi kontrol edebilmemiz için lütfen referansınızı belirterek info@egrikuyu.com adresinden bizimle iletişime geçin.",
         intro: "Satın aldığınız için teşekkürler. Siparişiniz başarıyla işlendi ve kısa süre içinde kargoya verilecektir.",
         summaryTitle: "Sipariş Özeti",
         orderNumber: "Sipariş Numarası",
@@ -129,7 +141,7 @@ export default defineMessages({
         paymentStatus: "Ödeme Durumu",
         paymentSuccessful: "Başarılı",
         orderDate: "Sipariş Tarihi",
-        notAvailable: "N/A",
+        notAvailable: "Belirtilmemiş",
         deliveryTitle: "Teslimat Bilgileri",
         fullName: "Ad Soyad",
         address: "Adres",
@@ -151,7 +163,7 @@ export default defineMessages({
         referenceLabel: "Referans:",
         faqTitle: "Sık Sorulan Sorular",
         deliveryTimeLabel: "Teslimat süresi:",
-        deliveryTimeValue: "3-5 iş günü",
+        deliveryTimeValue: (min: number, max: number) => `${min}-${max} iş günü`,
         returnPolicyLabel: "İade politikası:",
         returnPolicyValue: "60 gün içinde",
         trackingLabel: "Kargo takibi:",

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/i18n/LocaleLink";
 
 // "→ NAME" section heading with an optional VIEW ALL button on the right.
 export function SectionHeading({

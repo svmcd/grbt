@@ -3,38 +3,91 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAdmin } from "../../_components/AdminProvider";
-import { Button, Card, Field, PageHeader, inputClass, selectClass, textareaClass } from "../../_components/ui";
+import { Button, Card, Field, PageHeader, PlusIcon, inputClass, selectClass, textareaClass } from "../../_components/ui";
 import { adminFetch } from "@/lib/admin/client";
-import { countryName } from "@/lib/admin/format";
+import { countryName, money } from "@/lib/admin/format";
+import { hasretSlugs, memleketSlugs, recepIvedikSlugs, titleCaseCity } from "@/lib/catalog";
+import { getPriceForSlug } from "@/lib/pricing";
 import { shippingCountries } from "@/lib/shipping";
 
-const EMPTY = { name: "", email: "", phone: "", line1: "", line2: "", postalCode: "", city: "", country: "NL", amountEuros: "", items: "", notes: "", locale: "tr" };
+const EMPTY = { name: "", email: "", phone: "", line1: "", line2: "", postalCode: "", city: "", country: "NL", shippingEuros: "0", discountEuros: "", notes: "", locale: "tr" };
 
-// Orders sold outside the site (in person, by message). Saved as paid.
+type ProductType = "tshirt" | "hoodie" | "sweater";
+type Line = { slug: string; productType: ProductType; color: "siyah" | "beyaz"; size: string; quantity: string; unitPrice: string };
+
+const DESIGNS = [
+    { label: "Memleket", slugs: memleketSlugs },
+    { label: "Hasret", slugs: hasretSlugs },
+    { label: "Sinema", slugs: recepIvedikSlugs },
+];
+const TYPES: { value: ProductType; label: string }[] = [
+    { value: "tshirt", label: "T-shirt" },
+    { value: "hoodie", label: "Hoodie" },
+    { value: "sweater", label: "Sweater" },
+];
+const SIZES = ["S", "M", "L", "XL", "XXL"];
+// Same prices as the shop: the design's price, hoodie and sweater €20 more
+const shopPrice = (slug: string, type: ProductType) => (slug ? getPriceForSlug(slug) + (type === "tshirt" ? 0 : 20) : 0);
+const euros = (v: string) => Number(v.replace(",", "."));
+const newLine = (): Line => ({ slug: "", productType: "tshirt", color: "siyah", size: "M", quantity: "1", unitPrice: "" });
+
+// Orders sold outside the site (in person, by message). Saved as paid. Items are picked from the
+// catalog so they show up in analytics like shop orders.
 export default function NewOrderPage() {
     const router = useRouter();
     const { reload, toast } = useAdmin();
     const [form, setForm] = useState(EMPTY);
+    const [lines, setLines] = useState<Line[]>([newLine()]);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState("");
     const set = (k: keyof typeof EMPTY) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setForm({ ...form, [k]: e.target.value });
 
-    const items = form.items
-        .split("\n")
-        .map((l) => l.trim())
-        .filter(Boolean);
-    const amount = Number(form.amountEuros.replace(",", "."));
+    const setLine = (i: number, patch: Partial<Line>) =>
+        setLines((cur) =>
+            cur.map((l, j) => {
+                if (j !== i) return l;
+                const next = { ...l, ...patch };
+                // Follow the shop price until the price was typed by hand
+                const auto = l.unitPrice === "" || euros(l.unitPrice) === shopPrice(l.slug, l.productType);
+                if (auto && (patch.slug !== undefined || patch.productType !== undefined)) next.unitPrice = next.slug ? String(shopPrice(next.slug, next.productType)) : "";
+                return next;
+            }),
+        );
+
+    const subtotal = lines.reduce((s, l) => s + (euros(l.unitPrice) || 0) * (Math.floor(Number(l.quantity)) || 0), 0);
+    const shipping = euros(form.shippingEuros) || 0;
+    const discount = euros(form.discountEuros) || 0;
+    const total = Math.max(0, subtotal - discount) + shipping;
 
     const submit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError("");
-        if (!items.length) return setError("Add at least one item.");
-        if (!(amount >= 0) || form.amountEuros.trim() === "") return setError("Enter the amount paid in euros.");
+        if (lines.some((l) => !l.slug)) return setError("Choose a design for every item.");
+        if (lines.some((l) => !(Math.floor(Number(l.quantity)) >= 1))) return setError("Every item needs a quantity of at least 1.");
+        if (lines.some((l) => l.unitPrice.trim() === "" || !(euros(l.unitPrice) >= 0))) return setError("Enter a price for every item.");
+        if (!(shipping >= 0) || !(discount >= 0)) return setError("Check the shipping and discount amounts.");
         setBusy(true);
         try {
             const res = await adminFetch<{ ok: boolean; id: string }>("/api/admin/orders", {
                 method: "POST",
-                body: { action: "create", data: { ...form, amountEuros: amount, items, name: form.name.trim(), email: form.email.trim() } },
+                body: {
+                    action: "create",
+                    data: {
+                        ...form,
+                        name: form.name.trim(),
+                        email: form.email.trim(),
+                        shippingEuros: shipping,
+                        discountEuros: discount,
+                        items: lines.map((l) => ({
+                            slug: l.slug,
+                            productType: l.productType,
+                            color: l.color,
+                            size: l.size,
+                            quantity: Math.floor(Number(l.quantity)),
+                            unitPriceEuros: euros(l.unitPrice),
+                        })),
+                    },
+                },
             });
             await reload();
             toast("Order created.");
@@ -51,13 +104,94 @@ export default function NewOrderPage() {
             <form onSubmit={submit} className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
                 <div className="space-y-4">
                     <Card title="Items">
-                        <div className="space-y-4 px-4 pb-4 pt-3 sm:px-5">
-                            <Field label="Items" hint="One item per line, e.g. “Konya T-shirt, Black, M”">
-                                <textarea rows={4} value={form.items} onChange={set("items")} className={textareaClass} placeholder={"Konya T-shirt, Black, M\nRize Hoodie, Black, L"} />
-                            </Field>
-                            <Field label="Amount paid (€)" hint="Total including shipping" className="max-w-[200px]">
-                                <input type="text" inputMode="decimal" required value={form.amountEuros} onChange={set("amountEuros")} placeholder="0.00" className={inputClass} />
-                            </Field>
+                        <div className="space-y-3 px-4 pb-4 pt-3 sm:px-5">
+                            {lines.map((l, i) => (
+                                <div key={i} className="grid grid-cols-2 gap-2 rounded-lg border border-zinc-200 p-3 sm:grid-cols-6">
+                                    <Field label="Design" className="col-span-2 sm:col-span-3">
+                                        <select required value={l.slug} onChange={(e) => setLine(i, { slug: e.target.value })} className={selectClass}>
+                                            <option value="">Choose a design</option>
+                                            {DESIGNS.map((g) => (
+                                                <optgroup key={g.label} label={g.label}>
+                                                    {g.slugs.map((slug) => (
+                                                        <option key={slug} value={slug}>
+                                                            {titleCaseCity(slug)}
+                                                        </option>
+                                                    ))}
+                                                </optgroup>
+                                            ))}
+                                        </select>
+                                    </Field>
+                                    <Field label="Product" className="sm:col-span-3">
+                                        <select value={l.productType} onChange={(e) => setLine(i, { productType: e.target.value as ProductType })} className={selectClass}>
+                                            {TYPES.map((t) => (
+                                                <option key={t.value} value={t.value}>
+                                                    {t.label}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </Field>
+                                    <Field label="Color" className="sm:col-span-2">
+                                        <select value={l.color} onChange={(e) => setLine(i, { color: e.target.value as Line["color"] })} className={selectClass}>
+                                            <option value="siyah">Black</option>
+                                            <option value="beyaz">White</option>
+                                        </select>
+                                    </Field>
+                                    <Field label="Size">
+                                        <select value={l.size} onChange={(e) => setLine(i, { size: e.target.value })} className={selectClass}>
+                                            {SIZES.map((sz) => (
+                                                <option key={sz} value={sz}>
+                                                    {sz}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </Field>
+                                    <Field label="Quantity">
+                                        <input type="number" min={1} max={99} required value={l.quantity} onChange={(e) => setLine(i, { quantity: e.target.value })} className={inputClass} />
+                                    </Field>
+                                    <Field label="Price each (€)" className="sm:col-span-2">
+                                        <input type="text" inputMode="decimal" required value={l.unitPrice} onChange={(e) => setLine(i, { unitPrice: e.target.value })} placeholder="0.00" className={inputClass} />
+                                    </Field>
+                                    {lines.length > 1 && (
+                                        <div className="col-span-2 sm:col-span-6">
+                                            <button type="button" className="text-[13px] font-medium text-red-700 hover:underline" onClick={() => setLines((cur) => cur.filter((_, j) => j !== i))}>
+                                                Remove item
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                            <Button size="sm" onClick={() => setLines((cur) => [...cur, newLine()])}>
+                                <PlusIcon className="h-4 w-4" />
+                                Add item
+                            </Button>
+                            <div className="grid gap-3 border-t border-zinc-100 pt-3 sm:grid-cols-2">
+                                <Field label="Shipping (€)">
+                                    <input type="text" inputMode="decimal" value={form.shippingEuros} onChange={set("shippingEuros")} placeholder="0.00" className={inputClass} />
+                                </Field>
+                                <Field label="Discount (€)" hint="Leave empty for none">
+                                    <input type="text" inputMode="decimal" value={form.discountEuros} onChange={set("discountEuros")} placeholder="0.00" className={inputClass} />
+                                </Field>
+                            </div>
+                            <dl className="space-y-1 text-sm">
+                                <div className="flex justify-between text-zinc-700">
+                                    <dt>Items</dt>
+                                    <dd className="tabular-nums">{money(Math.round(subtotal * 100))}</dd>
+                                </div>
+                                {discount > 0 && (
+                                    <div className="flex justify-between text-zinc-700">
+                                        <dt>Discount</dt>
+                                        <dd className="tabular-nums">−{money(Math.round(discount * 100))}</dd>
+                                    </div>
+                                )}
+                                <div className="flex justify-between text-zinc-700">
+                                    <dt>Shipping</dt>
+                                    <dd className="tabular-nums">{money(Math.round(shipping * 100))}</dd>
+                                </div>
+                                <div className="flex justify-between font-semibold text-zinc-900">
+                                    <dt>Amount paid</dt>
+                                    <dd className="tabular-nums">{money(Math.round(total * 100))}</dd>
+                                </div>
+                            </dl>
                         </div>
                     </Card>
                     <Card title="Shipping address">

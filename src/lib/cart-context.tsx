@@ -5,10 +5,16 @@ import {
   useContext,
   useReducer,
   useEffect,
+  useCallback,
   ReactNode,
 } from "react";
-import { memleketSlugs } from "./catalog";
 import { track } from "./track";
+import { MAX_QUANTITY, memleketDiscountCents, unitPriceCents } from "./cart-pricing";
+
+// Checkout accepts at most MAX_QUANTITY of one line
+// Same rule as the server: whole numbers from 1 to MAX_QUANTITY
+const clampQuantity = (quantity: number) =>
+  Number.isFinite(quantity) ? Math.min(MAX_QUANTITY, Math.max(1, Math.floor(quantity))) : 1;
 
 export type CartItem = {
   slug: string;
@@ -67,6 +73,7 @@ type CartAction =
     }
   | { type: "CLEAR_CART" }
   | { type: "TOGGLE_CART" }
+  | { type: "OPEN_CART" }
   | { type: "CLOSE_CART" }
   | { type: "ADD_ITEM_SUCCESS"; payload: CartItem };
 
@@ -86,6 +93,7 @@ const loadCartFromStorage = (): CartState => {
         .map((item: any) => ({
           ...item,
           productType: item.productType || "tshirt", // Default to tshirt for old items
+          quantity: clampQuantity(item.quantity || 1),
         }));
       return {
         items: migratedItems,
@@ -129,7 +137,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
           ) {
             return {
               ...item,
-              quantity: item.quantity + action.payload.quantity,
+              quantity: clampQuantity(item.quantity + action.payload.quantity),
             };
           }
           return item;
@@ -143,7 +151,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
       }
       return {
         ...state,
-        items: [...state.items, action.payload],
+        items: [...state.items, { ...action.payload, quantity: clampQuantity(action.payload.quantity) }],
         isOpen: true, // Auto-open cart
         justAdded: action.payload,
       };
@@ -169,7 +177,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
               JSON.stringify(personalization) &&
             JSON.stringify(item.giftPackage) === JSON.stringify(giftPackage)
           ) {
-            return { ...item, quantity };
+            return { ...item, quantity: clampQuantity(quantity) };
           }
           return item;
         })
@@ -202,6 +210,8 @@ function cartReducer(state: CartState, action: CartAction): CartState {
       return { ...state, items: [] };
     case "TOGGLE_CART":
       return { ...state, isOpen: !state.isOpen };
+    case "OPEN_CART":
+      return state.isOpen ? state : { ...state, isOpen: true };
     case "CLOSE_CART":
       return { ...state, isOpen: false };
     default:
@@ -231,6 +241,7 @@ type CartContextType = {
   ) => void;
   clearCart: () => void;
   toggleCart: () => void;
+  openCart: () => void;
   closeCart: () => void;
   getSubtotal: () => number;
   getTotal: () => number;
@@ -294,69 +305,26 @@ export function CartProvider({ children }: { children: ReactNode }) {
         giftPackage,
       },
     });
-  const clearCart = () => dispatch({ type: "CLEAR_CART" });
-  const toggleCart = () => dispatch({ type: "TOGGLE_CART" });
-  const closeCart = () => dispatch({ type: "CLOSE_CART" });
+  // Stable identities, so effects can depend on them
+  const clearCart = useCallback(() => dispatch({ type: "CLEAR_CART" }), []);
+  const toggleCart = useCallback(() => dispatch({ type: "TOGGLE_CART" }), []);
+  const openCart = useCallback(() => dispatch({ type: "OPEN_CART" }), []);
+  const closeCart = useCallback(() => dispatch({ type: "CLOSE_CART" }), []);
   const clearJustAdded = () =>
     dispatch({ type: "ADD_ITEM_SUCCESS", payload: null as any });
-  const getSubtotal = () => {
-    // Calculate subtotal for all items (including personalization and gift packages)
-    return state.items.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0
-    );
-  };
+  // Subtotal in cents, before discounts (including personalization and gift packaging).
+  // Prices come from the catalog, the same rules /api/checkout charges.
+  const getSubtotal = () =>
+    state.items.reduce((sum, item) => sum + cartUnitCents(item) * item.quantity, 0);
 
-  const getTotal = () => {
-    const memleketItems = state.items.filter((item) =>
-      memleketSlugs.includes(item.slug)
-    );
+  // Total in cents after the Memleket family discount, before shipping
+  const getTotal = () => getSubtotal() - memleketDiscountCents(state.items);
 
-    // Calculate subtotal for all items (including personalization and gift packages)
-    const allItemsTotal = state.items.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0
-    );
-
-    // Calculate memleket quantity for family discount
-    const memleketQuantity = memleketItems.reduce(
-      (sum, item) => sum + item.quantity,
-      0
-    );
-
-    // Apply family discount based on memleket quantity
-    let familyDiscount = 0;
-    if (memleketQuantity >= 3) {
-      // 3+ memleket items: €10 discount
-      familyDiscount = 10 * 100; // Convert to cents
-    } else if (memleketQuantity >= 2) {
-      // 2 memleket items: €5 discount
-      familyDiscount = 5 * 100; // Convert to cents
-    }
-
-    const total = allItemsTotal - familyDiscount;
-    return total;
-  };
   const getItemCount = () =>
     state.items.reduce((sum, item) => sum + item.quantity, 0);
 
-  const getMemleketSavings = () => {
-    const memleketItems = state.items.filter((item) =>
-      memleketSlugs.includes(item.slug)
-    );
-    const memleketQuantity = memleketItems.reduce(
-      (sum, item) => sum + item.quantity,
-      0
-    );
-
-    if (memleketQuantity >= 3) {
-      return 10; // €10 discount for 3+ items
-    } else if (memleketQuantity >= 2) {
-      return 5; // €5 discount for 2 items
-    }
-
-    return 0;
-  };
+  // Memleket family discount in euros (2 items: €5, 3 or more: €10)
+  const getMemleketSavings = () => memleketDiscountCents(state.items) / 100;
 
   return (
     <CartContext.Provider
@@ -367,6 +335,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         updateQuantity,
         clearCart,
         toggleCart,
+        openCart,
         closeCart,
         getSubtotal,
         getTotal,
@@ -378,6 +347,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
       {children}
     </CartContext.Provider>
   );
+}
+
+// Unit price in cents from the catalog; the stored price only for an item the catalog no longer has
+// (checkout refuses those, so the customer has to remove it).
+export function cartUnitCents(item: CartItem): number {
+  return unitPriceCents(item) ?? item.price;
 }
 
 export function useCart() {

@@ -4,11 +4,13 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useAdmin } from "../_components/AdminProvider";
+import { BulkActions } from "../_components/BulkActions";
 import { LoadErrorCard } from "../_components/LoadErrorCard";
 import { OrderList } from "../_components/OrderList";
 import { Card, DownloadIcon, PageHeader, PlusIcon, SearchIcon, Tabs, buttonClass, inputClass, selectClass, Button } from "../_components/ui";
 import { countryName } from "@/lib/admin/format";
-import { downloadCsv, isToShip, ordersCsvRows, searchOrder } from "@/lib/admin/metrics";
+import { labelCsvRows } from "@/lib/admin/labels";
+import { csvToday, downloadCsv, isToShip, ordersCsvRows, searchOrder } from "@/lib/admin/metrics";
 import type { AdminOrder } from "@/lib/admin/orders";
 
 const TABS = ["all", "to_ship", "label_created", "shipped", "refunded", "archived"] as const;
@@ -114,10 +116,14 @@ function Orders() {
             return n;
         });
 
+    const selectedOrders = useMemo(() => orders.filter((o) => selected.has(o.id)), [orders, selected]);
     const exportCsv = () => {
-        const rows = selected.size ? orders.filter((o) => selected.has(o.id)) : filtered;
-        downloadCsv(`egrikuyu-orders-${new Date().toISOString().slice(0, 10)}.csv`, ordersCsvRows(rows));
+        const rows = selected.size ? selectedOrders : filtered;
+        downloadCsv(`egrikuyu-orders-${csvToday()}.csv`, ordersCsvRows(rows));
     };
+    // Recipient rows for a label tool: the selected orders, else the "To ship" queue as filtered
+    const labelOrders = selected.size ? selectedOrders : tab === "to_ship" ? filtered : [];
+    const exportLabels = () => downloadCsv(`egrikuyu-labels-${csvToday()}.csv`, labelCsvRows(labelOrders));
 
     return (
         <>
@@ -125,6 +131,12 @@ function Orders() {
                 title="Orders"
                 actions={
                     <>
+                        {labelOrders.length > 0 && (
+                            <Button onClick={exportLabels} title="CSV with recipient, street, house number, postal code and country, for a label tool">
+                                <DownloadIcon className="h-4 w-4" />
+                                {selected.size ? `Export ${selected.size} for labels` : "Export for labels"}
+                            </Button>
+                        )}
                         <Button onClick={exportCsv} disabled={!filtered.length && !selected.size}>
                             <DownloadIcon className="h-4 w-4" />
                             {selected.size ? `Export ${selected.size} selected` : "Export CSV"}
@@ -204,6 +216,8 @@ function Orders() {
                         )}
                     </div>
                 )}
+
+                {selectedOrders.length > 0 && <BulkActions selected={selectedOrders} onDone={() => setSelected(new Set())} />}
 
                 <OrderList
                     orders={shown}

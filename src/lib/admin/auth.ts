@@ -18,22 +18,36 @@ export type AdminUser = { uid: string; email: string };
 // Local screenshots/testing only: never active outside `next dev`, and only with ADMIN_DEV_BYPASS=1 in .env.local
 export const devBypass = () => process.env.NODE_ENV === "development" && process.env.ADMIN_DEV_BYPASS === "1";
 
-export async function getAdmin(request: NextRequest): Promise<AdminUser | null> {
-    if (devBypass()) return { uid: "dev", email: "dev@localhost" };
+type AdminCheck = { admin: AdminUser } | { admin: null; reason: "unauthorized" | "email_unverified" };
+
+async function checkAdmin(request: NextRequest): Promise<AdminCheck> {
+    if (devBypass()) return { admin: { uid: "dev", email: "dev@localhost" } };
     const header = request.headers.get("authorization");
-    if (!header?.startsWith("Bearer ")) return null;
+    if (!header?.startsWith("Bearer ")) return { admin: null, reason: "unauthorized" };
     try {
         const token = await adminAuth.verifyIdToken(header.slice(7));
         const email = (token.email || "").toLowerCase();
-        if (!email || !adminEmails().includes(email)) return null;
-        return { uid: token.uid, email };
+        if (!email || !adminEmails().includes(email)) return { admin: null, reason: "unauthorized" };
+        // An allowlisted address only counts once its owner proved they control the inbox
+        if (token.email_verified !== true) return { admin: null, reason: "email_unverified" };
+        return { admin: { uid: token.uid, email } };
     } catch {
-        return null;
+        return { admin: null, reason: "unauthorized" };
     }
 }
 
+export async function getAdmin(request: NextRequest): Promise<AdminUser | null> {
+    return (await checkAdmin(request)).admin;
+}
+
 // Usage: const admin = await requireAdmin(req); if (admin instanceof NextResponse) return admin;
+// An allowlisted account whose email is not verified gets 403 with code "email_unverified",
+// so the admin can offer to send the verification email instead of a plain "no access".
 export async function requireAdmin(request: NextRequest): Promise<AdminUser | NextResponse> {
-    const admin = await getAdmin(request);
-    return admin ?? NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const check = await checkAdmin(request);
+    if (check.admin) return check.admin;
+    if (check.reason === "email_unverified") {
+        return NextResponse.json({ error: "Verify your email address to use the admin", code: "email_unverified" }, { status: 403 });
+    }
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 }

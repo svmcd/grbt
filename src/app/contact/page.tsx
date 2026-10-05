@@ -6,6 +6,10 @@ import contactMessages from "@/i18n/messages/contactPage";
 import commonMessages from "@/i18n/messages/common";
 import { TextPage } from "@/app/components/pages/TextPage";
 
+// Same limits as /api/contact
+const MAX_NAME = 100;
+const MAX_MESSAGE = 3000;
+
 export default function ContactPage() {
   const { locale } = useLocale();
   const t = useMessages(contactMessages);
@@ -13,6 +17,8 @@ export default function ContactPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
+  // Honeypot: hidden from people, bots tend to fill it in
+  const [website, setWebsite] = useState("");
   const [sent, setSent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -28,7 +34,7 @@ export default function ContactPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ name, email, message, locale }),
+        body: JSON.stringify({ name, email, message, website, locale }),
       });
 
       if (response.ok) {
@@ -37,7 +43,16 @@ export default function ContactPage() {
         setEmail("");
         setMessage("");
       } else {
-        setError(t.sendFailed);
+        const { error: code } = await response.json().catch(() => ({ error: "" }));
+        setError(
+          code === "invalid_email"
+            ? t.invalidEmail
+            : code === "too_long"
+              ? t.tooLong(MAX_MESSAGE)
+              : response.status === 429
+                ? t.rateLimited
+                : t.sendFailed
+        );
       }
     } catch {
       setError(t.genericError);
@@ -64,6 +79,7 @@ export default function ContactPage() {
                 className={fieldClass}
                 placeholder={t.namePlaceholder}
                 autoComplete="name"
+                maxLength={MAX_NAME}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
@@ -77,6 +93,7 @@ export default function ContactPage() {
                 className={fieldClass}
                 placeholder={t.emailPlaceholder}
                 autoComplete="email"
+                maxLength={254}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -91,10 +108,29 @@ export default function ContactPage() {
               placeholder={t.messagePlaceholder}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
+              maxLength={MAX_MESSAGE}
               required
               disabled={isLoading}
             />
+            {message.length > MAX_MESSAGE - 300 && (
+              <span className="mt-1 block text-right text-[12px] text-subdued">
+                {t.charCount(message.length, MAX_MESSAGE)}
+              </span>
+            )}
           </label>
+          <div aria-hidden className="absolute -left-[9999px] h-px w-px overflow-hidden">
+            <label>
+              {t.honeypotLabel}
+              <input
+                type="text"
+                name="website"
+                tabIndex={-1}
+                autoComplete="off"
+                value={website}
+                onChange={(e) => setWebsite(e.target.value)}
+              />
+            </label>
+          </div>
           <div className="pt-3">
             <button
               type="submit"

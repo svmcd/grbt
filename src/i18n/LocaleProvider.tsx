@@ -1,8 +1,8 @@
 "use client";
 
 import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
-import { LOCALE_COOKIE, intlLocales, type Locale } from "./config";
+import { usePathname, useRouter } from "next/navigation";
+import { LOCALE_COOKIE, intlLocales, localizePath, splitLocalePrefix, type Locale } from "./config";
 import type { Messages } from "./define";
 
 type LocaleContextType = {
@@ -14,7 +14,14 @@ type LocaleContextType = {
 const LocaleContext = createContext<LocaleContextType | undefined>(undefined);
 
 export function LocaleProvider({ initialLocale, children }: { initialLocale: Locale; children: ReactNode }) {
+    // Seeded from the server-resolved locale (URL prefix, then cookie). Follows the
+    // server when the root layout re-renders with another locale (router.refresh).
     const [locale, setLocaleState] = useState<Locale>(initialLocale);
+    const [seed, setSeed] = useState<Locale>(initialLocale);
+    if (seed !== initialLocale) {
+        setSeed(initialLocale);
+        setLocaleState(initialLocale);
+    }
     const router = useRouter();
 
     const setLocale = useCallback(
@@ -22,8 +29,13 @@ export function LocaleProvider({ initialLocale, children }: { initialLocale: Loc
             document.cookie = `${LOCALE_COOKIE}=${next}; path=/; max-age=31536000; samesite=lax`;
             document.documentElement.lang = next;
             setLocaleState(next);
-            // Re-render server components (metadata, server-rendered text) in the new language
-            router.refresh();
+            // Move to the same page's URL in the new language (/tr/…, English unprefixed); the
+            // navigation re-renders the page and its metadata. Same URL (unprefixed page, language
+            // from the cookie): re-render server components in place.
+            const { pathname, search, hash } = window.location;
+            const target = localizePath(pathname, next);
+            if (target !== pathname) router.push(target + search + hash, { scroll: false });
+            else router.refresh();
         },
         [router]
     );
@@ -39,6 +51,19 @@ export function useLocale() {
     const context = useContext(LocaleContext);
     if (!context) throw new Error("useLocale must be used within a LocaleProvider");
     return context;
+}
+
+// The current path without its language prefix: "/tr/collection/hasret" → "/collection/hasret".
+// Use this instead of usePathname() when comparing against routes (home, active nav link).
+export function usePlainPathname(): string {
+    return splitLocalePrefix(usePathname() ?? "/").path;
+}
+
+// Internal link in the URL's language: on /tr/… pages, href("/shipping") is "/tr/shipping";
+// on unprefixed pages links stay unprefixed (the cookie carries the language).
+export function useLocalizedHref() {
+    const urlLocale = splitLocalePrefix(usePathname() ?? "/").locale;
+    return useCallback((path: string) => (urlLocale ? localizePath(path, urlLocale) : path), [urlLocale]);
 }
 
 // Euro amounts in the visitor's number format: "€40" (tr/en), "40 €" (de/fr).

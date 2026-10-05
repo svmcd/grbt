@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
+import { FieldValue } from "firebase-admin/firestore";
 import { adminDb } from "@/lib/firebase-admin";
 import nodemailer from "nodemailer";
 import Stripe from "stripe";
 import { isLocale, type Locale } from "@/i18n/config";
 import emails from "@/i18n/messages/emails";
 import { mailFrom, REPLY_TO } from "@/lib/emails/sender";
+import { buildOrderConfirmationEmail } from "@/lib/emails/order-confirmation";
 import { requireAdmin } from "@/lib/admin/auth";
+import { normalizeOrder, trackingUrl, type AdminEmailLog, type AdminEmailType, type AdminOrder } from "@/lib/admin/orders";
 
+// Customer emails sent from the admin: packing (label created), shipped with tracking, and a resend
+// of the order confirmation. Every email that goes out is recorded on the order (`emails`).
 
 const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST || "smtp.gmail.com",
@@ -22,16 +27,15 @@ const stripe = process.env.STRIPE_SECRET_KEY
     ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2025-09-30.clover" })
     : null;
 
+const TYPES: AdminEmailType[] = ["label_created", "shipped_out", "order_confirmation"];
+
+const esc = (v: unknown) =>
+    String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
+
 // Order language: the Firestore order first, then the Stripe session metadata, else Turkish
 // (every order placed before localization came from the Turkish site).
-async function orderLocale(orderId: string): Promise<Locale> {
-    try {
-        const doc = await adminDb.collection("orders").doc(orderId).get();
-        const saved = doc.exists ? doc.data()?.locale : undefined;
-        if (isLocale(saved)) return saved;
-    } catch (error) {
-        console.error("Could not read order locale from Firestore:", error);
-    }
+async function orderLocale(orderId: string, saved: unknown): Promise<Locale> {
+    if (isLocale(saved)) return saved;
     if (stripe && orderId.startsWith("cs_")) {
         try {
             const session = await stripe.checkout.sessions.retrieve(orderId);
@@ -43,28 +47,12 @@ async function orderLocale(orderId: string): Promise<Locale> {
     return "tr";
 }
 
-export async function POST(request: NextRequest) {
-    const admin = await requireAdmin(request);
-    if (admin instanceof NextResponse) return admin;
-
-    try {
-        const { orderId, status, email, trackingProvider, trackingCode, postalCode, country } = await request.json();
-
-        if (!orderId || !status || !email) {
-            return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
-        }
-
-        // Customer's language, saved on the order (orders from before localization: Turkish)
-        const locale = await orderLocale(orderId);
-        const s = emails[locale].status;
-        const layout = emails[locale].layout;
-
-        let subject = "";
-        let html = "";
-
-        if (status === "label_created") {
-            subject = s.packing.subject;
-            html = `
+function packingEmail(locale: Locale) {
+    const s = emails[locale].status;
+    const layout = emails[locale].layout;
+    return {
+        subject: s.packing.subject,
+        html: `
                 <!DOCTYPE html>
                 <html>
                 <head>
@@ -189,14 +177,16 @@ export async function POST(request: NextRequest) {
                     </div>
                 </body>
                 </html>
-            `;
-        } else if (status === "shipped_out") {
-            const trackingLink = trackingProvider === "DHL"
-                ? `https://www.dhl.com/content/gb/en/express/tracking.html?AWB=${trackingCode}`
-                : `https://jouw.postnl.nl/track-and-trace/${trackingCode}-${country || "NL"}-${postalCode || ""}`;
+            `,
+    };
+}
 
-            subject = s.shipped.subject;
-            html = `
+function shippedEmail(locale: Locale, trackingProvider: string, trackingCode: string, trackingLink: string) {
+    const s = emails[locale].status;
+    const layout = emails[locale].layout;
+    return {
+        subject: s.shipped.subject,
+        html: `
                 <!DOCTYPE html>
                 <html>
                 <head>
@@ -339,16 +329,16 @@ export async function POST(request: NextRequest) {
                                         ${s.shipped.carrier}
                                     </div>
                                     <div style="font-size: 18px; color: #2c3e50; font-weight: 600; margin-bottom: 15px;">
-                                        ${trackingProvider}
+                                        ${esc(trackingProvider)}
                                     </div>
                                     <div style="font-size: 14px; color: #6c757d; margin-bottom: 8px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">
                                         ${s.shipped.trackingNumber}
                                     </div>
                                     <div class="tracking-code">
-                                        ${trackingCode}
+                                        ${esc(trackingCode)}
                                     </div>
                                     <div style="text-align: center; margin-top: 20px;">
-                                        <a href="${trackingLink}" class="tracking-button" style="display: inline-block; padding: 12px 30px; background: #000000; color: white; text-decoration: none; border-radius: 6px; font-weight: 600;">
+                                        <a href="${esc(trackingLink)}" class="tracking-button" style="display: inline-block; padding: 12px 30px; background: #000000; color: white; text-decoration: none; border-radius: 6px; font-weight: 600;">
                                             ${s.shipped.button}
                                         </a>
                                     </div>
@@ -371,23 +361,108 @@ export async function POST(request: NextRequest) {
                     </div>
                 </body>
                 </html>
-            `;
-        } else {
-            return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+            `,
+    };
+}
+
+// The checkout confirmation, built by the same module and design ("minimal") the Stripe webhook
+// (/api/checkout-session-completed) uses. The address is the one saved on the order, so a resend
+// after an address correction shows the corrected address.
+async function confirmationEmail(order: AdminOrder, raw: any, locale: Locale) {
+    const shipping = {
+        name: order.shipping.name || order.customer.name,
+        address: {
+            line1: order.shipping.line1 || null,
+            line2: order.shipping.line2 || null,
+            city: order.shipping.city || null,
+            postal_code: order.shipping.postalCode || null,
+            country: order.shipping.country || null,
+            state: null,
+        },
+    };
+    let lineItems: Stripe.LineItem[];
+    let orderTotal = order.amountTotal / 100;
+    let shippingCost = (order.amountShipping || 0) / 100;
+    if (stripe && order.id.startsWith("cs_")) {
+        // As the webhook does: the session's own line items and totals
+        const session = await stripe.checkout.sessions.retrieve(order.id, { expand: ["line_items.data.price.product"] });
+        lineItems = session.line_items?.data || [];
+        orderTotal = (session.amount_total || 0) / 100;
+        shippingCost = (session.total_details?.amount_shipping || 0) / 100;
+    } else {
+        // Manual orders: the stored items, with the name and unit price where the template reads them
+        lineItems = (raw.line_items || []).map((li: any) => ({
+            ...li,
+            price_data: { product_data: { name: li.description }, unit_amount: li.price?.unit_amount ?? li.amount_total ?? 0 },
+        }));
+    }
+    return buildOrderConfirmationEmail({
+        locale,
+        variant: "minimal",
+        created: order.created,
+        sessionId: raw.stripe_id || order.id,
+        orderTotal,
+        shippingCost,
+        itemsTotal: orderTotal - shippingCost,
+        lineItems,
+        shipping,
+    });
+}
+
+export async function POST(request: NextRequest) {
+    const admin = await requireAdmin(request);
+    if (admin instanceof NextResponse) return admin;
+
+    try {
+        const body = await request.json();
+        const { orderId, status, resend } = body as { orderId?: string; status?: string; resend?: boolean };
+        if (!orderId || !status) return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+        if (!TYPES.includes(status as AdminEmailType)) return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+        const type = status as AdminEmailType;
+
+        // Everything comes from the saved order, so the link is the one the admin shows
+        const ref = adminDb.collection("orders").doc(orderId);
+        const snap = await ref.get();
+        const raw = snap.data();
+        if (!snap.exists || !raw || raw.deleted) return NextResponse.json({ error: "Order not found" }, { status: 404 });
+        const order = normalizeOrder(snap.id, raw);
+        const to = order.customer.email;
+        if (!to) return NextResponse.json({ error: "This order has no customer email" }, { status: 400 });
+        // A packing or tracking email for an order the customer got all their money back for would
+        // only confuse them (bulk runs leave these orders out; this also covers a stale screen)
+        if (type !== "order_confirmation" && order.payment.status === "refunded") {
+            return NextResponse.json({ error: "Not sent: this order is fully refunded", skipped: "refunded" }, { status: 409 });
         }
 
-        await transporter.sendMail({
-            from: mailFrom(),
-            replyTo: REPLY_TO,
-            to: email,
-            subject,
-            html,
-        });
+        // Customer's language, saved on the order (orders from before localization: Turkish)
+        const locale = await orderLocale(orderId, raw.locale);
 
-        return NextResponse.json({ success: true, message: "Email sent successfully" });
+        let mail: { subject: string; html: string };
+        if (type === "label_created") {
+            mail = packingEmail(locale);
+        } else if (type === "shipped_out") {
+            const f = order.fulfillment;
+            const link = trackingUrl(f.trackingProvider, f.trackingCode, order.shipping.country || "NL", order.shipping.postalCode);
+            if (!f.trackingProvider || !f.trackingCode || !link) return NextResponse.json({ error: "Save a tracking code first" }, { status: 400 });
+            mail = shippedEmail(locale, f.trackingProvider, f.trackingCode, link);
+        } else {
+            mail = await confirmationEmail(order, raw, locale);
+        }
+
+        await transporter.sendMail({ from: mailFrom(), replyTo: REPLY_TO, to, subject: mail.subject, html: mail.html });
+
+        const log: AdminEmailLog = { type, to, at: new Date().toISOString(), by: admin.email, ...(resend ? { resend: true } : {}) };
+        let saved = true;
+        try {
+            await ref.update({ emails: FieldValue.arrayUnion(log), updated_at: log.at });
+        } catch (error) {
+            saved = false;
+            console.error("Email sent but not recorded on the order:", error);
+        }
+        const after = saved ? normalizeOrder(snap.id, (await ref.get()).data()) : { ...order, emails: [...order.emails, log] };
+        return NextResponse.json({ success: true, message: "Email sent successfully", order: after });
     } catch (error) {
         console.error("Error sending status email:", error);
         return NextResponse.json({ error: "Failed to send email" }, { status: 500 });
     }
 }
-

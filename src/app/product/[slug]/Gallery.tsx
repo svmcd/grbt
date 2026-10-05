@@ -8,36 +8,21 @@ import { ImageZoom } from "@/app/components/ImageZoom";
 
 // Product image slider: square slides on white, swipe/scroll-snap on touch,
 // dash indicators, "+" button that opens the full-screen zoom view.
+// `images` only lists images that exist (decided on the server, see gallery-images.ts),
+// so the first slide renders right away; an image that still fails to load is dropped.
 export function Gallery({ images, city }: { images: string[]; city: string }) {
   const t = useMessages(productPageMessages).gallery;
-  const [validImages, setValidImages] = useState<string[]>([]);
+  const [broken, setBroken] = useState<string[]>([]);
   const [index, setIndex] = useState(0);
   const [zoomOpen, setZoomOpen] = useState(false);
   const trackRef = useRef<HTMLDivElement>(null);
   const key = images.join("|");
+  const validImages = images.filter((src) => src && !broken.includes(src));
 
-  // Only show images that exist (product folders differ in what they contain).
+  // New variant (color / product type): back to the first image
   useEffect(() => {
-    let cancelled = false;
-    Promise.all(
-      images.filter(Boolean).map(async (src) => {
-        try {
-          const res = await fetch(src, { method: "HEAD" });
-          return res.ok ? src : null;
-        } catch {
-          return null;
-        }
-      })
-    ).then((found) => {
-      if (cancelled) return;
-      setValidImages(found.filter((s): s is string => !!s));
-      setIndex(0);
-      trackRef.current?.scrollTo({ left: 0 });
-    });
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    setIndex(0);
+    trackRef.current?.scrollTo({ left: 0 });
   }, [key]);
 
   const goTo = (i: number) => {
@@ -84,6 +69,7 @@ export function Gallery({ images, city }: { images: string[]; city: string }) {
               fill
               priority={i === 0}
               sizes="(max-width: 1023px) 100vw, 50vw"
+              onError={() => setBroken((b) => (b.includes(src) ? b : [...b, src]))}
               className="object-contain px-[6%] pt-[5%] pb-[10%]"
             />
           </button>

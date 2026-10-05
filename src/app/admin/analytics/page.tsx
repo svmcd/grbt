@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useAdmin } from "../_components/AdminProvider";
 import { BarChart } from "../_components/BarChart";
+import { LoadErrorCard } from "../_components/LoadErrorCard";
 import { PeriodTabs, RankList, periodLabel } from "../_components/reports";
 import { Card, PageHeader } from "../_components/ui";
 import { countryName, languageName, money, percent } from "@/lib/admin/format";
@@ -57,6 +58,7 @@ export default function AnalyticsPage() {
     return (
         <>
             <PageHeader title="Analytics" />
+            <LoadErrorCard />
             <div className="mb-4">
                 <PeriodTabs value={period} onChange={setPeriod} />
             </div>

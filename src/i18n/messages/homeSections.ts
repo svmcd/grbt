@@ -25,9 +25,9 @@ export default defineMessages({
                     details: "Orders placed before 20:00 are handed to the carrier the same day.",
                 },
                 {
-                    title: "Fast Shipping",
-                    description: "Delivery within Europe in 2-6 days",
-                    details: "Secure delivery to European countries within 2-6 business days.",
+                    title: "Worldwide Shipping",
+                    description: "Shipped worldwide from the Netherlands",
+                    details: "Standard shipping €8, free from €100. Netherlands 1-3, EU 3-7, other countries 7-14 business days.",
                 },
                 {
                     title: "Free Shipping",
@@ -45,9 +45,9 @@ export default defineMessages({
                     details: "All our shipments are insured and can be followed with a tracking number.",
                 },
                 {
-                    title: "24/7 Support",
-                    description: "Customer support 24 hours a day, 7 days a week",
-                    details: "For any question, our customer service is available 24 hours a day, 7 days a week.",
+                    title: "Personal Support",
+                    description: "Questions? Write to info@egrikuyu.com",
+                    details: "For any question about your order or our products, write to info@egrikuyu.com and we will personally help you.",
                 },
                 {
                     title: "Premium Packaging",
@@ -99,9 +99,9 @@ export default defineMessages({
                     details: "Bestellungen, die vor 20:00 Uhr eingehen, werden am selben Tag dem Versanddienst übergeben.",
                 },
                 {
-                    title: "Schneller Versand",
-                    description: "Lieferung innerhalb Europas in 2-6 Tagen",
-                    details: "Sichere Lieferung in europäische Länder innerhalb von 2-6 Werktagen.",
+                    title: "Weltweiter Versand",
+                    description: "Weltweiter Versand aus den Niederlanden",
+                    details: "Standardversand 8 €, ab 100 € kostenlos. Niederlande 1-3, EU 3-7, andere Länder 7-14 Werktage.",
                 },
                 {
                     title: "Kostenloser Versand",
@@ -119,9 +119,9 @@ export default defineMessages({
                     details: "Alle unsere Sendungen sind versichert und können mit einer Sendungsnummer verfolgt werden.",
                 },
                 {
-                    title: "Support rund um die Uhr",
-                    description: "Kundensupport an 7 Tagen, 24 Stunden",
-                    details: "Bei Fragen erreichen Sie unseren Kundenservice an 7 Tagen der Woche rund um die Uhr.",
+                    title: "Persönlicher Support",
+                    description: "Fragen? Schreiben Sie an info@egrikuyu.com",
+                    details: "Bei Fragen zu Ihrer Bestellung oder unseren Produkten schreiben Sie an info@egrikuyu.com, wir helfen Ihnen persönlich weiter.",
                 },
                 {
                     title: "Premium-Verpackung",
@@ -173,9 +173,9 @@ export default defineMessages({
                     details: "Les commandes passées avant 20h00 sont remises au transporteur le jour même.",
                 },
                 {
-                    title: "Livraison rapide",
-                    description: "Livraison en Europe en 2 à 6 jours",
-                    details: "Livraison sécurisée vers les pays européens en 2 à 6 jours ouvrés.",
+                    title: "Livraison dans le monde entier",
+                    description: "Expédié depuis les Pays-Bas dans le monde entier",
+                    details: "Livraison standard 8 €, offerte dès 100 €. Pays-Bas 1 à 3, UE 3 à 7, autres pays 7 à 14 jours ouvrés.",
                 },
                 {
                     title: "Livraison gratuite",
@@ -193,9 +193,9 @@ export default defineMessages({
                     details: "Tous nos envois sont assurés et peuvent être suivis grâce à un numéro de suivi.",
                 },
                 {
-                    title: "Assistance 24h/24, 7j/7",
-                    description: "Service client 7 jours sur 7, 24 heures sur 24",
-                    details: "Pour toute question, notre service client est disponible 7 jours sur 7, 24 heures sur 24.",
+                    title: "Assistance personnalisée",
+                    description: "Une question ? Écrivez à info@egrikuyu.com",
+                    details: "Pour toute question sur votre commande ou nos produits, écrivez à info@egrikuyu.com et nous vous répondrons personnellement.",
                 },
                 {
                     title: "Emballage premium",
@@ -247,9 +247,9 @@ export default defineMessages({
                     details: "Saat 20:00'dan önce verilen siparişler aynı gün içinde kargoya verilir.",
                 },
                 {
-                    title: "Hızlı Kargo",
-                    description: "Avrupa içi 2-6 gün teslimat",
-                    details: "Avrupa ülkelerine 2-6 iş günü içinde güvenli teslimat.",
+                    title: "Dünyanın Her Yerine Kargo",
+                    description: "Hollanda'dan dünyanın her yerine gönderim",
+                    details: "Standart kargo €8, €100 üzeri ücretsiz. Hollanda 1-3, AB 3-7, diğer ülkeler 7-14 iş günü.",
                 },
                 {
                     title: "Ücretsiz Kargo",
@@ -267,9 +267,9 @@ export default defineMessages({
                     details: "Tüm gönderilerimiz sigortalıdır ve takip numarası ile takip edilebilir.",
                 },
                 {
-                    title: "7/24 Destek",
-                    description: "7 gün 24 saat müşteri desteği",
-                    details: "Herhangi bir sorunuzda 7 gün 24 saat müşteri hizmetlerimizden destek alabilirsiniz.",
+                    title: "Kişisel Destek",
+                    description: "Sorunuz mu var? info@egrikuyu.com adresine yazın",
+                    details: "Siparişiniz veya ürünlerimizle ilgili her soru için info@egrikuyu.com adresine yazın, size bizzat yardımcı olalım.",
                 },
                 {
                     title: "Premium Paketleme",

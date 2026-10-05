@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { LOCALE_COOKIE, isLocale, matchLocale } from "@/i18n/config";
+import { LOCALE_COOKIE, LOCALE_HEADER, PATH_HEADER, defaultLocale, isLocale, isLocalizablePath, matchLocale, splitLocalePrefix } from "@/i18n/config";
 
 const OLD_HOSTS = new Set(["grbt.studio", "www.grbt.studio"]);
+
+const COOKIE_OPTIONS = { path: "/", maxAge: 60 * 60 * 24 * 365, sameSite: "lax" as const };
 
 export function middleware(request: NextRequest) {
     // Rebrand: old domain pages move to egrikuyu.com. API routes are not matched,
@@ -12,22 +14,46 @@ export function middleware(request: NextRequest) {
         return NextResponse.redirect(url, 308);
     }
 
-    // Protect admin routes
-    if (request.nextUrl.pathname.startsWith('/admin')) {
-        // Check if user is authenticated (you'll need to implement this)
-        // For now, we'll rely on client-side authentication
-        // In production, you should verify the Firebase token here
+    // /TR/… and /De/… → lowercase prefix
+    const firstSegment = request.nextUrl.pathname.split("/")[1] ?? "";
+    if (firstSegment !== firstSegment.toLowerCase() && isLocale(firstSegment.toLowerCase())) {
+        const url = request.nextUrl.clone();
+        url.pathname = `/${firstSegment.toLowerCase()}${request.nextUrl.pathname.slice(firstSegment.length + 1)}`;
+        return NextResponse.redirect(url, 308);
     }
 
-    const response = NextResponse.next();
+    const cookieLocale = request.cookies.get(LOCALE_COOKIE)?.value;
+    const { locale: urlLocale, path } = splitLocalePrefix(request.nextUrl.pathname);
 
-    // First visit: remember the browser's language so server and client render the same locale
-    if (!isLocale(request.cookies.get(LOCALE_COOKIE)?.value)) {
-        response.cookies.set(LOCALE_COOKIE, matchLocale(request.headers.get("accept-language")), {
-            path: "/",
-            maxAge: 60 * 60 * 24 * 365,
-            sameSite: "lax",
-        });
+    // /en/… and prefixed paths that only exist once (/de/admin, /tr/feed.xml) go to the plain URL
+    if (urlLocale && (urlLocale === defaultLocale || !isLocalizablePath(path))) {
+        const url = request.nextUrl.clone();
+        url.pathname = path;
+        const response = NextResponse.redirect(url, 308);
+        if (urlLocale === defaultLocale && cookieLocale !== defaultLocale) response.cookies.set(LOCALE_COOKIE, defaultLocale, COOKIE_OPTIONS);
+        return response;
+    }
+
+    // Never trust these from the client: only the middleware sets them
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.delete(LOCALE_HEADER);
+    requestHeaders.set(PATH_HEADER, path);
+
+    let response: NextResponse;
+    if (urlLocale) {
+        // /tr/product/konya renders /product/konya in Turkish. The cookie keeps client
+        // components and later unprefixed links in the same language.
+        requestHeaders.set(LOCALE_HEADER, urlLocale);
+        const url = request.nextUrl.clone();
+        url.pathname = path;
+        response = NextResponse.rewrite(url, { request: { headers: requestHeaders } });
+        if (cookieLocale !== urlLocale) response.cookies.set(LOCALE_COOKIE, urlLocale, COOKIE_OPTIONS);
+    } else {
+        response = NextResponse.next({ request: { headers: requestHeaders } });
+        // First visit: remember the browser's language so server and client render the same locale
+        if (!isLocale(cookieLocale)) {
+            response.cookies.set(LOCALE_COOKIE, matchLocale(request.headers.get("accept-language")), COOKIE_OPTIONS);
+        }
     }
 
     // Security headers
@@ -63,4 +89,3 @@ export const config = {
         "/((?!api|_next/static|_next/image|favicon.ico).*)",
     ],
 };
-

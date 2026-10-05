@@ -1,108 +1,77 @@
-import { getTestShippingPrice } from "./dev-mode";
+import type Stripe from "stripe";
 import { intlLocales, type Locale } from "@/i18n/config";
 
-export type ShippingCountry = {
-    code: string;
-    name: string; // Native name, kept as stored/fallback value. Use getCountryName() for display.
-    price: number;
-    currency: string;
-    estimatedDays: string;
-};
+// Shipping rules: one standard rate for every destination, free from a threshold on the items.
+export const STANDARD_SHIPPING_EUR = 8;
+export const FREE_SHIPPING_FROM_EUR = 100;
 
-// Shipping prices (2024)
-export const shippingCountries: ShippingCountry[] = [
-    {
-        code: "NL",
-        name: "Nederland",
-        price: 5,
-        currency: "EUR",
-        estimatedDays: "1-2 days"
-    },
-    {
-        code: "DE",
-        name: "Deutschland",
-        price: 10,
-        currency: "EUR",
-        estimatedDays: "2-3 days"
-    },
-    {
-        code: "FR",
-        name: "France",
-        price: 10,
-        currency: "EUR",
-        estimatedDays: "2-3 days"
-    },
-    {
-        code: "CH",
-        name: "Schweiz",
-        price: 10,
-        currency: "EUR",
-        estimatedDays: "3-5 days"
-    },
-    {
-        code: "AT",
-        name: "Österreich",
-        price: 10,
-        currency: "EUR",
-        estimatedDays: "2-3 days"
-    },
-    {
-        code: "GB",
-        name: "United Kingdom",
-        price: 10,
-        currency: "EUR",
-        estimatedDays: "3-5 days"
-    },
-    {
-        code: "US",
-        name: "United States",
-        price: 10,
-        currency: "EUR",
-        estimatedDays: "5-7 days"
-    },
-    {
-        code: "BE",
-        name: "België",
-        price: 10,
-        currency: "EUR",
-        estimatedDays: "1-2 days"
-    }
+type AllowedCountry = Stripe.Checkout.SessionCreateParams.ShippingAddressCollection.AllowedCountry;
+
+// Every country Stripe Checkout accepts in shipping_address_collection.allowed_countries
+// (the AllowedCountry union in node_modules/stripe, v19.1.0). "ZZ" (unknown region) is left out:
+// it is not a destination a customer can pick.
+const STRIPE_SHIPPING_COUNTRIES: AllowedCountry[] = [
+    "AC", "AD", "AE", "AF", "AG", "AI", "AL", "AM", "AO", "AQ", "AR", "AT", "AU", "AW", "AX", "AZ",
+    "BA", "BB", "BD", "BE", "BF", "BG", "BH", "BI", "BJ", "BL", "BM", "BN", "BO", "BQ", "BR", "BS",
+    "BT", "BV", "BW", "BY", "BZ", "CA", "CD", "CF", "CG", "CH", "CI", "CK", "CL", "CM", "CN", "CO",
+    "CR", "CV", "CW", "CY", "CZ", "DE", "DJ", "DK", "DM", "DO", "DZ", "EC", "EE", "EG", "EH", "ER",
+    "ES", "ET", "FI", "FJ", "FK", "FO", "FR", "GA", "GB", "GD", "GE", "GF", "GG", "GH", "GI", "GL",
+    "GM", "GN", "GP", "GQ", "GR", "GS", "GT", "GU", "GW", "GY", "HK", "HN", "HR", "HT", "HU", "ID",
+    "IE", "IL", "IM", "IN", "IO", "IQ", "IS", "IT", "JE", "JM", "JO", "JP", "KE", "KG", "KH", "KI",
+    "KM", "KN", "KR", "KW", "KY", "KZ", "LA", "LB", "LC", "LI", "LK", "LR", "LS", "LT", "LU", "LV",
+    "LY", "MA", "MC", "MD", "ME", "MF", "MG", "MK", "ML", "MM", "MN", "MO", "MQ", "MR", "MS", "MT",
+    "MU", "MV", "MW", "MX", "MY", "MZ", "NA", "NC", "NE", "NG", "NI", "NL", "NO", "NP", "NR", "NU",
+    "NZ", "OM", "PA", "PE", "PF", "PG", "PH", "PK", "PL", "PM", "PN", "PR", "PS", "PT", "PY", "QA",
+    "RE", "RO", "RS", "RU", "RW", "SA", "SB", "SC", "SD", "SE", "SG", "SH", "SI", "SJ", "SK", "SL",
+    "SM", "SN", "SO", "SR", "SS", "ST", "SV", "SX", "SZ", "TA", "TC", "TD", "TF", "TG", "TH", "TJ",
+    "TK", "TL", "TM", "TN", "TO", "TR", "TT", "TV", "TW", "TZ", "UA", "UG", "US", "UY", "UZ", "VA",
+    "VC", "VE", "VG", "VN", "VU", "WF", "WS", "XK", "YE", "YT", "ZA", "ZM", "ZW",
 ];
 
-export function getShippingPrice(countryCode: string): number {
-    const country = shippingCountries.find(c => c.code === countryCode);
-    const price = country?.price || 0;
+export const SHIPPING_COUNTRY_CODES: string[] = STRIPE_SHIPPING_COUNTRIES;
 
-    // Apply test mode pricing in development
-    return getTestShippingPrice(price);
+// Shown first in the cart's country picker
+export const POPULAR_SHIPPING_COUNTRIES = ["NL", "DE", "BE", "FR", "AT", "CH", "GB", "US", "TR"];
+
+// The 27 EU member states
+const EU_COUNTRY_CODES = new Set([
+    "AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE",
+    "IT", "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE",
+]);
+
+export function isShippingCountry(code: unknown): code is AllowedCountry {
+    return typeof code === "string" && SHIPPING_COUNTRY_CODES.includes(code);
 }
 
-export function getShippingCountry(countryCode: string): ShippingCountry | undefined {
-    return shippingCountries.find(c => c.code === countryCode);
+export function isEU(code: string): boolean {
+    return EU_COUNTRY_CODES.has(code.toUpperCase());
 }
 
-export function getAllShippingCountries(): ShippingCountry[] {
-    return shippingCountries;
+// Delivery time in business days after dispatch, as stated in the shipping policy:
+// Netherlands 1-3, EU 3-7, everywhere else 7-14.
+export function deliveryDays(countryCode: string): { min: number; max: number } {
+    const code = countryCode.toUpperCase();
+    if (code === "NL") return { min: 1, max: 3 };
+    if (isEU(code)) return { min: 3, max: 7 };
+    return { min: 7, max: 14 };
 }
 
+// Shipping for an order, in cents. The free-shipping threshold is measured on the items
+// subtotal before discounts (the cart has always worked this way).
+export function shippingCents(itemsSubtotalCents: number): number {
+    return itemsSubtotalCents >= FREE_SHIPPING_FROM_EUR * 100 ? 0 : STANDARD_SHIPPING_EUR * 100;
+}
 
-// Fallback names when Intl.DisplayNames is unavailable
-const countryNames: Record<Locale, Record<string, string>> = {
-    en: { NL: "Netherlands", DE: "Germany", FR: "France", CH: "Switzerland", AT: "Austria", GB: "United Kingdom", US: "United States", BE: "Belgium" },
-    de: { NL: "Niederlande", DE: "Deutschland", FR: "Frankreich", CH: "Schweiz", AT: "Österreich", GB: "Vereinigtes Königreich", US: "Vereinigte Staaten", BE: "Belgien" },
-    fr: { NL: "Pays-Bas", DE: "Allemagne", FR: "France", CH: "Suisse", AT: "Autriche", GB: "Royaume-Uni", US: "États-Unis", BE: "Belgique" },
-    tr: { NL: "Hollanda", DE: "Almanya", FR: "Fransa", CH: "İsviçre", AT: "Avusturya", GB: "Birleşik Krallık", US: "Amerika Birleşik Devletleri", BE: "Belçika" },
-};
+// Kept for the admin "Create order" form, which lists the countries by code.
+export const shippingCountries: { code: string }[] = SHIPPING_COUNTRY_CODES.map((code) => ({ code }));
 
-// Display name of a shipping country in the visitor's language
+// Display name of a country in the visitor's language
 export function getCountryName(countryCode: string, locale: Locale): string {
-    const mapped = countryNames[locale]?.[countryCode];
-    if (mapped) return mapped;
     try {
         const name = new Intl.DisplayNames([intlLocales[locale]], { type: "region" }).of(countryCode);
         if (name) return name;
     } catch {
-        // Fall through to the stored name
+        // Fall through to the code
     }
-    return getShippingCountry(countryCode)?.name ?? countryCode;
+    return countryCode;
 }

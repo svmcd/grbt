@@ -2,6 +2,8 @@ import type Stripe from "stripe";
 import { intlLocales, isLocale, type Locale } from "@/i18n/config";
 import common from "@/i18n/messages/common";
 import emails from "@/i18n/messages/emails";
+import { getCountryName } from "@/lib/shipping";
+import { orderNumber } from "@/lib/order-number";
 
 // Locale of a Checkout Session. Sessions created before localization have none: those customers
 // all used the Turkish site, so they fall back to "tr".
@@ -10,16 +12,15 @@ export function sessionLocale(session: { metadata?: Stripe.Metadata | null }): L
     return isLocale(value) ? value : "tr";
 }
 
-// The three confirmation routes each had their own design; the variant keeps each one's look.
-//  - "minimal":       /api/checkout-session-completed (black and white)
-//  - "classic":       /api/webhooks/stripe
-//  - "classic-emoji": /api/order/confirmation (section titles with emoji)
+// Design of the email. Customers get "minimal" (black and white), sent by the Stripe webhook
+// /api/checkout-session-completed. "classic" and "classic-emoji" are older designs, kept for reuse.
 export type OrderEmailVariant = "minimal" | "classic" | "classic-emoji";
 
 export type OrderEmailInput = {
     locale: Locale;
     variant: OrderEmailVariant;
     created: number; // unix seconds
+    sessionId?: string; // Stripe Checkout Session id; shown as the order number
     orderTotal: number; // euros
     shippingCost: number; // euros
     itemsTotal: number; // euros
@@ -763,7 +764,7 @@ export function buildOrderConfirmationEmail(input: OrderEmailInput): { subject: 
             ${shipping.address?.line2 ? `<div class="address-line"><strong>${L(o.address2)}</strong> ${shipping.address.line2}</div>` : ''}
             <div class="address-line"><strong>${L(o.city)}</strong> ${shipping.address?.city || ''}</div>
             <div class="address-line"><strong>${L(o.postalCode)}</strong> ${shipping.address?.postal_code || ''}</div>
-            <div class="address-line"><strong>${L(o.country)}</strong> ${shipping.address?.country || ''}</div>
+            <div class="address-line"><strong>${L(o.country)}</strong> ${shipping.address?.country ? getCountryName(shipping.address.country, locale) : ''}</div>
         `
         : `<div class="address-line">${o.noShipping}</div>`;
 
@@ -809,6 +810,10 @@ export function buildOrderConfirmationEmail(input: OrderEmailInput): { subject: 
                     <div class="section">
                         <div class="section-title">${title("📋", o.orderInfo)}</div>
                         <div class="order-info">
+                            ${input.sessionId ? `<div class="info-item">
+                                <div class="info-label">${o.orderNumber}</div>
+                                <div class="info-value">${orderNumber(input.sessionId)}</div>
+                            </div>` : ''}
                             <div class="info-item">
                                 <div class="info-label">${o.orderDate}</div>
                                 <div class="info-value">${new Date(input.created * 1000).toLocaleDateString(intlLocales[locale])}</div>

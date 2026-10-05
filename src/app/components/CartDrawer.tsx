@@ -1,18 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useCart, type CartItem } from "@/lib/cart-context";
+import { useEffect, useRef, useState } from "react";
+import { cartUnitCents, useCart, type CartItem } from "@/lib/cart-context";
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/i18n/LocaleLink";
 import { motion, AnimatePresence } from "framer-motion";
-import { getAllShippingCountries, getShippingPrice, getCountryName } from "@/lib/shipping";
+import { FREE_SHIPPING_FROM_EUR, deliveryDays, isEU, isShippingCountry, shippingCents } from "@/lib/shipping";
 import { memleketSlugs } from "@/lib/catalog";
+import { MAX_QUANTITY, memleketDiscountCents } from "@/lib/cart-pricing";
 import { useFormatPrice, useLocale, useMessages } from "@/i18n/LocaleProvider";
 import commonMessages from "@/i18n/messages/common";
 import cartMessages from "@/i18n/messages/cart";
+import { CountryCombobox } from "./CountryCombobox";
 
 // Free shipping threshold, in cents, measured on the subtotal before discounts
-const FREE_SHIPPING_CENTS = 10000;
+const FREE_SHIPPING_CENTS = FREE_SHIPPING_FROM_EUR * 100;
+
+// The visitor's last chosen shipping country
+const COUNTRY_STORAGE_KEY = "shippingCountry";
 
 const sameLine = (a: CartItem, b: CartItem) =>
   a.slug === b.slug &&
@@ -23,16 +28,12 @@ const sameLine = (a: CartItem, b: CartItem) =>
   JSON.stringify(a.giftPackage) === JSON.stringify(b.giftPackage);
 
 // Memleket family discount shown on a line: the whole discount sits on the first
-// Memleket line in the cart (2 items: €5, 3+ items: €10). Returns cents.
+// Memleket line in the cart (2 items: €5, 3+ items: €10), as /api/checkout charges it. Returns cents.
 function memleketLineDiscountCents(item: CartItem, items: CartItem[]): number {
   if (!memleketSlugs.includes(item.slug)) return 0;
-  const memleketItems = items.filter((i) => memleketSlugs.includes(i.slug));
-  const memleketQuantity = memleketItems.reduce((sum, i) => sum + i.quantity, 0);
-  const first = memleketItems[0];
+  const first = items.find((i) => memleketSlugs.includes(i.slug));
   if (!first || !sameLine(first, item)) return 0;
-  if (memleketQuantity >= 3) return 1000;
-  if (memleketQuantity >= 2) return 500;
-  return 0;
+  return memleketDiscountCents(items);
 }
 
 function CloseIcon() {
@@ -48,6 +49,7 @@ export function CartDrawer() {
     state,
     removeItem,
     updateQuantity,
+    openCart,
     closeCart,
     getSubtotal,
     getTotal,
@@ -56,8 +58,10 @@ export function CartDrawer() {
     clearJustAdded,
   } = useCart();
   const [isProcessing, setIsProcessing] = useState(false);
+  // Index of the cart line the server refused (sold out, old option); cleared when the cart changes
+  const [invalidLine, setInvalidLine] = useState<number | null>(null);
+  useEffect(() => setInvalidLine(null), [state.items]);
   const [selectedCountry, setSelectedCountry] = useState("");
-  const shippingCountries = getAllShippingCountries();
   const { locale, intlLocale } = useLocale();
   const common = useMessages(commonMessages);
   const t = useMessages(cartMessages);
@@ -106,30 +110,59 @@ export function CartDrawer() {
     return () => window.removeEventListener("keydown", onKey);
   }, [state.isOpen, closeCart]);
 
-  // Calculate shipping cost
-  const selectedShippingCountry = selectedCountry
-    ? shippingCountries.find((c) => c.code === selectedCountry)
-    : undefined;
-  const shippingCost = selectedCountry ? getShippingPrice(selectedCountry) : 0;
-  const itemsTotalCents = getSubtotal(); // Total in cents
-  const itemsTotal = itemsTotalCents / 100; // Convert to euros for display
-  const qualifiesForFreeShipping = itemsTotalCents >= FREE_SHIPPING_CENTS;
+  // Same rules /api/checkout charges: €8 everywhere, free from €100 of items before discounts
+  const itemsTotalCents = getSubtotal();
+  const itemsTotal = itemsTotalCents / 100;
+  const shippingCost = shippingCents(itemsTotalCents) / 100;
+  const qualifiesForFreeShipping = shippingCost === 0;
   const freeShippingProgress = Math.min(1, itemsTotalCents / FREE_SHIPPING_CENTS);
   const memleketSavings = getMemleketSavings();
+  const days = selectedCountry ? deliveryDays(selectedCountry) : null;
 
-  // Calculate estimated delivery dates based on selected country
-  const estimatedDays = selectedShippingCountry?.estimatedDays || "5 days";
-  const days = parseInt(estimatedDays) || 5;
-  const minDate = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000); // 3 days production
-  const maxDate = new Date(Date.now() + (3 + days) * 24 * 60 * 60 * 1000); // 3 days + shipping
-  const minDateStr = minDate.toLocaleDateString(intlLocale, {
-    day: "2-digit",
-    month: "2-digit",
-  });
-  const maxDateStr = maxDate.toLocaleDateString(intlLocale, {
-    day: "2-digit",
-    month: "2-digit",
-  });
+  // Shipping country: the last choice on this device, otherwise the visitor's country by IP
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(COUNTRY_STORAGE_KEY);
+      if (isShippingCountry(stored)) setSelectedCountry((current) => current || stored);
+    } catch {
+      // Storage blocked: the visitor picks a country
+    }
+  }, []);
+
+  const geoRequested = useRef(false);
+  useEffect(() => {
+    if (!state.isOpen || selectedCountry || geoRequested.current) return;
+    geoRequested.current = true;
+    fetch("/api/geo")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { country?: string | null } | null) => {
+        const country = data?.country;
+        if (isShippingCountry(country)) setSelectedCountry((current) => current || country);
+      })
+      .catch(() => {
+        // No preselection; the visitor picks a country
+      });
+  }, [state.isOpen, selectedCountry]);
+
+  const chooseCountry = (code: string) => {
+    setSelectedCountry(code);
+    try {
+      localStorage.setItem(COUNTRY_STORAGE_KEY, code);
+    } catch {
+      // Not remembered, still used for this checkout
+    }
+  };
+
+  // Stripe's cancel_url (/?cart=open) brings the buyer back with the cart open
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("cart") !== "open") return;
+    openCart();
+    params.delete("cart");
+    const query = params.toString();
+    // null state: Next.js then keeps its router in sync with the new URL
+    window.history.replaceState(null, "", window.location.pathname + (query ? `?${query}` : "") + window.location.hash);
+  }, [openCart]);
 
   useEffect(() => {
     if (state.justAdded) {
@@ -146,21 +179,45 @@ export function CartDrawer() {
     }
     setIsProcessing(true);
     try {
-      const totalDiscount = getMemleketSavings() * 100; // Convert to cents
-
+      // Only the choices are sent; the server prices the order from the catalog
       const resp = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          items: state.items,
+          items: state.items.map((item) => ({
+            slug: item.slug,
+            productType: item.productType,
+            color: item.color,
+            size: item.size,
+            quantity: item.quantity,
+            personalization: item.personalization
+              ? {
+                  method: item.personalization.method,
+                  text: item.personalization.text,
+                  placement: item.personalization.placement,
+                  font: item.personalization.font,
+                  color: item.personalization.color,
+                }
+              : undefined,
+            giftPackage: item.giftPackage?.included
+              ? { included: true, message: item.giftPackage.message }
+              : undefined,
+          })),
           shippingCountry: selectedCountry,
-          itemsTotal: (itemsTotalCents - totalDiscount) / 100, // Convert to euros
-          itemsSubtotal: itemsTotalCents / 100, // Convert to euros
-          discount: totalDiscount / 100, // Total discount in euros
-          shippingCost: itemsTotalCents >= 10000 ? 0 : shippingCost, // €100 in cents
           locale,
         }),
       });
+      if (resp.status === 400) {
+        const body = await resp.json().catch(() => ({}));
+        if (typeof body.line === "number" && body.line < state.items.length) {
+          setInvalidLine(body.line);
+          requestAnimationFrame(() =>
+            document.getElementById(`cart-line-${body.line}`)?.scrollIntoView({ behavior: "smooth", block: "center" })
+          );
+        }
+        else alert(t.checkoutRejected);
+        return;
+      }
       const contentType = resp.headers.get("content-type") || "";
       if (!contentType.includes("application/json")) {
         const text = await resp.text();
@@ -264,10 +321,11 @@ export function CartDrawer() {
                   <ul>
                     {state.items.map((item, index) => {
                       const lineDiscount = memleketLineDiscountCents(item, state.items);
-                      const lineTotal = item.price * item.quantity;
+                      const lineTotal = cartUnitCents(item) * item.quantity;
                       return (
                         <li
                           key={`${item.slug}-${item.color}-${item.size}-${item.productType}-${index}`}
+                          id={`cart-line-${index}`}
                           className="flex gap-4 border-b border-line py-6 last:border-b-0"
                         >
                           <div className="relative h-[96px] w-[96px] shrink-0 border border-line bg-paper">
@@ -357,8 +415,9 @@ export function CartDrawer() {
                                 <button
                                   type="button"
                                   onClick={() => changeQuantity(item, item.quantity + 1)}
+                                  disabled={item.quantity >= MAX_QUANTITY}
                                   aria-label={t.increaseQuantity}
-                                  className="flex h-full w-9 items-center justify-center text-ink"
+                                  className="flex h-full w-9 items-center justify-center text-ink disabled:opacity-30"
                                 >
                                   <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
                                     <path d="M0 5h10M5 0v10" stroke="currentColor" strokeWidth="1.4" />
@@ -382,6 +441,11 @@ export function CartDrawer() {
                                 {t.remove}
                               </button>
                             </div>
+                            {invalidLine === index && (
+                              <p role="alert" className="sub-xs mt-3 text-sale">
+                                {t.itemInvalid}
+                              </p>
+                            )}
                           </div>
                         </li>
                       );
@@ -391,34 +455,29 @@ export function CartDrawer() {
 
                 {/* Footer */}
                 <div className="shrink-0 border-t border-line px-6 pb-6 pt-5">
-                  <label htmlFor="cart-shipping-country" className="sub-xs mb-2 block">
+                  <label id="cart-shipping-country-label" htmlFor="cart-shipping-country" className="sub-xs mb-2 block">
                     {t.shippingCountry}
                   </label>
-                  <select
+                  <CountryCombobox
                     id="cart-shipping-country"
                     value={selectedCountry}
-                    onChange={(e) => setSelectedCountry(e.target.value)}
-                    required
-                    className="storefront-input cursor-pointer appearance-none focus:outline-none"
-                    style={{
-                      backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%231c1c1c' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
-                      backgroundPosition: "right 12px center",
-                      backgroundRepeat: "no-repeat",
-                      backgroundSize: "18px 18px",
-                      paddingTop: 0,
-                      paddingBottom: 0,
-                      paddingRight: 40,
+                    onChange={chooseCountry}
+                    locale={locale}
+                    intlLocale={intlLocale}
+                    labels={{
+                      placeholder: t.selectCountry,
+                      popular: t.popularCountries,
+                      all: t.allCountries,
+                      noResults: t.noCountryFound,
+                      results: t.countryResults,
                     }}
-                  >
-                    <option value="" disabled>
-                      {t.selectCountry}
-                    </option>
-                    {shippingCountries.map((country) => (
-                      <option key={country.code} value={country.code}>
-                        {getCountryName(country.code, locale)}
-                      </option>
-                    ))}
-                  </select>
+                  />
+                  {days && (
+                    <div className="mt-2 space-y-1 text-[12px] leading-[1.5] tracking-[0.04em] text-subdued">
+                      <p>{t.deliveryEstimate(days.min, days.max)}</p>
+                      {!isEU(selectedCountry) && <p>{t.customsNote}</p>}
+                    </div>
+                  )}
 
                   <dl className="mt-5 space-y-1.5">
                     <div className="sub-xs flex justify-between">
@@ -431,17 +490,13 @@ export function CartDrawer() {
                         <dd className="shrink-0 text-sale">-{price(memleketSavings, 2)}</dd>
                       </div>
                     )}
-                    {(selectedCountry || qualifiesForFreeShipping) && (
-                      <div className="sub-xs flex justify-between">
-                        <dt>{common.shipping}</dt>
-                        <dd>{qualifiesForFreeShipping ? common.free : price(shippingCost, 2)}</dd>
-                      </div>
-                    )}
+                    <div className="sub-xs flex justify-between">
+                      <dt>{common.shipping}</dt>
+                      <dd>{qualifiesForFreeShipping ? common.free : price(shippingCost, 2)}</dd>
+                    </div>
                     <div className="sub flex justify-between border-t border-line pt-3 !mt-3">
                       <dt>{common.total}</dt>
-                      <dd>
-                        {price(getTotal() / 100 + (qualifiesForFreeShipping ? 0 : shippingCost), 2)}
-                      </dd>
+                      <dd>{price(getTotal() / 100 + shippingCost, 2)}</dd>
                     </div>
                   </dl>
 
@@ -453,9 +508,11 @@ export function CartDrawer() {
                   >
                     {isProcessing ? t.processing : t.checkout}
                   </button>
-                  <p className="mt-3 text-center text-[12px] leading-[1.5] tracking-[0.04em] text-subdued">
-                    {selectedCountry ? t.orderNow(minDateStr, maxDateStr) : t.alertSelectCountry}
-                  </p>
+                  {!selectedCountry && (
+                    <p className="mt-3 text-center text-[12px] leading-[1.5] tracking-[0.04em] text-subdued">
+                      {t.alertSelectCountry}
+                    </p>
+                  )}
                 </div>
               </>
             )}

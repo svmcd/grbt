@@ -2,41 +2,75 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import Link from "next/link";
+import Link from "@/i18n/LocaleLink";
 import { useCart } from "@/lib/cart-context";
 import { useFormatPrice, useLocale, useMessages } from "@/i18n/LocaleProvider";
 import orderSuccessMessages from "@/i18n/messages/orderSuccess";
 import commonMessages from "@/i18n/messages/common";
+import { deliveryDays, getCountryName } from "@/lib/shipping";
+import { orderNumber } from "@/lib/order-number";
+
+// What /api/order/[sessionId] returns
+type OrderDetails = {
+  id: string;
+  payment_status: "paid" | "unpaid" | "no_payment_required";
+  amount_total: number | null;
+  created: number;
+  shipping_details: {
+    name?: string | null;
+    address?: {
+      line1?: string | null;
+      line2?: string | null;
+      city?: string | null;
+      postal_code?: string | null;
+      country?: string | null;
+    } | null;
+  } | null;
+};
 
 function OrderSuccessContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
-  const [orderDetails, setOrderDetails] = useState<any>(null);
+  const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const { clearCart } = useCart();
-  const { intlLocale } = useLocale();
+  const { locale, intlLocale } = useLocale();
   const t = useMessages(orderSuccessMessages);
   const common = useMessages(commonMessages);
   const price = useFormatPrice();
   const formatEuro = (amount: number) => price(amount, 2);
 
   useEffect(() => {
-    if (sessionId) {
-      fetch(`/api/order/${sessionId}`)
-        .then((res) => res.json())
-        .then((data) => {
-          setOrderDetails(data);
-          setLoading(false);
-          // Clear cart only after payment is confirmed
-          if (data && data.payment_status === "paid") {
-            clearCart();
-          }
-        })
-        .catch(() => setLoading(false));
-    } else {
+    if (!sessionId) {
       setLoading(false);
+      return;
     }
-  }, [sessionId, clearCart]);
+    let cancelled = false;
+    fetch(`/api/order/${encodeURIComponent(sessionId)}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: OrderDetails | null) => {
+        if (cancelled) return;
+        setOrderDetails(data && data.id ? data : null);
+        setLoading(false);
+      })
+      .catch(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [sessionId]);
+
+  // The order is complete when Stripe has the payment (or a promotion code covered the whole amount)
+  const paid = orderDetails?.payment_status === "paid";
+  const confirmed = paid || orderDetails?.payment_status === "no_payment_required";
+
+  // Empty the cart only once the order is confirmed, and only for a fresh order: reopening an old
+  // confirmation link from the browser history must not empty a new cart
+  const fresh = orderDetails?.created ? Date.now() / 1000 - orderDetails.created < 24 * 60 * 60 : false;
+  useEffect(() => {
+    if (confirmed && fresh) clearCart();
+  }, [confirmed, fresh, clearCart]);
 
   if (loading) {
     return (
@@ -46,7 +80,48 @@ function OrderSuccessContent() {
     );
   }
 
-  const orderRef = orderDetails?.id?.slice(-8).toUpperCase() || t.notAvailable;
+  const reference = orderDetails?.id ?? sessionId;
+  const orderRef = reference ? orderNumber(reference) : t.notAvailable;
+  const countryCode = orderDetails?.shipping_details?.address?.country || "";
+  const days = countryCode ? deliveryDays(countryCode) : null;
+
+  if (!orderDetails || !confirmed) {
+    return (
+      <div className="bg-paper text-ink">
+        <div className="px-4 pb-20 pt-12 md:px-8 md:pt-16 lg:px-12 lg:pt-20">
+          <div className="mx-auto w-full max-w-[640px] text-center">
+            <h1 className="h-section">{t.checkingTitle}</h1>
+            <p className="mx-auto mt-6 max-w-[560px] text-[14px] leading-[1.7]">{t.checkingText}</p>
+            <dl className="mx-auto mt-8 inline-flex flex-col gap-1.5 border border-line px-6 py-4 text-left text-[14px]">
+              <div className="flex flex-wrap gap-x-3">
+                <dt className="text-subdued">{t.emailLabel}</dt>
+                <dd>
+                  <a href="mailto:info@egrikuyu.com" className="underline underline-offset-4">
+                    info@egrikuyu.com
+                  </a>
+                </dd>
+              </div>
+              {reference && (
+                <div className="flex flex-wrap gap-x-3">
+                  <dt className="text-subdued">{t.referenceLabel}</dt>
+                  <dd>{orderRef}</dd>
+                </div>
+              )}
+            </dl>
+            <div className="mt-10 flex flex-col items-center gap-5">
+              <Link href="/contact" className="btn btn-ink w-full sm:w-auto sm:min-w-[260px]">
+                {common.contact}
+              </Link>
+              <Link href="/collection" className="sub-xs link-reveal">
+                {t.continueShopping}
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const steps = [
     { title: t.step1Title, text: t.step1Text },
     { title: t.step2Title, text: t.step2Text },
@@ -83,10 +158,12 @@ function OrderSuccessContent() {
                     {formatEuro(orderDetails?.amount_total ? orderDetails.amount_total / 100 : 0)}
                   </dd>
                 </div>
-                <div className="flex items-center justify-between gap-4">
-                  <dt className="text-subdued">{t.paymentStatus}</dt>
-                  <dd className="sub-xs border border-ink px-2 py-1">{t.paymentSuccessful}</dd>
-                </div>
+                {paid && (
+                  <div className="flex items-center justify-between gap-4">
+                    <dt className="text-subdued">{t.paymentStatus}</dt>
+                    <dd className="sub-xs border border-ink px-2 py-1">{t.paymentSuccessful}</dd>
+                  </div>
+                )}
                 <div className="flex items-center justify-between gap-4">
                   <dt className="text-subdued">{t.orderDate}</dt>
                   <dd>
@@ -128,7 +205,7 @@ function OrderSuccessContent() {
                   </div>
                   <div>
                     <dt className="sub-xs mb-1 text-subdued">{t.country}</dt>
-                    <dd>{orderDetails.shipping_details.address?.country}</dd>
+                    <dd>{countryCode ? getCountryName(countryCode, locale) : t.notAvailable}</dd>
                   </div>
                 </dl>
               </section>
@@ -177,10 +254,12 @@ function OrderSuccessContent() {
               <div>
                 <h3 className="sub mb-3">{t.faqTitle}</h3>
                 <dl className="space-y-1.5 text-[14px] leading-[1.6]">
-                  <div className="flex flex-wrap gap-x-2">
-                    <dt className="text-subdued">{t.deliveryTimeLabel}</dt>
-                    <dd>{t.deliveryTimeValue}</dd>
-                  </div>
+                  {days && (
+                    <div className="flex flex-wrap gap-x-2">
+                      <dt className="text-subdued">{t.deliveryTimeLabel}</dt>
+                      <dd>{t.deliveryTimeValue(days.min, days.max)}</dd>
+                    </div>
+                  )}
                   <div className="flex flex-wrap gap-x-2">
                     <dt className="text-subdued">{t.returnPolicyLabel}</dt>
                     <dd>{t.returnPolicyValue}</dd>

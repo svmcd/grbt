@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { memleketSlugs, hasretSlugs, recepIvedikSlugs, getProductBySlug, getPrimaryImageForSlug } from "@/lib/catalog";
 import { getPriceForSlug } from "@/lib/pricing";
-import Link from "next/link";
+import Link from "@/i18n/LocaleLink";
 import Image from "next/image";
 import { useFormatPrice, useLocale, useMessages } from "@/i18n/LocaleProvider";
 import commonMessages from "@/i18n/messages/common";
