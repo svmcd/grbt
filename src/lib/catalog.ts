@@ -83,7 +83,7 @@ export const recepIvedikSlugs: string[] = [
 // Turkish Time: the artwork is in designs/turkish-time/<slug without "turkish-time-">/
 export const turkishTimeSlugs: string[] = [
     "turkish-time-cay",
-    "turkish-time-kurt",
+    "turkish-time-bozkurt",
 ];
 
 // The collections in shop order, with the key used in URLs (/collection/<key>) and messages
@@ -151,7 +151,7 @@ export function titleCaseCity(slug: string): string {
         "sibel_to_my_recep": "Sibel To My Recep",
         // Turkish Time collection (Turkish names, the same in every language)
         "turkish-time-cay": "Çay",
-        "turkish-time-kurt": "Kurt"
+        "turkish-time-bozkurt": "Bozkurt"
     };
 
     return cityNames[slug] || slug.charAt(0).toUpperCase() + slug.slice(1);
@@ -574,20 +574,20 @@ const productData: Record<string, {
     },
     // Turkish Time Collection
     "turkish-time-cay": {
-        description: "Sırt baskısı: buharı tüten, içinde kaşığıyla ince belli bir çay bardağı ve desenli tabağı. Altında İngilizce “You met me at a very Turkish time in my life.” sözü yer alır.",
+        description: "Ön baskı: buharı tüten, içinde kaşığıyla ince belli bir çay bardağı ve desenli tabağı. Altında İngilizce “You met me at a very Turkish time in my life.” sözü yer alır.",
         donation: {
             percentage: 5,
             organization: "Bu tişörtten elde edilen kârın %5'i bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@egrikuyu.com"
         },
         designOrigin: "Türk çay bardağı"
     },
-    "turkish-time-kurt": {
-        description: "Sırt baskısı: koşan bir kurt. Altında İngilizce “You met me at a very Turkish time in my life.” sözü yer alır.",
+    "turkish-time-bozkurt": {
+        description: "Ön baskı: koşan bir bozkurt. Altında İngilizce “You met me at a very Turkish time in my life.” sözü yer alır.",
         donation: {
             percentage: 5,
             organization: "Bu tişörtten elde edilen kârın %5'i bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@egrikuyu.com"
         },
-        designOrigin: "Koşan kurt"
+        designOrigin: "Koşan bozkurt"
     },
     // New cities
     denizli: {

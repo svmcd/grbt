@@ -240,14 +240,14 @@ const products: CatalogTranslations = {
     },
     // Turkish Time Collection
     "turkish-time-cay": {
-        description: "Back print: a steaming tulip-shaped tea glass with a spoon, on a patterned saucer. Below it, the line “You met me at a very Turkish time in my life.”",
+        description: "Front print: a steaming tulip-shaped tea glass with a spoon, on a patterned saucer. Below it, the line “You met me at a very Turkish time in my life.”",
         donationText: donationGeneric,
         designOrigin: "The Turkish tea glass",
     },
-    "turkish-time-kurt": {
-        description: "Back print: a running wolf. Below it, the line “You met me at a very Turkish time in my life.”",
+    "turkish-time-bozkurt": {
+        description: "Front print: a running grey wolf (bozkurt). Below it, the line “You met me at a very Turkish time in my life.”",
         donationText: donationGeneric,
-        designOrigin: "A running wolf",
+        designOrigin: "A running grey wolf",
     },
     // New cities
     denizli: {

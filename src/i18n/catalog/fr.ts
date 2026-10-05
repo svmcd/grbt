@@ -241,14 +241,14 @@ const products: CatalogTranslations = {
     },
     // Turkish Time Collection
     "turkish-time-cay": {
-        description: "Impression au dos : un verre à thé fumant en forme de tulipe, avec sa cuillère, sur une soucoupe décorée. En dessous, la phrase « You met me at a very Turkish time in my life. »",
+        description: "Impression devant : un verre à thé fumant en forme de tulipe, avec sa cuillère, sur une soucoupe décorée. En dessous, la phrase « You met me at a very Turkish time in my life. »",
         donationText: donationGeneric,
         designOrigin: "Le verre à thé turc",
     },
-    "turkish-time-kurt": {
-        description: "Impression au dos : un loup qui court. En dessous, la phrase « You met me at a very Turkish time in my life. »",
+    "turkish-time-bozkurt": {
+        description: "Impression devant : un loup gris qui court (bozkurt). En dessous, la phrase « You met me at a very Turkish time in my life. »",
         donationText: donationGeneric,
-        designOrigin: "Un loup qui court",
+        designOrigin: "Un loup gris qui court",
     },
     // New cities
     denizli: {

@@ -240,14 +240,14 @@ const products: CatalogTranslations = {
     },
     // Turkish Time Collection
     "turkish-time-cay": {
-        description: "Rückendruck: ein dampfendes, tulpenförmiges Teeglas mit Löffel auf einer verzierten Untertasse. Darunter der Satz „You met me at a very Turkish time in my life.“",
+        description: "Frontdruck: ein dampfendes, tulpenförmiges Teeglas mit Löffel auf einer verzierten Untertasse. Darunter der Satz „You met me at a very Turkish time in my life.“",
         donationText: donationGeneric,
         designOrigin: "Das türkische Teeglas",
     },
-    "turkish-time-kurt": {
-        description: "Rückendruck: ein laufender Wolf. Darunter der Satz „You met me at a very Turkish time in my life.“",
+    "turkish-time-bozkurt": {
+        description: "Frontdruck: ein laufender grauer Wolf (Bozkurt). Darunter der Satz „You met me at a very Turkish time in my life.“",
         donationText: donationGeneric,
-        designOrigin: "Ein laufender Wolf",
+        designOrigin: "Ein laufender grauer Wolf",
     },
     // New cities
     denizli: {

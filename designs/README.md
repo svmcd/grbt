@@ -20,7 +20,7 @@ designs/
       plate.svg (or .png)    the plate number on the left sleeve
   hasret/<slug>/             gurbetten-memlekete, sıla-yolu, yabanci
   sinema/<slug>/             devam, recep_to_my_sibel, sensiz_olmaz, sibel_to_my_recep
-  turkish-time/<name>/       cay, kurt (product slugs turkish-time-cay, turkish-time-kurt)
+  turkish-time/<name>/       cay, bozkurt (product slugs turkish-time-cay, turkish-time-bozkurt)
       source.png             the artwork as delivered: red drawing + white text on transparency
       art.png, text.png      the drawing (its red, with alpha) and the text (alpha mask)
       design.json            where each layer goes (see "Hasret and Sinema" below)
