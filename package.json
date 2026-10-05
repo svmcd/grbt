@@ -1,9 +1,12 @@
 {
-  "name": "grbt",
+  "name": "egrikuyu",
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "mockups": "node scripts/generate-mockups.mjs",
+    "predev": "npm run mockups",
     "dev": "next dev",
+    "prebuild": "npm run mockups",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
@@ -29,6 +32,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.5.2",
+    "sharp": "^0.34.5",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

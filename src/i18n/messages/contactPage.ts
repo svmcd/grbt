@@ -1,0 +1,53 @@
+import { defineMessages } from "../define";
+
+// /contact form
+export default defineMessages({
+    en: {
+        intro: "For questions about your order or our products, send us a message using the form below or write to info@egrikuyu.com.",
+        sentTitle: "Message sent",
+        sendFailed: "Your message could not be sent. Please try again.",
+        genericError: "An error occurred. Please try again.",
+        namePlaceholder: "Full name",
+        emailPlaceholder: "Email",
+        messagePlaceholder: "Message",
+        sending: "Sending...",
+        send: "Send",
+        sent: "Thank you. Your message has been sent and we will get back to you as soon as possible.",
+    },
+    de: {
+        intro: "Bei Fragen zu Ihrer Bestellung oder unseren Produkten senden Sie uns eine Nachricht über das folgende Formular oder schreiben Sie an info@egrikuyu.com.",
+        sentTitle: "Nachricht gesendet",
+        sendFailed: "Ihre Nachricht konnte nicht gesendet werden. Bitte versuchen Sie es erneut.",
+        genericError: "Es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
+        namePlaceholder: "Vor- und Nachname",
+        emailPlaceholder: "E-Mail",
+        messagePlaceholder: "Nachricht",
+        sending: "Wird gesendet...",
+        send: "Senden",
+        sent: "Vielen Dank. Ihre Nachricht wurde gesendet und wir melden uns so bald wie möglich bei Ihnen.",
+    },
+    fr: {
+        intro: "Pour toute question concernant votre commande ou nos produits, envoyez-nous un message via le formulaire ci-dessous ou écrivez à info@egrikuyu.com.",
+        sentTitle: "Message envoyé",
+        sendFailed: "Votre message n'a pas pu être envoyé. Veuillez réessayer.",
+        genericError: "Une erreur s'est produite. Veuillez réessayer.",
+        namePlaceholder: "Nom et prénom",
+        emailPlaceholder: "E-mail",
+        messagePlaceholder: "Message",
+        sending: "Envoi en cours...",
+        send: "Envoyer",
+        sent: "Merci. Votre message a bien été envoyé et nous vous répondrons dans les meilleurs délais.",
+    },
+    tr: {
+        intro: "Siparişiniz veya ürünlerimizle ilgili sorularınız için aşağıdaki formu kullanarak bize mesaj gönderebilir ya da info@egrikuyu.com adresine yazabilirsiniz.",
+        sentTitle: "Mesaj gönderildi",
+        sendFailed: "Mesaj gönderilemedi. Lütfen tekrar deneyin.",
+        genericError: "Bir hata oluştu. Lütfen tekrar deneyin.",
+        namePlaceholder: "Ad Soyad",
+        emailPlaceholder: "E-posta",
+        messagePlaceholder: "Mesaj",
+        sending: "Gönderiliyor...",
+        send: "Gönder",
+        sent: "Teşekkürler — mesajınız gönderildi ve en kısa sürede size dönüş yapacağız.",
+    },
+});

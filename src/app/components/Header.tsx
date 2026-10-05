@@ -1,199 +1,318 @@
 "use client";
 
+/*
+ * Site chrome: announcement bar + header (both fixed to the top of the viewport).
+ *
+ * LAYOUT CONTRACT (for page authors)
+ * - Heights are CSS variables defined in app/layout.tsx:
+ *     --announcement-h  (40px, 46px from 1024px = lg)
+ *     --header-h        (60px, 74px from 1024px = lg)
+ * - This component renders an in-flow spacer before <main>, so pages never
+ *   need top padding for the chrome:
+ *     * every page except "/": spacer = announcement + header, content starts
+ *       right below the white header.
+ *     * "/": spacer = announcement only. The transparent header (white logo
+ *       and text) overlays the first section of the page. The homepage hero
+ *       must therefore be the first element of the page, with no top margin
+ *       or padding, and fill the screen below the announcement bar:
+ *         className="relative h-[calc(100svh-var(--announcement-h))] ..."
+ *       Keep hero text clear of the top var(--header-h) (center or bottom
+ *       align it) and make sure the top of the hero image is dark enough for
+ *       white text, e.g. a gradient from rgba(0,0,0,.35) at the top.
+ *   On "/" the header turns white (dark logo/text) after 10px of scroll, on
+ *   mouse hover and while the language list is open.
+ * - Overlays: header z-50, search drawer and mobile menu z-[80]. The cart
+ *   opens through toggleCart() from useCart() (CartDrawer renders it).
+ */
+
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 import { useCart } from "@/lib/cart-context";
-import { SearchBar } from "./SearchBar";
+import { SearchDrawer } from "./SearchBar";
+import { LanguageList, LanguageSwitcher } from "@/i18n/LanguageSwitcher";
+import { useMessages } from "@/i18n/LocaleProvider";
+import commonMessages from "@/i18n/messages/common";
+import chromeMessages from "@/i18n/messages/siteChrome";
+
+const iconProps = {
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 1.7,
+  "aria-hidden": true,
+} as const;
+
+// Locks page scroll while a drawer is open (html element, so it does not
+// conflict with the cart drawer, which locks <body>).
+function useScrollLock(locked: boolean) {
+  useEffect(() => {
+    if (!locked) return;
+    const html = document.documentElement;
+    const prev = html.style.overflow;
+    html.style.overflow = "hidden";
+    return () => {
+      html.style.overflow = prev;
+    };
+  }, [locked]);
+}
 
 export function Header() {
+  const pathname = usePathname();
+  const isHome = pathname === "/";
   const [scrolled, setScrolled] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const [langOpen, setLangOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const { toggleCart, getItemCount } = useCart();
+  const common = useMessages(commonMessages);
+  const chrome = useMessages(chromeMessages);
+  const t = chrome.header;
 
   useEffect(() => {
     setIsMounted(true);
-    const onScroll = () => setScrolled(window.scrollY > 4);
+    const onScroll = () => {
+      // The cart drawer pins <body> (scrollY becomes 0); keep the current state.
+      if (document.body.hasAttribute("data-scroll-y")) return;
+      setScrolled(window.scrollY > 10);
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  return (
-    <header
-      className={
-        "fixed top-0 inset-x-0 z-50 transition-all duration-300 " +
-        "bg-black " +
-        (scrolled ? "border-b border-white/10" : "border-b border-transparent")
-      }
-    >
-      <div className="max-w-6xl mx-auto flex items-center justify-between py-2 sm:py-3 px-4 lg:px-0">
-        <Link href="/" className="flex items-center gap-2">
-          <Image
-            src={mobileMenuOpen ? "/grbt-dark.svg" : "/grbt-dark.svg"}
-            alt="grbt."
-            width={120}
-            height={50}
-            className="h-5 sm:h-6 w-auto"
-          />
-        </Link>
-        <div className="flex items-center gap-4 sm:gap-6">
-          {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-4 xl:gap-6 text-sm">
-            <Link
-              href="/"
-              className="text-white/80 hover:text-white transition-colors whitespace-nowrap"
-            >
-              Ana Sayfa
-            </Link>
-            <Link
-              href="/collection/memleket"
-              className="text-white/80 hover:text-white transition-colors whitespace-nowrap"
-            >
-              Memleket
-            </Link>
-            <Link
-              href="/collection/hasret"
-              className="text-white/80 hover:text-white transition-colors whitespace-nowrap"
-            >
-              Hasret
-            </Link>
-            <Link
-              href="/collection/sinema"
-              className="text-white/80 hover:text-white transition-colors whitespace-nowrap"
-            >
-              Sinema
-            </Link>
-            <Link
-              href="/phone-case/kilim"
-              className="text-white/80 hover:text-white transition-colors whitespace-nowrap text-xs"
-            >
-              Telefon Kılıfları
-            </Link>
-            <Link
-              href="/contact"
-              className="text-white/80 hover:text-white transition-colors whitespace-nowrap"
-            >
-              İletişim
-            </Link>
-          </nav>
-          
-          {/* Tablet/Mobile Menu Button - Show on md screens too */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden text-white/80 hover:text-white transition-colors w-8 h-8 flex items-center justify-center"
-          >
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              {mobileMenuOpen ? (
-                <path d="M18 6L6 18M6 6l12 12" />
-              ) : (
-                <path d="M3 12h18M3 6h18M3 18h18" />
-              )}
-            </svg>
-          </button>
+  // Close drawers when navigating
+  useEffect(() => {
+    setMenuOpen(false);
+    setSearchOpen(false);
+  }, [pathname]);
 
-          <div className="flex items-center gap-2 sm:gap-4">
-            {/* Desktop Search */}
-            <div className="hidden lg:block">
-              <SearchBar />
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setMenuOpen(false);
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [menuOpen]);
+
+  useScrollLock(menuOpen || searchOpen);
+  const closeSearch = useCallback(() => setSearchOpen(false), []);
+
+  const solid = !isHome || scrolled || hovered || langOpen;
+  const count = isMounted ? getItemCount() : 0;
+
+  const navLinks = [
+    { href: "/", label: common.home },
+    { href: "/collection/memleket", label: "Memleket" },
+    { href: "/collection/hasret", label: "Hasret" },
+    { href: "/collection/sinema", label: "Sinema" },
+    { href: "/contact", label: common.contact },
+  ];
+  const isActive = (href: string) =>
+    href === "/" ? pathname === "/" : pathname?.startsWith(href);
+
+  const iconButton = "flex h-10 w-10 items-center justify-center";
+
+  return (
+    <>
+      {/* In-flow spacer: pages start below the chrome (on "/" below the announcement only) */}
+      <div
+        aria-hidden
+        className="flex-shrink-0"
+        style={{
+          height: isHome
+            ? "var(--announcement-h)"
+            : "calc(var(--announcement-h) + var(--header-h))",
+        }}
+      />
+
+      <div className="fixed inset-x-0 top-0 z-50">
+        <div className="sub-xs flex h-[var(--announcement-h)] items-center justify-center bg-night px-3 text-center text-paper max-sm:text-[11px] max-sm:tracking-[0.02em]">
+          <p className="truncate">{chrome.announcement}</p>
+        </div>
+
+        <header
+          onPointerEnter={(e) => e.pointerType === "mouse" && setHovered(true)}
+          onPointerLeave={() => setHovered(false)}
+          className={
+            "h-[var(--header-h)] border-b transition-colors duration-300 " +
+            (solid
+              ? "border-line bg-paper text-ink"
+              : "border-transparent bg-transparent text-paper")
+          }
+        >
+          <div className="grid h-full grid-cols-[1fr_auto_1fr] items-center px-2 md:px-6 lg:flex lg:px-8">
+            {/* Mobile / tablet left: menu + search */}
+            <div className="flex items-center lg:hidden">
+              <button
+                type="button"
+                onClick={() => setMenuOpen(true)}
+                aria-label={t.menu}
+                aria-expanded={menuOpen}
+                className={iconButton}
+              >
+                <svg width="22" height="22" viewBox="0 0 24 24" {...iconProps}>
+                  <path d="M3 7h18M3 12h18M3 17h18" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSearchOpen(true)}
+                aria-label={t.search}
+                className={iconButton}
+              >
+                <svg width="21" height="21" viewBox="0 0 24 24" {...iconProps}>
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="m20 20-3.5-3.5" />
+                </svg>
+              </button>
             </div>
 
-            {/* Desktop Cart */}
-            <button
-              onClick={toggleCart}
-              data-cart-toggle
-              className="hidden lg:block relative bg-white/10 backdrop-blur-sm border border-white/20 rounded-none w-10 h-10 hover:bg-white/20 transition-colors"
+            {/* Logo */}
+            <Link
+              href="/"
+              aria-label={common.brand}
+              className="relative block justify-self-center lg:mr-12 lg:flex-shrink-0"
             >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="text-white absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+              <Image
+                src="/egrikuyu.svg"
+                alt={common.brand}
+                width={1983}
+                height={644}
+                priority
+                className={"h-[30px] w-auto lg:h-[40px] " + (solid ? "" : "invisible")}
+              />
+              <Image
+                src="/egrikuyu-white.svg"
+                alt=""
+                aria-hidden
+                width={1983}
+                height={644}
+                priority
+                className={
+                  "absolute inset-0 h-[30px] w-auto lg:h-[40px] " + (solid ? "invisible" : "")
+                }
+              />
+            </Link>
+
+            {/* Desktop navigation */}
+            <nav className="hidden items-center gap-6 lg:flex">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  aria-current={isActive(link.href) ? "page" : undefined}
+                  className="sub link-reveal whitespace-nowrap"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+
+            {/* Right: language, search, cart */}
+            <div className="flex items-center justify-end lg:ml-auto">
+              <LanguageSwitcher className="mr-3 hidden lg:block" onOpenChange={setLangOpen} />
+              <button
+                type="button"
+                onClick={() => setSearchOpen(true)}
+                aria-label={t.search}
+                className={iconButton + " hidden lg:flex"}
               >
-                <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4zM3 6h18M16 10a4 4 0 11-8 0" />
+                <svg width="21" height="21" viewBox="0 0 24 24" {...iconProps}>
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="m20 20-3.5-3.5" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                onClick={toggleCart}
+                data-cart-toggle
+                aria-label={count > 0 ? `${t.cart} (${count})` : t.cart}
+                className={iconButton + " relative"}
+              >
+                <svg width="22" height="22" viewBox="0 0 24 24" {...iconProps}>
+                  <path d="M5 8h14l-1 13H6L5 8Z" />
+                  <path d="M9 10V6a3 3 0 0 1 6 0v4" />
+                </svg>
+                {count > 0 && (
+                  <span
+                    className={
+                      "absolute right-0.5 top-1 flex h-4 min-w-4 items-center justify-center px-1 text-[10px] leading-none transition-colors duration-300 " +
+                      (solid ? "bg-ink text-paper" : "bg-paper text-ink")
+                    }
+                  >
+                    {count}
+                  </span>
+                )}
+              </button>
+            </div>
+          </div>
+        </header>
+      </div>
+
+      {/* Mobile menu drawer */}
+      <div
+        className={"fixed inset-0 z-[80] lg:hidden " + (menuOpen ? "" : "pointer-events-none")}
+        aria-hidden={!menuOpen}
+      >
+        <div
+          onClick={() => setMenuOpen(false)}
+          className={
+            "absolute inset-0 bg-ink/40 transition-opacity duration-300 " +
+            (menuOpen ? "opacity-100" : "opacity-0")
+          }
+        />
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={t.menu}
+          className={
+            "absolute left-0 top-0 flex h-full w-[min(88vw,400px)] flex-col bg-paper text-ink transition-transform duration-300 ease-out " +
+            (menuOpen ? "translate-x-0" : "-translate-x-full")
+          }
+        >
+          <div className="flex h-[var(--header-h)] flex-shrink-0 items-center border-b border-line px-2 md:px-6">
+            <button
+              type="button"
+              onClick={() => setMenuOpen(false)}
+              aria-label={common.close}
+              tabIndex={menuOpen ? 0 : -1}
+              className={iconButton}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" {...iconProps}>
+                <path d="M5 5l14 14M19 5L5 19" />
               </svg>
-              {isMounted && getItemCount() > 0 && (
-                <span className="absolute -top-2 -right-2 bg-white/90 backdrop-blur-sm border border-white/20 text-black text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  {getItemCount()}
-                </span>
-              )}
             </button>
+          </div>
+          <nav className="flex-1 overflow-y-auto px-6 py-6 md:px-8">
+            <ul className="flex flex-col">
+              {navLinks.map((link) => (
+                <li key={link.href} className="border-b border-line">
+                  <Link
+                    href={link.href}
+                    onClick={() => setMenuOpen(false)}
+                    tabIndex={menuOpen ? 0 : -1}
+                    aria-current={isActive(link.href) ? "page" : undefined}
+                    className="flex items-center justify-between py-4 text-[22px] uppercase leading-none tracking-[-0.04em]"
+                  >
+                    {link.label}
+                    <svg width="14" height="14" viewBox="0 0 24 24" {...iconProps}>
+                      <path d="m9 5 7 7-7 7" />
+                    </svg>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+          <div className="flex-shrink-0 border-t border-line px-6 py-6 md:px-8">
+            <div className="sub-xs mb-3 text-subdued">{t.language}</div>
+            <LanguageList />
           </div>
         </div>
       </div>
 
-      {/* Mobile/Tablet Menu */}
-      {mobileMenuOpen && (
-        <div className="lg:hidden bg-black border-t border-white/10">
-          <div className="px-4 py-4 space-y-4">
-            {/* Search Bar in Mobile Menu */}
-            <div className="lg:hidden">
-              <SearchBar isMobile={true} />
-            </div>
-            
-            <nav className="space-y-3">
-              <Link
-                href="/"
-                className="block text-white/80 hover:text-white transition-colors"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Ana Sayfa
-              </Link>
-              <div className="pt-2 pb-1 border-t border-white/10">
-                <div className="text-white/60 text-xs uppercase tracking-wider mb-2">
-                  Koleksiyonlar
-                </div>
-                <Link
-                  href="/collection/memleket"
-                  className="block text-white/80 hover:text-white transition-colors pl-2"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Memleket Koleksiyonu
-                </Link>
-                <Link
-                  href="/collection/hasret"
-                  className="block text-white/80 hover:text-white transition-colors pl-2"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Hasret Koleksiyonu
-                </Link>
-                <Link
-                  href="/collection/sinema"
-                  className="block text-white/80 hover:text-white transition-colors pl-2"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Sinema Koleksiyonu
-                </Link>
-                <Link
-                  href="/phone-case/kilim"
-                  className="block text-white/80 hover:text-white transition-colors pl-2"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Telefon Kılıfları
-                </Link>
-              </div>
-              <Link
-                href="/contact"
-                className="block text-white/80 hover:text-white transition-colors"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                İletişim
-              </Link>
-            </nav>
-          </div>
-        </div>
-      )}
-    </header>
+      <SearchDrawer open={searchOpen} onClose={closeSearch} />
+    </>
   );
 }

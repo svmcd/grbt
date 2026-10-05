@@ -1,4 +1,4 @@
-# grbt. - Coming Soon
+# eğrikuyu
 
 A minimalist, luxury clothing brand website built with Next.js and Tailwind CSS.
 
@@ -50,6 +50,6 @@ The website follows minimalist design principles with:
 
 ## Brand
 
-- **Name**: grbt.
-- **Domain**: grbt.studio
+- **Name**: eğrikuyu
+- **Domain**: egrikuyu.com
 - **Style**: Luxury minimalist clothing

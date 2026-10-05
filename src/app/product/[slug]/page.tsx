@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useParams } from "next/navigation";
 import {
   getProductBySlug,
@@ -13,1249 +14,510 @@ import {
 import { getPriceForSlug } from "@/lib/pricing";
 import { getTestPrice } from "@/lib/dev-mode";
 import { useCart } from "@/lib/cart-context";
+import { useFormatPrice, useLocale, useMessages } from "@/i18n/LocaleProvider";
+import commonMessages from "@/i18n/messages/common";
+import productPageMessages from "@/i18n/messages/productPage";
 import { Gallery } from "./Gallery";
-import Image from "next/image";
-import { TrustSignals } from "@/app/components/TrustSignals";
-import { FAQ } from "@/app/components/FAQ";
-import { NewsletterSignup } from "@/app/components/NewsletterSignup";
-import { SocialLinks } from "@/app/components/SocialLinks";
-import { ProductCard } from "@/app/components/ProductCard";
-import { FamilyOffer } from "@/app/components/FamilyOffer";
+import { ProductDetails } from "./ProductDetails";
+import { ImageBand, RelatedProducts } from "./RelatedProducts";
+import { CheckSquare, FieldLabel, OptionBox, OptionLabel, Panel, Swatch } from "./ProductOptions";
+
+type ProductType = "tshirt" | "hoodie" | "sweater";
+type PersonalizationMethod = "printed" | "embroidered" | "none";
+
+const FONTS = [
+  { name: "Normal", font: "Arial" },
+  { name: "Serif", font: "Times New Roman" },
+  { name: "Cursive", font: "Brush Script MT, cursive" },
+];
 
 export default function ProductPage() {
   const { slug } = useParams<{ slug: string }>();
-  const product = slug ? getProductBySlug(slug) : undefined;
+  const { locale } = useLocale();
+  const common = useMessages(commonMessages);
+  const t = useMessages(productPageMessages);
+  const price = useFormatPrice();
+  const product = slug ? getProductBySlug(slug, locale) : undefined;
   const basePrice = product ? getPriceForSlug(product.slug) : 0;
   const { addItem } = useCart();
 
-  // State declarations - moved before early return
-  const [selectedProductType, setSelectedProductType] = useState<
-    "tshirt" | "hoodie" | "sweater"
-  >("tshirt");
-  const [selectedColor, setSelectedColor] = useState<string>(
-    product?.colors[0] || ""
-  );
-  const [selectedSize, setSelectedSize] = useState<string>(
-    product?.sizes[0] || ""
-  );
+  const [selectedProductType, setSelectedProductType] = useState<ProductType>("tshirt");
+  const [selectedColor, setSelectedColor] = useState<string>(product?.colors[0] || "");
+  const [selectedSize, setSelectedSize] = useState<string>(product?.sizes[0] || "");
   const [personalizationText, setPersonalizationText] = useState<string>("");
-  const [personalizationPlacement, setPersonalizationPlacement] =
-    useState<string>("");
-  const [personalizationMethod, setPersonalizationMethod] = useState<
-    "printed" | "embroidered" | "none"
-  >("none");
-  const [personalizationFont, setPersonalizationFont] =
-    useState<string>("Normal");
-  const [personalizationColor, setPersonalizationColor] =
-    useState<string>("#000000");
+  const [personalizationPlacement, setPersonalizationPlacement] = useState<string>("");
+  const [personalizationMethod, setPersonalizationMethod] = useState<PersonalizationMethod>("none");
+  const [personalizationFont, setPersonalizationFont] = useState<string>("Normal");
+  const [personalizationColor, setPersonalizationColor] = useState<string>("#000000");
   const [giftPackage, setGiftPackage] = useState<boolean>(false);
   const [giftMessage, setGiftMessage] = useState<string>("");
+  const [personalizationOpen, setPersonalizationOpen] = useState(false);
   const [showStickyButton, setShowStickyButton] = useState(false);
-  const [showScrollToTop, setShowScrollToTop] = useState(false);
-  const [randomProducts, setRandomProducts] = useState<any[]>([]);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
-  // Check if original button is out of view and scroll position
+  // Show the sticky add-to-cart bar once the main button has scrolled out of view.
   useEffect(() => {
     const handleScroll = () => {
       if (buttonRef.current) {
         const rect = buttonRef.current.getBoundingClientRect();
         setShowStickyButton(rect.bottom < 0);
       }
-
-      // Show scroll to top button after scrolling down 300px
-      setShowScrollToTop(window.scrollY > 300);
     };
-
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Generate random products on client side only
-  useEffect(() => {
-    const allSlugs = [...memleketSlugs, ...hasretSlugs].filter(
-      (s) => s !== slug
-    );
-    // Shuffle and take 3 random products
-    const shuffled = allSlugs.sort(() => 0.5 - Math.random());
-    const randomSlugs = shuffled.slice(0, 3);
-
-    const randomProductsData = randomSlugs
-      .map((slug) => {
-        const product = getProductBySlug(slug);
-        return product ? { ...product, slug } : null;
-      })
-      .filter(Boolean);
-
-    setRandomProducts(randomProductsData);
-  }, [slug]);
-
-  // Early return after all hooks
   if (!product) return null;
 
-  // Calculate personalization cost
   const personalizationCost =
-    personalizationMethod === "printed"
-      ? 7.5
-      : personalizationMethod === "embroidered"
-      ? 10
-      : 0;
-
-  // Calculate gift package cost
+    personalizationMethod === "printed" ? 7.5 : personalizationMethod === "embroidered" ? 10 : 0;
   const giftPackageCost = giftPackage ? 5 : 0;
-
-  // Calculate product type cost (hoodie and sweater add €20)
+  // Hoodie and sweater add €20
   const productTypeCost =
-    selectedProductType === "hoodie" || selectedProductType === "sweater"
-      ? 20
-      : 0;
+    selectedProductType === "hoodie" || selectedProductType === "sweater" ? 20 : 0;
+  const totalPrice = getTestPrice(basePrice + productTypeCost + personalizationCost + giftPackageCost);
 
-  const totalPrice = getTestPrice(
-    basePrice + productTypeCost + personalizationCost + giftPackageCost
-  );
+  const isMemleket = memleketSlugs.includes(product.slug);
+  const isHasret = hasretSlugs.includes(product.slug);
+  const isSinema = recepIvedikSlugs.includes(product.slug);
+  const collectionName = isHasret
+    ? common.collections.hasret
+    : isSinema
+    ? common.collections.sinema
+    : common.collections.memleket;
+  const collectionHref = isHasret
+    ? "/collection/hasret"
+    : isSinema
+    ? "/collection/sinema"
+    : "/collection/memleket";
 
-  // Determine collection name
-  const isHasretCollection = hasretSlugs.includes(product.slug);
-  const isRecepIvedikCollection = recepIvedikSlugs.includes(product.slug);
-  const collectionName = isHasretCollection
-    ? "Hasret Koleksiyonu"
-    : isRecepIvedikCollection
-    ? "Sinema Koleksiyonu"
-    : "Memleket Koleksiyonu";
+  const images = getImagesForSlug(product.slug, selectedColor, selectedProductType);
+  const personalizationIncomplete =
+    personalizationMethod !== "none" &&
+    (!personalizationText.trim() || !personalizationPlacement.trim());
+  const cannotAdd = !selectedColor || !selectedSize || personalizationIncomplete;
+
+  const handleAddToCart = () => {
+    if (!selectedColor || !selectedSize) {
+      alert(t.alertColorSize);
+      return;
+    }
+    if (personalizationIncomplete) {
+      alert(t.alertPersonalization);
+      return;
+    }
+    addItem({
+      slug: product.slug,
+      city: product.city,
+      color: selectedColor,
+      size: selectedSize,
+      productType: selectedProductType,
+      price: totalPrice * 100, // Convert to cents
+      image: getImagesForSlug(product.slug, selectedColor, selectedProductType)[0],
+      quantity: 1,
+      personalization:
+        personalizationMethod !== "none"
+          ? {
+              method: personalizationMethod,
+              text: personalizationText,
+              placement: personalizationPlacement,
+              font: personalizationFont,
+              color: personalizationColor,
+              cost: personalizationCost,
+            }
+          : undefined,
+      giftPackage: giftPackage
+        ? {
+            included: true,
+            cost: giftPackageCost,
+            message: giftMessage,
+          }
+        : undefined,
+    });
+  };
+
+  const garmentName = selectedProductType === "hoodie" ? t.garment.hoodie : t.garment.sweater;
+  const surcharges = [
+    productTypeCost > 0 ? `+ ${price(productTypeCost)} ${garmentName}` : null,
+    personalizationCost > 0 ? `+ ${price(personalizationCost)} ${t.surchargePersonalization}` : null,
+    giftPackageCost > 0 ? `+ ${price(giftPackageCost)} ${t.surchargeGift}` : null,
+  ].filter(Boolean);
+
+  const personalizationVisible = personalizationOpen || personalizationMethod !== "none";
+  const fontFamily = FONTS.find((f) => f.name === personalizationFont)?.font ?? "Arial";
+  const matchingSlug =
+    slug === "sibel_to_my_recep" ? "recep_to_my_sibel" : slug === "recep_to_my_sibel" ? "sibel_to_my_recep" : null;
+  const matchingProduct = matchingSlug ? getProductBySlug(matchingSlug, locale) : undefined;
 
   return (
-    <div className="min-h-screen bg-black">
-      {/* Breadcrumb */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-8 pt-6 sm:pt-20 pb-4">
-        <nav className="text-white/60 text-sm">
-          <Link href="/" className="hover:text-white transition-colors">
-            Ana Sayfa
-          </Link>
-          <span className="mx-2">/</span>
-          <Link
-            href="/collection"
-            className="hover:text-white transition-colors"
-          >
-            {collectionName}
-          </Link>
-          <span className="mx-2">/</span>
-          <span className="text-white">{product.city}</span>
-        </nav>
-      </div>
-
-      {/* Main Product Layout */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-8 pb-16">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16">
-          {/* Product Images */}
-          <div>
-            <Gallery
-              images={getImagesForSlug(
-                product.slug,
-                selectedColor,
-                selectedProductType
-              )}
-              city={product.city}
-            />
+    <div className="bg-paper text-ink">
+      <div className="mx-auto max-w-[1440px] lg:px-12 lg:pt-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-x-[6vw] xl:gap-x-24">
+          {/* Gallery */}
+          <div className="lg:sticky lg:top-[144px] lg:self-start">
+            <Gallery images={images} city={product.city} />
           </div>
 
-          {/* Product Information */}
-          <div className="space-y-3 sm:space-y-6">
-            {/* Product Title & Price */}
-            <div className="flex items-baseline justify-between">
-              <div>
-                <div className="text-white/60 text-sm uppercase tracking-[0.2em] font-light">
-                  {collectionName}
-                </div>
-                <h1 className="text-3xl sm:text-4xl text-white font-light tracking-tight font-serif">
-                  {product.city.toUpperCase()}
-                </h1>
-              </div>
-              <div className="text-right">
-                <div className="text-2xl sm:text-3xl text-white font-light">
-                  €{totalPrice}
-                </div>
-                {(productTypeCost > 0 ||
-                  personalizationCost > 0 ||
-                  giftPackageCost > 0) && (
-                  <div className="text-white/60 text-sm">
-                    <div className="text-white/40 text-xs line-through">
-                      €{basePrice}
-                    </div>
-                    {productTypeCost > 0 && (
-                      <div>
-                        + €{productTypeCost}{" "}
-                        {selectedProductType === "hoodie"
-                          ? "hoodie"
-                          : "sweater"}
-                      </div>
-                    )}
-                    {personalizationCost > 0 && (
-                      <div>+ €{personalizationCost} kişiselleştirme</div>
-                    )}
-                    {giftPackageCost > 0 && (
-                      <div>+ €{giftPackageCost} hediye paketi</div>
-                    )}
-                  </div>
+          {/* Info column */}
+          <div className="px-4 pt-6 sm:px-8 lg:sticky lg:top-[144px] lg:self-start lg:px-0 lg:pt-0">
+            <div className="lg:max-w-[540px]">
+              <Link href={collectionHref} className="sub-xs link-reveal text-subdued">
+                {collectionName}
+              </Link>
+              <h1 className="h-product mt-2 text-ink">{product.city}</h1>
+
+              {/* Price */}
+              <div className="mt-3">
+                <p className="text-[18px] tracking-[0.02em] text-ink">{price(totalPrice)}</p>
+                {surcharges.length > 0 && (
+                  <p className="sub-xs mt-1 text-subdued">
+                    {price(basePrice)} {surcharges.join(" ")}
+                  </p>
                 )}
               </div>
-            </div>
 
-            {/* Product Options */}
-            <div className="space-y-2 sm:space-y-4">
-              {/* Product Type Selection */}
-              <div>
-                <div className="text-white/80 text-sm mb-2 sm:mb-3 font-medium">
-                  Ürün Tipi
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setSelectedProductType("tshirt")}
-                    style={{
-                      padding: "8px 16px",
-                      border:
-                        selectedProductType === "tshirt"
-                          ? "1px solid rgba(0, 0, 0, 0.3)"
-                          : "1px solid rgba(0, 0, 0, 0.1)",
-                      borderRadius: "4px",
-                      fontSize: "12px",
-                      fontWeight: "700",
-                      backgroundColor:
-                        selectedProductType === "tshirt"
-                          ? "rgba(0, 0, 0, 0.05)"
-                          : "transparent",
-                      color:
-                        selectedProductType === "tshirt"
-                          ? "rgba(0, 0, 0, 0.8)"
-                          : "rgba(0, 0, 0, 0.6)",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Tişört
-                  </button>
-                  <button
-                    onClick={() => setSelectedProductType("hoodie")}
-                    style={{
-                      padding: "8px 16px",
-                      border:
-                        selectedProductType === "hoodie"
-                          ? "1px solid rgba(0, 0, 0, 0.3)"
-                          : "1px solid rgba(0, 0, 0, 0.1)",
-                      borderRadius: "4px",
-                      fontSize: "12px",
-                      fontWeight: "700",
-                      backgroundColor:
-                        selectedProductType === "hoodie"
-                          ? "rgba(0, 0, 0, 0.05)"
-                          : "transparent",
-                      color:
-                        selectedProductType === "hoodie"
-                          ? "rgba(0, 0, 0, 0.8)"
-                          : "rgba(0, 0, 0, 0.6)",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Hoodie (+€20)
-                  </button>
-                  <button
-                    onClick={() => setSelectedProductType("sweater")}
-                    style={{
-                      padding: "8px 16px",
-                      border:
-                        selectedProductType === "sweater"
-                          ? "1px solid rgba(0, 0, 0, 0.3)"
-                          : "1px solid rgba(0, 0, 0, 0.1)",
-                      borderRadius: "4px",
-                      fontSize: "12px",
-                      fontWeight: "700",
-                      backgroundColor:
-                        selectedProductType === "sweater"
-                          ? "rgba(0, 0, 0, 0.05)"
-                          : "transparent",
-                      color:
-                        selectedProductType === "sweater"
-                          ? "rgba(0, 0, 0, 0.8)"
-                          : "rgba(0, 0, 0, 0.6)",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Sweater (+€20)
-                  </button>
-                </div>
-                {(selectedProductType === "hoodie" ||
-                  selectedProductType === "sweater") &&
-                  !hasretSlugs.includes(slug || "") &&
-                  !recepIvedikSlugs.includes(slug || "") && (
-                    <div className="bg-white/5 border border-white/10 rounded-none p-2 sm:p-3 mt-2 sm:mt-3">
-                      <div className="text-white/70 text-xs">
-                        Örnek görsellerde genel tasarım gösteriliyor ("sehir" ve
-                        "99" placeholder olarak). Siparişinizde {product.city}{" "}
-                        tasarımı{" "}
-                        {selectedProductType === "hoodie"
-                          ? "hoodie"
-                          : "sweater"}{" "}
-                        üzerine uygulanacak.
-                      </div>
-                    </div>
-                  )}
-              </div>
-
-              {/* Color Selection */}
-              <div>
-                <div className="text-white/80 text-sm mb-2 sm:mb-3 font-medium">
-                  Renk
-                </div>
-                <div className="flex gap-2">
-                  {product.colors.map((c) => (
-                    <button
-                      key={c}
-                      onClick={() => setSelectedColor(c)}
-                      style={{
-                        padding: "8px 16px",
-                        border:
-                          selectedColor === c
-                            ? "1px solid rgba(0, 0, 0, 0.3)"
-                            : "1px solid rgba(0, 0, 0, 0.1)",
-                        borderRadius: "4px",
-                        fontSize: "10px",
-                        fontWeight: "700",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.1em",
-                        backgroundColor:
-                          selectedColor === c
-                            ? "rgba(0, 0, 0, 0.05)"
-                            : "transparent",
-                        color:
-                          selectedColor === c
-                            ? "rgba(0, 0, 0, 0.8)"
-                            : "rgba(0, 0, 0, 0.6)",
-                        cursor: "pointer",
-                      }}
-                    >
-                      {c}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Size Selection */}
-              <div>
-                <div className="text-white/80 text-sm mb-2 sm:mb-3 font-medium">
-                  Beden
-                </div>
-                <div className="flex gap-2">
-                  {product.sizes.map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => setSelectedSize(s)}
-                      style={{
-                        padding: "8px 16px",
-                        border:
-                          selectedSize === s
-                            ? "1px solid rgba(0, 0, 0, 0.3)"
-                            : "1px solid rgba(0, 0, 0, 0.1)",
-                        borderRadius: "4px",
-                        fontSize: "12px",
-                        fontWeight: "700",
-                        backgroundColor:
-                          selectedSize === s
-                            ? "rgba(0, 0, 0, 0.05)"
-                            : "transparent",
-                        color:
-                          selectedSize === s
-                            ? "rgba(0, 0, 0, 0.8)"
-                            : "rgba(0, 0, 0, 0.6)",
-                        cursor: "pointer",
-                      }}
-                    >
-                      {s}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Personalization Options */}
-            <div className="space-y-2 sm:space-y-4">
-              <div>
-                <div className="text-white/80 text-sm mb-2 sm:mb-3 font-medium">
-                  Kişiselleştirme
-                </div>
-                <div className="space-y-3">
-                  {/* Personalization Method */}
-                  <div>
-                    <div className="text-white/60 text-xs mb-2">
-                      Kişiselleştirme Türü
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => setPersonalizationMethod("none")}
-                        style={{
-                          padding: "8px 16px",
-                          border:
-                            personalizationMethod === "none"
-                              ? "1px solid rgba(0, 0, 0, 0.3)"
-                              : "1px solid rgba(0, 0, 0, 0.1)",
-                          borderRadius: "4px",
-                          fontSize: "12px",
-                          fontWeight: "700",
-                          backgroundColor:
-                            personalizationMethod === "none"
-                              ? "rgba(0, 0, 0, 0.05)"
-                              : "transparent",
-                          color:
-                            personalizationMethod === "none"
-                              ? "rgba(0, 0, 0, 0.8)"
-                              : "rgba(0, 0, 0, 0.6)",
-                          cursor: "pointer",
-                        }}
-                      >
-                        Yok
-                      </button>
-                      <button
-                        onClick={() => setPersonalizationMethod("printed")}
-                        style={{
-                          padding: "8px 16px",
-                          border:
-                            personalizationMethod === "printed"
-                              ? "1px solid rgba(0, 0, 0, 0.3)"
-                              : "1px solid rgba(0, 0, 0, 0.1)",
-                          borderRadius: "4px",
-                          fontSize: "12px",
-                          fontWeight: "700",
-                          backgroundColor:
-                            personalizationMethod === "printed"
-                              ? "rgba(0, 0, 0, 0.05)"
-                              : "transparent",
-                          color:
-                            personalizationMethod === "printed"
-                              ? "rgba(0, 0, 0, 0.8)"
-                              : "rgba(0, 0, 0, 0.6)",
-                          cursor: "pointer",
-                        }}
-                      >
-                        Baskı (+€7.50)
-                      </button>
-                      <button
-                        onClick={() => setPersonalizationMethod("embroidered")}
-                        style={{
-                          padding: "8px 16px",
-                          border:
-                            personalizationMethod === "embroidered"
-                              ? "1px solid rgba(0, 0, 0, 0.3)"
-                              : "1px solid rgba(0, 0, 0, 0.1)",
-                          borderRadius: "4px",
-                          fontSize: "12px",
-                          fontWeight: "700",
-                          backgroundColor:
-                            personalizationMethod === "embroidered"
-                              ? "rgba(0, 0, 0, 0.05)"
-                              : "transparent",
-                          color:
-                            personalizationMethod === "embroidered"
-                              ? "rgba(0, 0, 0, 0.8)"
-                              : "rgba(0, 0, 0, 0.6)",
-                          cursor: "pointer",
-                        }}
-                      >
-                        İşleme (+€10)
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Personalization Text */}
-                  {personalizationMethod !== "none" && (
-                    <div>
-                      <div className="text-white/60 text-xs mb-2">
-                        Metin (Maksimum 20 karakter)
-                      </div>
-                      <input
-                        type="text"
-                        value={personalizationText}
-                        onChange={(e) =>
-                          setPersonalizationText(e.target.value.slice(0, 20))
-                        }
-                        placeholder="Kişiselleştirme metni..."
-                        className="w-full px-4 py-3 bg-white/5 border border-white/20 text-white text-sm rounded-none focus:outline-none focus:border-white/40 focus:bg-white/10 transition-all placeholder-white/50"
-                      />
-                      <div className="text-white/40 text-xs mt-1">
-                        {personalizationText.length}/20 karakter
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Font Selection */}
-                  {personalizationMethod !== "none" && (
-                    <div>
-                      <div className="text-white/60 text-xs mb-2">
-                        Font Seçimi
-                      </div>
-                      <div className="flex gap-2 flex-wrap">
-                        {[
-                          { name: "Normal", font: "Arial" },
-                          { name: "Serif", font: "Times New Roman" },
-                          { name: "Cursive", font: "Brush Script MT, cursive" },
-                        ].map((fontOption) => (
-                          <button
-                            key={fontOption.name}
-                            onClick={() =>
-                              setPersonalizationFont(fontOption.name)
-                            }
-                            style={{
-                              padding: "6px 12px",
-                              border:
-                                personalizationFont === fontOption.name
-                                  ? "1px solid rgba(0, 0, 0, 0.3)"
-                                  : "1px solid rgba(0, 0, 0, 0.1)",
-                              borderRadius: "4px",
-                              fontSize: "11px",
-                              fontWeight: "700",
-                              backgroundColor:
-                                personalizationFont === fontOption.name
-                                  ? "rgba(0, 0, 0, 0.05)"
-                                  : "transparent",
-                              color:
-                                personalizationFont === fontOption.name
-                                  ? "rgba(0, 0, 0, 0.8)"
-                                  : "rgba(0, 0, 0, 0.6)",
-                              cursor: "pointer",
-                              fontFamily: fontOption.font,
-                            }}
-                          >
-                            {fontOption.name}
-                          </button>
-                        ))}
-                      </div>
-
-                      {/* Font Preview */}
-                      {personalizationText && (
-                        <div className="mt-3">
-                          <div className="text-white/60 text-xs mb-2">
-                            Önizleme
-                          </div>
-                          <div
-                            className="bg-white/10 border border-white/20 rounded-none p-3 text-center"
-                            style={{
-                              fontFamily:
-                                personalizationFont === "Normal"
-                                  ? "Arial"
-                                  : personalizationFont === "Serif"
-                                  ? "Times New Roman"
-                                  : "Brush Script MT, cursive",
-                              fontSize: "16px",
-                              fontWeight: "normal",
-                              color: personalizationColor,
-                            }}
-                          >
-                            {personalizationText}
-                          </div>
-                          <div className="text-white/40 text-xs mt-1 text-center">
-                            Ürün üzerinde 1 cm yüksekliğinde
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Color Selection */}
-                  {personalizationMethod !== "none" && (
-                    <div>
-                      <div className="text-white/60 text-xs mb-2">
-                        Renk Seçimi
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="color"
-                          value={personalizationColor}
-                          onChange={(e) =>
-                            setPersonalizationColor(e.target.value)
-                          }
-                          className="w-12 h-10 border border-white/20 rounded-none cursor-pointer"
-                        />
-                        <span className="text-white/80 text-sm">
-                          {personalizationColor}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Personalization Placement */}
-                  {personalizationMethod !== "none" && (
-                    <div>
-                      <div className="text-white/60 text-xs mb-2">
-                        Yerleşim Açıklaması
-                      </div>
-                      <input
-                        type="text"
-                        value={personalizationPlacement}
-                        onChange={(e) =>
-                          setPersonalizationPlacement(e.target.value)
-                        }
-                        placeholder="Örn: Sol göğüs, sağ kol, arka..."
-                        className="w-full px-4 py-3 bg-white/5 border border-white/20 text-white text-sm rounded-none focus:outline-none focus:border-white/40 focus:bg-white/10 transition-all placeholder-white/50"
-                      />
-                    </div>
-                  )}
-
-                  {/* Personalization Info */}
-                  {personalizationMethod !== "none" && (
-                    <div className="bg-white/5 border border-white/10 rounded-none p-3">
-                      <div className="text-white/60 text-xs mb-1">
-                        Kişiselleştirme Bilgileri
-                      </div>
-                      <div className="text-white/80 text-xs">
-                        • Harfler yaklaşık 1 cm boyutunda olacak
-                        <br />•{" "}
-                        {personalizationMethod === "printed"
-                          ? "Baskı"
-                          : "İşleme"}{" "}
-                        tekniği kullanılacak
-                        <br />• Font: {personalizationFont}
-                        <br />• Renk: {personalizationColor}
-                        <br />• Ek ücret: €
-                        {personalizationMethod === "printed" ? "7.50" : "10"}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Gift Package Option */}
-            <div className="space-y-2 sm:space-y-4">
-              <div>
-                <div className="text-white/80 text-sm mb-2 sm:mb-3 font-medium">
-                  Hediye Paketi
-                </div>
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="checkbox"
-                      id="giftPackage"
-                      checked={giftPackage}
-                      onChange={(e) => setGiftPackage(e.target.checked)}
-                      className="w-4 h-4 text-white bg-white/5 border-white/20 rounded-none focus:ring-white/20 focus:ring-2"
-                    />
-                    <label
-                      htmlFor="giftPackage"
-                      className="text-white/80 text-sm cursor-pointer"
-                    >
-                      Özel hediye paketi
-                    </label>
-                  </div>
-
-                  {giftPackage && (
-                    <div className="bg-white/5 border border-white/10 rounded-none p-4">
-                      <div className="text-white/60 text-xs mb-2 font-medium">
-                        Hediye Paketi İçeriği
-                      </div>
-                      <div className="text-white/80 text-xs space-y-1">
-                        <div>• Özel tasarım hediye kutusu</div>
-                        <div>• 1 Loki lokum</div>
-                        <div>• Eyup Sabri Tuncer ıslak mendil</div>
-                        <div>• Özel ambalaj ve kurdele</div>
-                        <div>• Hediye mesajı ekleme imkanı</div>
-                      </div>
-                      <div className="text-white/60 text-xs mt-3">
-                        Mükemmel hediye deneyimi için özel olarak hazırlanır
-                      </div>
-
-                      {/* Gift Message Input */}
-                      <div className="mt-4">
-                        <div className="text-white/60 text-xs mb-2">
-                          Hediye Mesajı (Opsiyonel)
-                        </div>
-                        <textarea
-                          value={giftMessage}
-                          onChange={(e) => setGiftMessage(e.target.value)}
-                          placeholder="Hediye alan kişi için özel mesajınız..."
-                          className="w-full px-4 py-3 bg-white/5 border border-white/20 text-white text-sm rounded-none focus:outline-none focus:border-white/40 focus:bg-white/10 transition-all placeholder-white/50 resize-none"
-                          rows={3}
-                          maxLength={100}
-                        />
-                        <div className="text-white/40 text-xs mt-1">
-                          {giftMessage.length}/100 karakter
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Add to Cart Button */}
-            <button
-              ref={buttonRef}
-              onClick={() => {
-                if (!selectedColor || !selectedSize) {
-                  alert("Lütfen hem renk hem de beden seçin");
-                  return;
-                }
-                if (
-                  personalizationMethod !== "none" &&
-                  (!personalizationText.trim() ||
-                    !personalizationPlacement.trim())
-                ) {
-                  alert(
-                    "Kişiselleştirme için metin ve yerleşim açıklaması gereklidir"
-                  );
-                  return;
-                }
-                addItem({
-                  slug: product.slug,
-                  city: product.city,
-                  color: selectedColor,
-                  size: selectedSize,
-                  productType: selectedProductType,
-                  price: totalPrice * 100, // Convert to cents
-                  image: getImagesForSlug(
-                    product.slug,
-                    selectedColor,
-                    selectedProductType
-                  )[0],
-                  quantity: 1,
-                  personalization:
-                    personalizationMethod !== "none"
-                      ? {
-                          method: personalizationMethod,
-                          text: personalizationText,
-                          placement: personalizationPlacement,
-                          font: personalizationFont,
-                          color: personalizationColor,
-                          cost: personalizationCost,
-                        }
-                      : undefined,
-                  giftPackage: giftPackage
-                    ? {
-                        included: true,
-                        cost: giftPackageCost,
-                        message: giftMessage,
-                      }
-                    : undefined,
-                });
-              }}
-              disabled={
-                !selectedColor ||
-                !selectedSize ||
-                (personalizationMethod !== "none" &&
-                  (!personalizationText.trim() ||
-                    !personalizationPlacement.trim()))
-              }
-              className="w-full py-4 bg-white text-black font-medium tracking-wider uppercase text-sm transition-all duration-300 hover:bg-white/90 rounded-none disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Sepete Ekle
-            </button>
-
-            {/* Production & Shipping Notice */}
-            <p className="text-white/60 text-xs text-center">
-              Şimdi sipariş ver, 3 gün içinde üretilir ve kargoya verilir
-            </p>
-
-            {/* Bundle Offers */}
-            <div className="bg-black border border-white/10 rounded-none p-4 mt-4">
-              <div className="text-white font-medium text-sm mb-2">
-                Özel Paket Fırsatları
-              </div>
-              <div className="space-y-1.5 text-xs text-white/80">
+              <div className="mt-6 space-y-6">
+                {/* Product type */}
                 <div>
-                  • Telefon Kılıfı + Tişört al, tişörtte{" "}
-                  <span className="text-white font-medium">-€5</span> indirim{" "}
-                  <Link
-                    href="/phone-case/kilim"
-                    className="text-white underline underline-offset-1 hover:text-white/70 transition-colors border-b border-white"
-                  >
-                    → Telefon kılıflarını gör
-                  </Link>
+                  <OptionLabel label={t.productType} value={common.productTypes[selectedProductType]} />
+                  <div className="flex flex-wrap gap-2">
+                    {(["tshirt", "hoodie", "sweater"] as const).map((type) => (
+                      <OptionBox
+                        key={type}
+                        selected={selectedProductType === type}
+                        onClick={() => setSelectedProductType(type)}
+                      >
+                        {common.productTypes[type]}
+                        {type !== "tshirt" && <span className="ml-1.5 text-subdued">+{price(20)}</span>}
+                      </OptionBox>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            {/* Matching Product Feature */}
-            {(slug === "sibel_to_my_recep" || slug === "recep_to_my_sibel") && (
-              <div className="bg-white/5 border border-white/10 rounded-none p-4 mt-4">
-                <div className="text-white/80 text-sm font-medium mb-3">
-                  Eşleşen Ürün
+                {/* Color */}
+                <div>
+                  <OptionLabel label={common.color} value={common.colors[selectedColor] ?? selectedColor} />
+                  <div className="-ml-1 flex gap-2">
+                    {product.colors.map((c) => (
+                      <Swatch
+                        key={c}
+                        color={c}
+                        label={common.colors[c] ?? c}
+                        selected={selectedColor === c}
+                        onClick={() => setSelectedColor(c)}
+                      />
+                    ))}
+                  </div>
                 </div>
-                <Link
-                  href={`/product/${
-                    slug === "sibel_to_my_recep"
-                      ? "recep_to_my_sibel"
-                      : "sibel_to_my_recep"
-                  }`}
-                  className="block group"
+
+                {/* Size */}
+                <div>
+                  <OptionLabel label={common.size} value={selectedSize} />
+                  <div className="flex flex-wrap gap-2">
+                    {product.sizes.map((s) => (
+                      <OptionBox key={s} selected={selectedSize === s} onClick={() => setSelectedSize(s)}>
+                        {s}
+                      </OptionBox>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Personalization */}
+                <Panel
+                  active={personalizationMethod !== "none"}
+                  open={personalizationVisible}
+                  onToggle={
+                    personalizationMethod === "none" ? () => setPersonalizationOpen((o) => !o) : undefined
+                  }
+                  header={
+                    <span className="flex items-baseline justify-between gap-3">
+                      <span className="sub text-ink">{t.personalization}</span>
+                      <span className="sub-xs text-subdued">
+                        {personalizationMethod === "none"
+                          ? `+${price(7.5)} / +${price(10)}`
+                          : `${common.personalization[personalizationMethod]} +${price(personalizationCost)}`}
+                      </span>
+                    </span>
+                  }
                 >
-                  {(() => {
-                    const matchingSlug =
-                      slug === "sibel_to_my_recep"
-                        ? "recep_to_my_sibel"
-                        : "sibel_to_my_recep";
-                    const matchingProduct = getProductBySlug(matchingSlug);
-                    if (!matchingProduct) return null;
-                    return (
-                      <div className="flex items-center gap-4">
-                        <div className="relative w-20 h-20 flex-shrink-0">
-                          <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-white/10 rounded-none blur-sm" />
-                          <Image
-                            src={matchingProduct.image}
-                            alt={matchingProduct.city}
-                            fill
-                            className="object-contain transition-transform duration-300 relative z-10 group-hover:scale-105"
+                  <div className="space-y-5">
+                    <div>
+                      <FieldLabel>{t.personalizationType}</FieldLabel>
+                      <div className="flex flex-wrap gap-2">
+                        <OptionBox
+                          selected={personalizationMethod === "none"}
+                          onClick={() => setPersonalizationMethod("none")}
+                        >
+                          {t.none}
+                        </OptionBox>
+                        <OptionBox
+                          selected={personalizationMethod === "printed"}
+                          onClick={() => setPersonalizationMethod("printed")}
+                        >
+                          {common.personalization.printed}
+                          <span className="ml-1.5 text-subdued">+{price(7.5)}</span>
+                        </OptionBox>
+                        <OptionBox
+                          selected={personalizationMethod === "embroidered"}
+                          onClick={() => setPersonalizationMethod("embroidered")}
+                        >
+                          {common.personalization.embroidered}
+                          <span className="ml-1.5 text-subdued">+{price(10)}</span>
+                        </OptionBox>
+                      </div>
+                    </div>
+
+                    {personalizationMethod !== "none" && (
+                      <>
+                        <div>
+                          <FieldLabel htmlFor="pdp-personalization-text">{t.textLabel}</FieldLabel>
+                          <input
+                            id="pdp-personalization-text"
+                            type="text"
+                            value={personalizationText}
+                            onChange={(e) => setPersonalizationText(e.target.value.slice(0, 20))}
+                            placeholder={t.textPlaceholder}
+                            className="storefront-input text-[14px] outline-none placeholder:text-subdued"
+                          />
+                          <p className="mt-1 text-[12px] text-subdued">
+                            {t.charCount(personalizationText.length, 20)}
+                          </p>
+                        </div>
+
+                        <div>
+                          <FieldLabel>{t.fontLabel}</FieldLabel>
+                          <div className="flex flex-wrap gap-2">
+                            {FONTS.map((f) => (
+                              <OptionBox
+                                key={f.name}
+                                selected={personalizationFont === f.name}
+                                onClick={() => setPersonalizationFont(f.name)}
+                                className="!normal-case !tracking-normal"
+                                style={{ fontFamily: f.font }}
+                              >
+                                {t.fontNames[f.name] ?? f.name}
+                              </OptionBox>
+                            ))}
+                          </div>
+                          {personalizationText && (
+                            <div className="mt-3">
+                              <FieldLabel>{t.preview}</FieldLabel>
+                              <div
+                                className="border border-line p-3 text-center"
+                                style={{ fontFamily, fontSize: "16px", color: personalizationColor }}
+                              >
+                                {personalizationText}
+                              </div>
+                              <p className="mt-1 text-center text-[12px] text-subdued">{t.previewHeight}</p>
+                            </div>
+                          )}
+                        </div>
+
+                        <div>
+                          <FieldLabel htmlFor="pdp-personalization-color">{t.colorLabel}</FieldLabel>
+                          <div className="flex items-center gap-3">
+                            <input
+                              id="pdp-personalization-color"
+                              type="color"
+                              value={personalizationColor}
+                              onChange={(e) => setPersonalizationColor(e.target.value)}
+                              className="h-10 w-12 cursor-pointer border border-line bg-paper p-0.5"
+                            />
+                            <span className="sub-xs text-ink">{personalizationColor}</span>
+                          </div>
+                        </div>
+
+                        <div>
+                          <FieldLabel htmlFor="pdp-personalization-placement">{t.placementLabel}</FieldLabel>
+                          <input
+                            id="pdp-personalization-placement"
+                            type="text"
+                            value={personalizationPlacement}
+                            onChange={(e) => setPersonalizationPlacement(e.target.value)}
+                            placeholder={t.placementPlaceholder}
+                            className="storefront-input text-[14px] outline-none placeholder:text-subdued"
                           />
                         </div>
-                        <div className="flex-1">
-                          <div className="text-white text-sm font-medium mb-1 group-hover:text-white/80 transition-colors">
-                            {matchingProduct.city}
-                          </div>
-                          <div className="text-white/60 text-xs mb-2">
-                            Eşleşen ürünü görüntüle →
-                          </div>
-                          <div className="text-white/80 text-sm">
-                            €{getPriceForSlug(matchingSlug)}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })()}
-                </Link>
-              </div>
-            )}
 
-            {/* TikTok Link */}
-            <Link
-              href="https://tiktok.com/@grbt.studio"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block bg-white/5 border border-white/10 rounded-none p-4 hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer"
-            >
-              <div className="flex items-center gap-3">
-                <svg
-                  className="w-5 h-5 text-white flex-shrink-0"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
+                        <div className="border border-line p-3">
+                          <p className="sub-xs mb-2 text-subdued">{t.infoTitle}</p>
+                          <ul className="space-y-1 text-[12px] leading-relaxed text-ink">
+                            <li>{t.infoLetterSize}</li>
+                            <li>{t.infoTechnique(personalizationMethod)}</li>
+                            <li>
+                              {t.infoFont}: {t.fontNames[personalizationFont] ?? personalizationFont}
+                            </li>
+                            <li>
+                              {common.color}: {personalizationColor}
+                            </li>
+                            <li>
+                              {t.infoExtraCost}: {price(personalizationCost)}
+                            </li>
+                          </ul>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </Panel>
+
+                {/* Gift package */}
+                <Panel
+                  active={giftPackage}
+                  open={giftPackage}
+                  header={
+                    <label htmlFor="giftPackage" className="flex cursor-pointer items-center gap-3">
+                      <input
+                        type="checkbox"
+                        id="giftPackage"
+                        checked={giftPackage}
+                        onChange={(e) => setGiftPackage(e.target.checked)}
+                        className="peer sr-only"
+                      />
+                      <CheckSquare checked={giftPackage} />
+                      <span className="sub flex-1 text-ink">{t.giftCheckbox}</span>
+                      <span className="sub-xs text-subdued">+{price(5)}</span>
+                    </label>
+                  }
                 >
+                  <p className="sub-xs mb-2 text-subdued">{t.giftContentsTitle}</p>
+                  <ul className="list-disc space-y-1 pl-4 text-[12px] leading-relaxed text-ink">
+                    {t.giftContents.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                  <p className="mt-3 text-[12px] text-subdued">{t.giftPrepared}</p>
+                  <div className="mt-4">
+                    <FieldLabel htmlFor="pdp-gift-message">{t.giftMessageLabel}</FieldLabel>
+                    <textarea
+                      id="pdp-gift-message"
+                      value={giftMessage}
+                      onChange={(e) => setGiftMessage(e.target.value)}
+                      placeholder={t.giftMessagePlaceholder}
+                      className="storefront-input resize-none text-[14px] outline-none placeholder:text-subdued"
+                      style={{ height: "auto" }}
+                      rows={3}
+                      maxLength={100}
+                    />
+                    <p className="mt-1 text-[12px] text-subdued">{t.charCount(giftMessage.length, 100)}</p>
+                  </div>
+                </Panel>
+
+                {/* Memleket family discount (real cart rule: 2 items -€5, 3+ items -€10) */}
+                {isMemleket && (
+                  <div>
+                    <div className="flex items-center gap-4">
+                      <span className="h-px flex-1 bg-ink" />
+                      <span className="sub text-ink">{t.family.title}</span>
+                      <span className="h-px flex-1 bg-ink" />
+                    </div>
+                    <div className="mt-3 border border-line">
+                      <div className="flex items-center justify-between gap-4 px-4 py-3">
+                        <span className="sub text-ink">{t.family.twoItems}</span>
+                        <span className="sub text-ink">−{price(5)}</span>
+                      </div>
+                      <div className="flex items-center justify-between gap-4 border-t border-line px-4 py-3">
+                        <span className="sub text-ink">{t.family.threeItems}</span>
+                        <span className="sub text-ink">−{price(10)}</span>
+                      </div>
+                    </div>
+                    <p className="mt-2 text-[12px] text-subdued">{t.family.note}</p>
+                  </div>
+                )}
+
+                {/* Add to cart */}
+                <div>
+                  <button
+                    ref={buttonRef}
+                    type="button"
+                    onClick={handleAddToCart}
+                    disabled={cannotAdd}
+                    className="btn btn-ink w-full disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {common.addToCart}
+                  </button>
+                  <p className="sub-xs mt-3 text-center text-subdued">{t.productionNotice}</p>
+                </div>
+
+                {/* Matching product (Sinema couple shirts) */}
+                {matchingSlug && matchingProduct && (
+                  <Link
+                    href={`/product/${matchingSlug}`}
+                    className="group flex items-center gap-4 border border-line p-3 transition-colors hover:border-ink"
+                  >
+                    <div className="relative h-20 w-20 shrink-0">
+                      <Image
+                        src={matchingProduct.image}
+                        alt={matchingProduct.city}
+                        fill
+                        sizes="80px"
+                        className="object-contain"
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="sub-xs text-subdued">{t.matchingTitle}</p>
+                      <p className="sub mt-0.5 text-ink">{matchingProduct.city}</p>
+                      <p className="sub-xs mt-0.5 text-subdued">{price(getPriceForSlug(matchingSlug))}</p>
+                      <p className="sub-xs mt-2 text-ink underline underline-offset-4">{t.matchingView}</p>
+                    </div>
+                  </Link>
+                )}
+              </div>
+
+              <ProductDetails product={product} isMemleket={isMemleket} />
+
+              <a
+                href="https://tiktok.com/@egrikuyu.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-6 flex items-center gap-3 text-ink"
+              >
+                <svg className="h-4 w-4 shrink-0" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
                   <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
                 </svg>
-                <div className="flex-1">
-                  <div className="text-white text-xs font-medium mb-1">
-                    Daha fazla görsel ve video için TikTok'u ziyaret edin
-                  </div>
-                  <div className="text-white/80 hover:text-white text-xs font-medium underline">
-                    @grbt.studio →
-                  </div>
-                </div>
-              </div>
-            </Link>
-
-            {/* Product Specifications */}
-            <div className="space-y-4 py-6 border-t border-white/10">
-              <div className="text-center">
-                <h3 className="text-white font-medium text-sm mb-4 font-serif">
-                  ÜRÜN ÖZELLİKLERİ
-                </h3>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 text-center">
-                <div>
-                  <div className="text-white/60 text-xs mb-1">Kumaş</div>
-                  <div className="text-white text-sm font-medium">
-                    %100 Pamuk
-                  </div>
-                  <div className="text-white/50 text-xs">240 g/m²</div>
-                </div>
-                <div>
-                  <div className="text-white/60 text-xs mb-1">Kesim</div>
-                  <div className="text-white text-sm font-medium">
-                    Normal Kesim
-                  </div>
-                  <div className="text-white/50 text-xs">Rahat Fit</div>
-                </div>
-                <div>
-                  <div className="text-white/60 text-xs mb-1">Baskı</div>
-                  <div className="text-white text-sm font-medium">
-                    El Baskısı
-                  </div>
-                  <div className="text-white/50 text-xs">Hassas Teknik</div>
-                </div>
-                <div>
-                  <div className="text-white/60 text-xs mb-1">Üretim</div>
-                  <div className="text-white text-sm font-medium">Hollanda</div>
-                  <div className="text-white/50 text-xs">Modern Atölye</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Donation Info - Only for Memleket Collection */}
-            {memleketSlugs.includes(product.slug) && (
-              <div className="bg-white/5 border border-white/10 rounded-none p-4 mt-6">
-                <div className="text-center">
-                  <div className="text-white/60 text-xs mb-2">
-                    SOSYAL SORUMLULUK
-                  </div>
-                  <div className="text-white/80 text-sm">
-                    {product.donation.organization}
-                  </div>
-                  {product.donation.link && (
-                    <div className="mt-3">
-                      <a
-                        href={product.donation.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 border border-white/20 text-white text-sm hover:bg-white/20 transition-colors rounded-none"
-                      >
-                        <span>Kurumu Ziyaret Et</span>
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                          />
-                        </svg>
-                      </a>
-                    </div>
-                  )}
-                  <div className="text-white/50 text-xs mt-2">
-                    Hayvan dostlarımız için birlikte çalışıyoruz
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Family Offer - Only for Memleket Collection */}
-          {memleketSlugs.includes(product.slug) && (
-            <div className="lg:col-span-2">
-              <FamilyOffer />
-            </div>
-          )}
-        </div>
-
-        {/* City Information Section - Only for Memleket Collection */}
-        {product.cityInfo && (
-          <div className="mt-16">
-            <div className="bg-white/5 border border-white/10 rounded-none p-8">
-              <h3 className="text-white font-light text-xl mb-6">
-                {product.city} Hakkında
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div>
-                  <h4 className="text-white font-medium text-sm mb-3">
-                    Şehir Bilgileri
-                  </h4>
-                  <p className="text-white/70 text-sm leading-relaxed">
-                    {product.cityInfo.general}
-                  </p>
-                </div>
-                <div>
-                  <h4 className="text-white font-medium text-sm mb-3">
-                    Kültürel Değerler
-                  </h4>
-                  <p className="text-white/70 text-sm leading-relaxed">
-                    {product.cityInfo.culture}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Specifications */}
-        <div className="mt-12">
-          <h3 className="text-white font-light text-xl mb-8">Özellikler</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white/5 border border-white/10 rounded-none p-6">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-2 h-2 bg-white rounded-full"></div>
-                <span className="text-white font-medium text-sm">Malzeme</span>
-              </div>
-              <p className="text-white/80 text-sm">
-                %100 Premium Pamuk - 240 GSM
-              </p>
-            </div>
-
-            <div className="bg-white/5 border border-white/10 rounded-none p-6">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-2 h-2 bg-white rounded-full"></div>
-                <span className="text-white font-medium text-sm">
-                  Tasarım & Baskı
-                </span>
-              </div>
-              <p className="text-white/80 text-sm">
-                Hollanda'da tasarlanıp el baskısı ile üretildi
-              </p>
-            </div>
-
-            <div className="bg-white/5 border border-white/10 rounded-none p-6">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-2 h-2 bg-white rounded-full"></div>
-                <span className="text-white font-medium text-sm">Kalite</span>
-              </div>
-              <p className="text-white/80 text-sm">
-                Premium malzemeler ve kaliteli işçilik
-              </p>
-            </div>
-
-            <div className="bg-white/5 border border-white/10 rounded-none p-6">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-2 h-2 bg-white rounded-full"></div>
-                <span className="text-white font-medium text-sm">Kesim</span>
-              </div>
-              <p className="text-white/80 text-sm">Rahat ve modern kesim</p>
+                <span className="sub-xs text-subdued">{t.tiktok}</span>
+                <span className="sub-xs link-reveal">@egrikuyu.com</span>
+              </a>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Sticky Add to Cart Button */}
+      <ImageBand slug={product.slug} city={product.city} />
+      <RelatedProducts slug={product.slug} />
+
+      {/* Sticky add-to-cart bar (spacer keeps the footer end reachable) */}
+      {showStickyButton && <div aria-hidden className="h-[72px]" />}
       {showStickyButton && (
-        <div className="fixed bottom-0 left-0 right-0 bg-black/95 backdrop-blur border-t border-white/10 p-4 z-50">
-          <div className="max-w-6xl mx-auto flex items-center gap-4">
-            <div className="flex-1">
-              <div className="text-white text-sm font-medium">
-                {product.city.toUpperCase()} - €{totalPrice}
-              </div>
-              <div className="text-white/60 text-xs">
-                <span className="font-bold text-[10px]">
-                  {selectedProductType === "hoodie"
-                    ? "Hoodie"
-                    : selectedProductType === "sweater"
-                    ? "Sweater"
-                    : "Tişört"}
-                </span>{" "}
-                •{" "}
-                <span className="font-bold uppercase tracking-wider text-[10px]">
-                  {selectedColor}
-                </span>{" "}
-                • <span className="font-bold text-[10px]">{selectedSize}</span>
-                {personalizationMethod !== "none" && (
-                  <>
-                    {" "}
-                    •{" "}
-                    <span className="font-bold text-[10px]">
-                      {personalizationMethod === "printed" ? "Baskı" : "İşleme"}
-                    </span>
-                  </>
-                )}
-                {giftPackage && (
-                  <>
-                    {" "}
-                    •{" "}
-                    <span className="font-bold text-[10px]">
-                      🎁 Hediye Paketi
-                    </span>
-                  </>
-                )}
-              </div>
+        <div className="fixed inset-x-0 bottom-0 z-50 border-t border-line bg-paper">
+          <div className="mx-auto flex max-w-[1440px] items-center gap-4 px-4 py-3 sm:px-8 lg:px-12">
+            <div className="relative hidden h-12 w-12 shrink-0 sm:block">
+              <Image src={images[0]} alt="" fill sizes="48px" className="object-contain" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="sub truncate text-ink">{product.city}</p>
+              <p className="sub-xs truncate text-subdued">
+                {[
+                  price(totalPrice),
+                  common.productTypes[selectedProductType],
+                  common.colors[selectedColor] ?? selectedColor,
+                  selectedSize,
+                  personalizationMethod !== "none" ? common.personalization[personalizationMethod] : null,
+                  giftPackage ? common.giftPackage : null,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </p>
             </div>
             <button
-              onClick={() => {
-                if (!selectedColor || !selectedSize) {
-                  alert("Lütfen hem renk hem de beden seçin");
-                  return;
-                }
-                if (
-                  personalizationMethod !== "none" &&
-                  (!personalizationText.trim() ||
-                    !personalizationPlacement.trim())
-                ) {
-                  alert(
-                    "Kişiselleştirme için metin ve yerleşim açıklaması gereklidir"
-                  );
-                  return;
-                }
-                addItem({
-                  slug: product.slug,
-                  city: product.city,
-                  color: selectedColor,
-                  size: selectedSize,
-                  productType: selectedProductType,
-                  price: totalPrice * 100, // Convert to cents
-                  image: getImagesForSlug(
-                    product.slug,
-                    selectedColor,
-                    selectedProductType
-                  )[0],
-                  quantity: 1,
-                  personalization:
-                    personalizationMethod !== "none"
-                      ? {
-                          method: personalizationMethod,
-                          text: personalizationText,
-                          placement: personalizationPlacement,
-                          font: personalizationFont,
-                          color: personalizationColor,
-                          cost: personalizationCost,
-                        }
-                      : undefined,
-                  giftPackage: giftPackage
-                    ? {
-                        included: true,
-                        cost: giftPackageCost,
-                        message: giftMessage,
-                      }
-                    : undefined,
-                });
-              }}
-              disabled={
-                !selectedColor ||
-                !selectedSize ||
-                (personalizationMethod !== "none" &&
-                  (!personalizationText.trim() ||
-                    !personalizationPlacement.trim()))
-              }
-              className="px-6 py-3 bg-white text-black font-medium tracking-wider uppercase text-sm transition-all duration-300 hover:bg-white/90 rounded-none disabled:opacity-50 disabled:cursor-not-allowed"
+              type="button"
+              onClick={handleAddToCart}
+              disabled={cannotAdd}
+              className="btn btn-ink shrink-0 px-5 disabled:cursor-not-allowed disabled:opacity-50 sm:px-10"
             >
-              Sepete Ekle
+              {common.addToCart}
             </button>
           </div>
         </div>
-      )}
-
-      {/* Factory Section */}
-      <div className="py-20 px-4 sm:px-8 bg-white/5">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-light mb-6 text-white font-serif">
-              ÜRETİM SÜRECİMİZ
-            </h2>
-            <p className="text-white/70 text-lg max-w-3xl mx-auto">
-              Her ürünümüz, Hollanda'daki atölyemizde özenle tasarlanıp
-              üretilir. Kalite ve sürdürülebilirlik bizim önceliğimizdir.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="relative aspect-square mb-6">
-                <Image
-                  src="/media/showcase2.png"
-                  alt="Tasarım Süreci"
-                  fill
-                  className="object-cover rounded-none"
-                />
-              </div>
-              <h3 className="text-xl font-light mb-4 text-white font-serif">
-                01. TASARIM
-              </h3>
-              <p className="text-white/70 text-sm leading-relaxed">
-                Her şehir için özel olarak tasarlanan motifler ve desenler,
-                kültürel öğelerden ilham alınarak oluşturulur.
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="relative aspect-square mb-6">
-                <Image
-                  src="/media/factory.png"
-                  alt="Hollanda Atölyesi"
-                  fill
-                  className="object-cover rounded-none"
-                />
-              </div>
-              <h3 className="text-xl font-light mb-4 text-white font-serif">
-                02. ÜRETİM
-              </h3>
-              <p className="text-white/70 text-sm leading-relaxed">
-                Hollanda'daki modern atölyemizde, premium kalitede pamuklu
-                kumaşlar üzerine hassas baskı teknikleri uygulanır.
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="relative aspect-square mb-6">
-                <Image
-                  src="/media/showcase4.png"
-                  alt="Kalite Kontrol"
-                  fill
-                  className="object-cover rounded-none"
-                />
-              </div>
-              <h3 className="text-xl font-light mb-4 text-white font-serif">
-                03. KALİTE
-              </h3>
-              <p className="text-white/70 text-sm leading-relaxed">
-                Her ürün, titiz kalite kontrolünden geçer. Dayanıklılık ve
-                konfor standartlarımızı karşılamayan ürünler üretimden
-                çıkarılır.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Trust Signals */}
-      <TrustSignals />
-
-      {/* FAQ Section */}
-      <FAQ />
-
-      {/* Newsletter Signup */}
-      <div className="py-16 px-4">
-        <div className="max-w-4xl mx-auto">
-          <NewsletterSignup />
-        </div>
-      </div>
-
-      {/* Random Collection Section */}
-      <div className="py-20 px-4 sm:px-8">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-light text-white mb-4 font-serif">
-              Diğer Ürünleri Keşfedin
-            </h2>
-            <p className="text-white/60 text-lg max-w-2xl mx-auto">
-              Koleksiyonumuzdan daha fazla şehir ve tasarım keşfedin
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {randomProducts.map((p) => (
-              <ProductCard key={p.slug} product={p} />
-            ))}
-          </div>
-
-          <div className="text-center mt-12">
-            <Link
-              href="/"
-              className="inline-block px-8 py-4 font-medium tracking-wider uppercase text-sm transition-all duration-300 bg-white text-black hover:bg-white/90 rounded-none"
-              style={{
-                backgroundColor: "var(--white)",
-                color: "var(--black)",
-              }}
-            >
-              Tüm Koleksiyonları Gör
-            </Link>
-          </div>
-        </div>
-      </div>
-
-      {/* Social Links */}
-      <SocialLinks />
-
-      {/* Scroll to Top Button - Mobile Only */}
-      {showScrollToTop && (
-        <button
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="fixed bottom-20 right-4 sm:hidden w-12 h-12 bg-white/10 backdrop-blur-sm border border-white/20 rounded-none flex items-center justify-center text-black hover:bg-white/20 transition-colors z-40"
-        >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M5 10l7-7m0 0l7 7m-7-7v18"
-            />
-          </svg>
-        </button>
       )}
     </div>
   );

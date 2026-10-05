@@ -1,3 +1,6 @@
+import type { Locale } from "@/i18n/config";
+import paymentMethodMessages from "@/i18n/messages/paymentMethods";
+
 export type PaymentMethod = {
     id: string;
     name: string;
@@ -45,10 +48,19 @@ export const paymentMethods: PaymentMethod[] = [
     }
 ];
 
-export function getPaymentMethod(id: string): PaymentMethod | undefined {
-    return paymentMethods.find(method => method.id === id);
+// Without a locale the original (English) labels are returned
+function localizePaymentMethod(method: PaymentMethod, locale?: Locale): PaymentMethod {
+    if (!locale) return method;
+    const labels = paymentMethodMessages[locale][method.id];
+    if (!labels) return method;
+    return { ...method, name: labels.name, description: labels.description };
 }
 
-export function getAllPaymentMethods(): PaymentMethod[] {
-    return paymentMethods;
+export function getPaymentMethod(id: string, locale?: Locale): PaymentMethod | undefined {
+    const method = paymentMethods.find(method => method.id === id);
+    return method ? localizePaymentMethod(method, locale) : undefined;
+}
+
+export function getAllPaymentMethods(locale?: Locale): PaymentMethod[] {
+    return paymentMethods.map(method => localizePaymentMethod(method, locale));
 }

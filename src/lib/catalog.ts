@@ -1,3 +1,15 @@
+import type { Locale } from "@/i18n/config";
+import type { CatalogTranslations } from "@/i18n/catalog/types";
+import enProducts from "@/i18n/catalog/en";
+import deProducts from "@/i18n/catalog/de";
+import frProducts from "@/i18n/catalog/fr";
+
+const translatedProducts: Record<Exclude<Locale, "tr">, CatalogTranslations> = {
+    en: enProducts,
+    de: deProducts,
+    fr: frProducts,
+};
+
 export type Product = {
     slug: string;
     city: string;
@@ -174,10 +186,11 @@ export function getImagesForSlug(slug: string, color: string = "siyah", productT
             ];
         }
 
-        // Memleket collection uses examples folder
+        // Memleket: generated per design (scripts/generate-mockups.mjs)
+        const colorFolder = color === "beyaz" ? "beyaz" : "siyah";
         return [
-            `/products/collections/memleket/examples/${productKey}_${colorKey}_front.png`,
-            `/products/collections/memleket/examples/${productKey}_${colorKey}_back.png`,
+            `/products/collections/memleket/${slug}/${colorFolder}/${productKey}_front.png`,
+            `/products/collections/memleket/${slug}/${colorFolder}/${productKey}_back.png`,
         ];
     }
 
@@ -241,7 +254,7 @@ const productData: Record<string, {
         description: "Afyon'un tarihi dokusu ve termal kaynaklarıyla ünlü şehrinin ruhunu yansıtan tasarım. Geleneksel mimari ve doğal güzelliklerin buluşması.",
         donation: {
             percentage: 5,
-            organization: "Bu tişörtten elde edilen kârın %5'i Afyon'daki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+            organization: "Bu tişörtten elde edilen kârın %5'i Afyon'daki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@egrikuyu.com"
         },
         designOrigin: "Afyon Kalesi ve termal kaynaklar",
         cityInfo: {
@@ -253,7 +266,7 @@ const productData: Record<string, {
         description: "Aksaray'ın zengin tarihi ve kültürel mirasını taşıyan tasarım. Kapadokya'nın kapısı olan bu şehrin büyüleyici atmosferi.",
         donation: {
             percentage: 5,
-            organization: "Bu tişörtten elde edilen kârın %5'i Aksaray'daki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+            organization: "Bu tişörtten elde edilen kârın %5'i Aksaray'daki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@egrikuyu.com"
         },
         designOrigin: "Aksaray Ulu Camii ve tarihi çarşı",
         cityInfo: {
@@ -265,7 +278,7 @@ const productData: Record<string, {
         description: "Ardahan'ın soğuk ama sıcak kalpli atmosferini yansıtan tasarım. Doğu Anadolu'nun eşsiz doğası ve kültürel zenginliği.",
         donation: {
             percentage: 5,
-            organization: "Bu tişörtten elde edilen kârın %5'i Ardahan'daki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+            organization: "Bu tişörtten elde edilen kârın %5'i Ardahan'daki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@egrikuyu.com"
         },
         designOrigin: "Ardahan Kalesi ve Posof sınır kapısı",
         cityInfo: {
@@ -277,7 +290,7 @@ const productData: Record<string, {
         description: "Gaziantep'in zengin mutfak kültürü ve tarihi dokusunu taşıyan tasarım. Antep fıstığı ve bakır işçiliğinin şehri.",
         donation: {
             percentage: 5,
-            organization: "Bu tişörtten elde edilen kârın %5'i Gaziantep'teki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+            organization: "Bu tişörtten elde edilen kârın %5'i Gaziantep'teki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@egrikuyu.com"
         },
         designOrigin: "Gaziantep Kalesi ve Zeugma mozaikleri",
         cityInfo: {
@@ -289,7 +302,7 @@ const productData: Record<string, {
         description: "Karaman'ın geleneksel Türk kültürünün merkezi olan atmosferini yansıtan tasarım. Yunus Emre'nin şehri.",
         donation: {
             percentage: 5,
-            organization: "Bu tişörtten elde edilen kârın %5'i Karaman'daki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+            organization: "Bu tişörtten elde edilen kârın %5'i Karaman'daki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@egrikuyu.com"
         },
         designOrigin: "Karaman Kalesi ve Yunus Emre Türbesi",
         cityInfo: {
@@ -301,7 +314,7 @@ const productData: Record<string, {
         description: "Kayseri'nin ticaret merkezi olan dinamik atmosferini yansıtan tasarım. Erciyes Dağı ve geleneksel ticaret kültürü.",
         donation: {
             percentage: 5,
-            organization: "Bu tişörtten elde edilen kârın %5'i Kayseri'deki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+            organization: "Bu tişörtten elde edilen kârın %5'i Kayseri'deki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@egrikuyu.com"
         },
         designOrigin: "Erciyes Dağı ve Kayseri Kalesi",
         cityInfo: {
@@ -313,7 +326,7 @@ const productData: Record<string, {
         description: "Konya'nın manevi merkez olan derin kültürünü taşıyan tasarım. Mevlana'nın şehri ve tasavvuf geleneği.",
         donation: {
             percentage: 5,
-            organization: "Bu tişörtten elde edilen kârın %5'i Konya'daki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+            organization: "Bu tişörtten elde edilen kârın %5'i Konya'daki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@egrikuyu.com"
         },
         designOrigin: "Mevlana Türbesi ve Konya Kalesi",
         cityInfo: {
@@ -325,7 +338,7 @@ const productData: Record<string, {
         description: "Nevşehir'in peri bacaları ve Kapadokya'nın büyülü atmosferini yansıtan tasarım. Doğal harikalar ve tarihi dokular.",
         donation: {
             percentage: 5,
-            organization: "Bu tişörtten elde edilen kârın %5'i Nevşehir'deki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+            organization: "Bu tişörtten elde edilen kârın %5'i Nevşehir'deki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@egrikuyu.com"
         },
         designOrigin: "Peri Bacaları ve Kapadokya manzarası",
         cityInfo: {
@@ -337,7 +350,7 @@ const productData: Record<string, {
         description: "Sivas'ın Anadolu'nun kültür başkenti olan zengin tarihini taşıyan tasarım. Selçuklu mimarisi ve geleneksel el sanatları.",
         donation: {
             percentage: 5,
-            organization: "Bu tişörtten elde edilen kârın %5'i Sivas'taki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+            organization: "Bu tişörtten elde edilen kârın %5'i Sivas'taki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@egrikuyu.com"
         },
         designOrigin: "Sivas Kalesi ve Çifte Minareli Medrese",
         cityInfo: {
@@ -349,7 +362,7 @@ const productData: Record<string, {
         description: "Trabzon'un Karadeniz'in incisi olan yeşil doğasını yansıtan tasarım. Uzungöl ve geleneksel Karadeniz kültürü.",
         donation: {
             percentage: 5,
-            organization: "Bu tişörtten elde edilen kârın %5'i Trabzon'daki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+            organization: "Bu tişörtten elde edilen kârın %5'i Trabzon'daki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@egrikuyu.com"
         },
         designOrigin: "Uzungöl ve Trabzon Kalesi",
         cityInfo: {
@@ -361,7 +374,7 @@ const productData: Record<string, {
         description: "Yozgat'ın tarihi dokusu ve geleneksel mimarisini yansıtan tasarım. İç Anadolu'nun kültürel zenginliği.",
         donation: {
             percentage: 5,
-            organization: "Bu tişörtten elde edilen kârın %5'i Yozgat'taki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+            organization: "Bu tişörtten elde edilen kârın %5'i Yozgat'taki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@egrikuyu.com"
         },
         designOrigin: "Yozgat Kalesi ve geleneksel mimari",
         cityInfo: {
@@ -373,7 +386,7 @@ const productData: Record<string, {
         description: "Ankara'nın modern başkent kimliği ile tarihi dokusunu birleştiren tasarım. Atatürk'ün şehri ve Türkiye'nin kalbi.",
         donation: {
             percentage: 5,
-            organization: "Bu tişörtten elde edilen kârın %5'i Ankara'daki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+            organization: "Bu tişörtten elde edilen kârın %5'i Ankara'daki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@egrikuyu.com"
         },
         designOrigin: "Anıtkabir ve Ankara Kalesi",
         cityInfo: {
@@ -385,7 +398,7 @@ const productData: Record<string, {
         description: "Aydın'ın Ege'nin bereketli topraklarını ve antik tarihini yansıtan tasarım. Zeytin ve incir diyarı.",
         donation: {
             percentage: 5,
-            organization: "Bu tişörtten elde edilen kârın %5'i Aydın'daki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+            organization: "Bu tişörtten elde edilen kârın %5'i Aydın'daki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@egrikuyu.com"
         },
         designOrigin: "Efes Antik Kenti ve Ege doğası",
         cityInfo: {
@@ -397,7 +410,7 @@ const productData: Record<string, {
         description: "Gümüşhane'nin dağlık doğasını ve tarihi gümüş madenlerini yansıtan tasarım. Karadeniz'in yükseklerindeki gizli hazine.",
         donation: {
             percentage: 5,
-            organization: "Bu tişörtten elde edilen kârın %5'i Gümüşhane'deki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+            organization: "Bu tişörtten elde edilen kârın %5'i Gümüşhane'deki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@egrikuyu.com"
         },
         designOrigin: "Gümüş madenleri ve dağlık doğa",
         cityInfo: {
@@ -409,7 +422,7 @@ const productData: Record<string, {
         description: "Niğde'nin Kapadokya'nın eşsiz doğasını ve tarihi dokusunu yansıtan tasarım. Peri bacaları ve antik tarih.",
         donation: {
             percentage: 5,
-            organization: "Bu tişörtten elde edilen kârın %5'i Niğde'deki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+            organization: "Bu tişörtten elde edilen kârın %5'i Niğde'deki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@egrikuyu.com"
         },
         designOrigin: "Kapadokya peri bacaları ve Niğde Kalesi",
         cityInfo: {
@@ -421,7 +434,7 @@ const productData: Record<string, {
         description: "Rize'nin çay bahçelerini ve Karadeniz'in yeşil doğasını yansıtan tasarım. Çayın anavatanı ve doğal güzellikler.",
         donation: {
             percentage: 5,
-            organization: "Bu tişörtten elde edilen kârın %5'i Rize'deki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+            organization: "Bu tişörtten elde edilen kârın %5'i Rize'deki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@egrikuyu.com"
         },
         designOrigin: "Çay bahçeleri ve Karadeniz doğası",
         cityInfo: {
@@ -433,7 +446,7 @@ const productData: Record<string, {
         description: "Çorum'un Hitit medeniyetinin kalbi olan tarihi dokusunu yansıtan tasarım. Antik tarih ve geleneksel kültür.",
         donation: {
             percentage: 5,
-            organization: "Bu tişörtten elde edilen kârın %5'i Çorum'daki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+            organization: "Bu tişörtten elde edilen kârın %5'i Çorum'daki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@egrikuyu.com"
         },
         designOrigin: "Hattuşaş ve Hitit medeniyeti",
         cityInfo: {
@@ -445,7 +458,7 @@ const productData: Record<string, {
         description: "Uşak'ın Ege'nin iç kesimlerindeki sakin atmosferini yansıtan tasarım. Geleneksel halı dokumacılığı ve doğal güzellikler.",
         donation: {
             percentage: 5,
-            organization: "Bu tişörtten elde edilen kârın %5'i Uşak'taki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+            organization: "Bu tişörtten elde edilen kârın %5'i Uşak'taki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@egrikuyu.com"
         },
         designOrigin: "Uşak halıları ve geleneksel dokumacılık",
         cityInfo: {
@@ -457,7 +470,7 @@ const productData: Record<string, {
         description: "Kırşehir'in Ahi Evran'ın şehri olan tasavvuf kültürünü yansıtan tasarım. Ahilik geleneği ve manevi değerler.",
         donation: {
             percentage: 5,
-            organization: "Bu tişörtten elde edilen kârın %5'i Kırşehir'deki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+            organization: "Bu tişörtten elde edilen kârın %5'i Kırşehir'deki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@egrikuyu.com"
         },
         designOrigin: "Ahi Evran ve Ahilik geleneği",
         cityInfo: {
@@ -469,7 +482,7 @@ const productData: Record<string, {
         description: "Sakarya'nın Marmara'nın bereketli topraklarını ve doğal güzelliklerini yansıtan tasarım. Sapanca Gölü ve yeşil doğa.",
         donation: {
             percentage: 5,
-            organization: "Bu tişörtten elde edilen kârın %5'i Sakarya'daki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+            organization: "Bu tişörtten elde edilen kârın %5'i Sakarya'daki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@egrikuyu.com"
         },
         designOrigin: "Sapanca Gölü ve Sakarya Nehri",
         cityInfo: {
@@ -481,7 +494,7 @@ const productData: Record<string, {
         description: "Ağrı'nın Türkiye'nin en yüksek dağı olan Ağrı Dağı'nın görkemini yansıtan tasarım. Doğu Anadolu'nun doğal güzellikleri.",
         donation: {
             percentage: 5,
-            organization: "Bu tişörtten elde edilen kârın %5'i Ağrı'daki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+            organization: "Bu tişörtten elde edilen kârın %5'i Ağrı'daki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@egrikuyu.com"
         },
         designOrigin: "Ağrı Dağı ve Doğu Anadolu doğası",
         cityInfo: {
@@ -522,7 +535,7 @@ const productData: Record<string, {
         description: "Türk sinemasından ilham alan 'Devam' repliğini taşıyan özel tasarım.",
         donation: {
             percentage: 5,
-            organization: "Bu tişörtten elde edilen kârın %5'i bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+            organization: "Bu tişörtten elde edilen kârın %5'i bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@egrikuyu.com"
         },
         designOrigin: "Türk sineması"
     },
@@ -530,7 +543,7 @@ const productData: Record<string, {
         description: "Türk sinemasından ilham alan romantik tasarım.",
         donation: {
             percentage: 5,
-            organization: "Bu tişörtten elde edilen kârın %5'i bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+            organization: "Bu tişörtten elde edilen kârın %5'i bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@egrikuyu.com"
         },
         designOrigin: "Türk sineması"
     },
@@ -538,7 +551,7 @@ const productData: Record<string, {
         description: "Türk sinemasından ilham alan özel tasarım.",
         donation: {
             percentage: 5,
-            organization: "Bu tişörtten elde edilen kârın %5'i bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+            organization: "Bu tişörtten elde edilen kârın %5'i bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@egrikuyu.com"
         },
         designOrigin: "Türk sineması"
     },
@@ -546,7 +559,7 @@ const productData: Record<string, {
         description: "Türk sinemasından ilham alan romantik tasarım.",
         donation: {
             percentage: 5,
-            organization: "Bu tişörtten elde edilen kârın %5'i bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+            organization: "Bu tişörtten elde edilen kârın %5'i bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@egrikuyu.com"
         },
         designOrigin: "Türk sineması"
     },
@@ -555,7 +568,7 @@ const productData: Record<string, {
         description: "Denizli'nin zengin tarihi ve kültürel mirasını yansıtan tasarım.",
         donation: {
             percentage: 5,
-            organization: "Bu tişörtten elde edilen kârın %5'i Denizli'deki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+            organization: "Bu tişörtten elde edilen kârın %5'i Denizli'deki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@egrikuyu.com"
         },
         designOrigin: "Denizli'nin tarihi ve kültürel özellikleri"
     },
@@ -563,7 +576,7 @@ const productData: Record<string, {
         description: "Erzurum'un soğuk ama sıcak kalpli atmosferini yansıtan tasarım.",
         donation: {
             percentage: 5,
-            organization: "Bu tişörtten elde edilen kârın %5'i Erzurum'daki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+            organization: "Bu tişörtten elde edilen kârın %5'i Erzurum'daki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@egrikuyu.com"
         },
         designOrigin: "Erzurum'un tarihi ve kültürel özellikleri"
     },
@@ -571,7 +584,7 @@ const productData: Record<string, {
         description: "Giresun'un Karadeniz'in eşsiz güzelliklerini yansıtan tasarım.",
         donation: {
             percentage: 5,
-            organization: "Bu tişörtten elde edilen kârın %5'i Giresun'daki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+            organization: "Bu tişörtten elde edilen kârın %5'i Giresun'daki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@egrikuyu.com"
         },
         designOrigin: "Giresun'un tarihi ve kültürel özellikleri"
     },
@@ -579,7 +592,7 @@ const productData: Record<string, {
         description: "Kahramanmaraş'ın zengin kültürel mirasını yansıtan tasarım.",
         donation: {
             percentage: 5,
-            organization: "Bu tişörtten elde edilen kârın %5'i Kahramanmaraş'taki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+            organization: "Bu tişörtten elde edilen kârın %5'i Kahramanmaraş'taki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@egrikuyu.com"
         },
         designOrigin: "Kahramanmaraş'ın tarihi ve kültürel özellikleri"
     },
@@ -587,7 +600,7 @@ const productData: Record<string, {
         description: "Kars'ın soğuk ama sıcak kalpli atmosferini yansıtan tasarım.",
         donation: {
             percentage: 5,
-            organization: "Bu tişörtten elde edilen kârın %5'i Kars'taki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+            organization: "Bu tişörtten elde edilen kârın %5'i Kars'taki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@egrikuyu.com"
         },
         designOrigin: "Kars'ın tarihi ve kültürel özellikleri"
     },
@@ -595,7 +608,7 @@ const productData: Record<string, {
         description: "Mardin'in eşsiz mimarisi ve kültürel zenginliğini yansıtan tasarım.",
         donation: {
             percentage: 5,
-            organization: "Bu tişörtten elde edilen kârın %5'i Mardin'deki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+            organization: "Bu tişörtten elde edilen kârın %5'i Mardin'deki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@egrikuyu.com"
         },
         designOrigin: "Mardin'in tarihi ve kültürel özellikleri"
     },
@@ -603,7 +616,7 @@ const productData: Record<string, {
         description: "Ordu'nun Karadeniz'in eşsiz güzelliklerini yansıtan tasarım.",
         donation: {
             percentage: 5,
-            organization: "Bu tişörtten elde edilen kârın %5'i Ordu'daki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+            organization: "Bu tişörtten elde edilen kârın %5'i Ordu'daki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@egrikuyu.com"
         },
         designOrigin: "Ordu'nun tarihi ve kültürel özellikleri"
     },
@@ -611,7 +624,7 @@ const productData: Record<string, {
         description: "Samsun'un Karadeniz'in eşsiz güzelliklerini yansıtan tasarım.",
         donation: {
             percentage: 5,
-            organization: "Bu tişörtten elde edilen kârın %5'i Samsun'daki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+            organization: "Bu tişörtten elde edilen kârın %5'i Samsun'daki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@egrikuyu.com"
         },
         designOrigin: "Samsun'un tarihi ve kültürel özellikleri"
     },
@@ -619,7 +632,7 @@ const productData: Record<string, {
         description: "Şanlıurfa'nın zengin tarihi ve kültürel mirasını yansıtan tasarım.",
         donation: {
             percentage: 5,
-            organization: "Bu tişörtten elde edilen kârın %5'i Şanlıurfa'daki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+            organization: "Bu tişörtten elde edilen kârın %5'i Şanlıurfa'daki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@egrikuyu.com"
         },
         designOrigin: "Şanlıurfa'nın tarihi ve kültürel özellikleri"
     },
@@ -627,13 +640,13 @@ const productData: Record<string, {
         description: "Zonguldak'ın Karadeniz'in eşsiz güzelliklerini yansıtan tasarım.",
         donation: {
             percentage: 5,
-            organization: "Bu tişörtten elde edilen kârın %5'i Zonguldak'taki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@grbt.studio"
+            organization: "Bu tişörtten elde edilen kârın %5'i Zonguldak'taki bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@egrikuyu.com"
         },
         designOrigin: "Zonguldak'ın tarihi ve kültürel özellikleri"
     }
 };
 
-export function getProductBySlug(slug: string): Product | undefined {
+export function getProductBySlug(slug: string, locale: Locale = "tr"): Product | undefined {
     // Decode URL-encoded slug
     const decodedSlug = decodeURIComponent(slug);
     if (!memleketSlugs.includes(decodedSlug) && !hasretSlugs.includes(decodedSlug) && !recepIvedikSlugs.includes(decodedSlug)) return undefined;
@@ -646,6 +659,8 @@ export function getProductBySlug(slug: string): Product | undefined {
         return undefined;
     }
 
+    const copy = locale === "tr" ? undefined : translatedProducts[locale][decodedSlug];
+
     return {
         slug: decodedSlug,
         city,
@@ -653,10 +668,10 @@ export function getProductBySlug(slug: string): Product | undefined {
         images,
         colors: getAvailableColors(),
         sizes: ["S", "M", "L", "XL", "XXL"],
-        description: data.description,
-        donation: data.donation,
-        designOrigin: data.designOrigin,
-        cityInfo: data.cityInfo,
+        description: copy?.description ?? data.description,
+        donation: copy ? { ...data.donation, organization: copy.donationText } : data.donation,
+        designOrigin: copy?.designOrigin ?? data.designOrigin,
+        cityInfo: copy ? copy.cityInfo : data.cityInfo,
     };
 }
 

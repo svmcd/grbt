@@ -1,73 +1,87 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { getPriceForSlug } from "@/lib/pricing";
-import {
-  getPrimaryImageForSlug,
-  getProductBySlug,
-  hasretSlugs,
-  recepIvedikSlugs,
-} from "@/lib/catalog";
+import { getImagesForSlug, getPrimaryImageForSlug, getProductBySlug } from "@/lib/catalog";
+import { useFormatPrice, useLocale, useMessages } from "@/i18n/LocaleProvider";
+import commonMessages from "@/i18n/messages/common";
+import cardMessages from "@/i18n/messages/productCard";
+
+const swatchColors: Record<string, string> = {
+  siyah: "#000000",
+  beyaz: "#ffffff",
+};
 
 interface ProductCardProps {
   product: {
     slug: string;
     city: string;
-    image: string;
   };
 }
 
+// Product tile: image (second image on hover), "choose options" bar on hover,
+// then title, price and color dots underneath.
 export function ProductCard({ product }: ProductCardProps) {
-  const [isHovered, setIsHovered] = useState(false);
-  const productData = getProductBySlug(product.slug);
+  const { locale } = useLocale();
+  const common = useMessages(commonMessages);
+  const t = useMessages(cardMessages);
+  const price = useFormatPrice();
+  const productData = getProductBySlug(product.slug, locale);
 
-  // Determine collection name
-  const isHasretCollection = hasretSlugs.includes(product.slug);
-  const isRecepIvedikCollection = recepIvedikSlugs.includes(product.slug);
-  const collectionName = isHasretCollection
-    ? "Hasret Koleksiyonu"
-    : isRecepIvedikCollection
-    ? "Sinema Koleksiyonu"
-    : "Memleket Koleksiyonu";
+  const primary = getPrimaryImageForSlug(product.slug);
+  const secondary = getImagesForSlug(product.slug).find((src) => src !== primary);
+  const colors = productData?.colors ?? ["siyah", "beyaz"];
+  const href = `/product/${product.slug}`;
 
   return (
-    <div className="relative">
-      <Link href={`/product/${product.slug}`} className="group block">
-        {/* Main Image */}
-        <div
-          className="relative aspect-square mb-6"
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-        >
-          <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-white/10 rounded-none blur-sm" />
+    <div className="group relative flex flex-col">
+      <Link href={href} className="relative block aspect-square overflow-hidden bg-paper">
+        <Image
+          src={primary}
+          alt={t.imageAlt(product.city)}
+          fill
+          sizes="(max-width: 699px) 50vw, (max-width: 999px) 33vw, 25vw"
+          className={
+            "object-contain transition-opacity duration-500 " +
+            (secondary ? "group-hover:opacity-0" : "")
+          }
+        />
+        {secondary && (
           <Image
-            src={getPrimaryImageForSlug(product.slug)}
-            alt={`Memleket ${product.city}`}
+            src={secondary}
+            alt=""
+            aria-hidden
             fill
-            className={`object-contain transition-transform duration-500 relative z-10 ${
-              isHovered ? "scale-105" : "scale-100"
-            }`}
+            sizes="(max-width: 699px) 50vw, (max-width: 999px) 33vw, 25vw"
+            className="object-contain opacity-0 transition-opacity duration-500 group-hover:opacity-100"
           />
-        </div>
-
-        {/* Content */}
-        <div className="text-center space-y-2">
-          <div className="text-white/80 text-xs uppercase tracking-[0.3em] font-light font-serif">
-            {collectionName}
-          </div>
-          <h3 className="text-white font-light text-xl group-hover:text-white/80 transition-colors font-serif">
-            {product.city.toUpperCase()}
-          </h3>
-          <div className="text-white/60 text-[10px] font-bold uppercase tracking-wider">
-            {productData?.colors.join(" | ") || "beyaz | siyah"}
-          </div>
-          <div className="text-white/80 text-sm">
-            €{getPriceForSlug(product.slug)}
-          </div>
-        </div>
+        )}
+        <span className="pointer-events-none absolute inset-x-4 bottom-4 hidden translate-y-2 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 lg:block">
+          <span className="btn btn-paper w-full shadow-[0_0_0_1px_var(--line)]">{t.chooseOptions}</span>
+        </span>
       </Link>
+
+      <div className="flex flex-col items-start gap-2.5 px-4 pt-5 pb-6">
+        <div className="flex flex-col gap-0.5">
+          <Link href={href} className="sub text-ink">
+            {product.city}
+          </Link>
+          <span className="sub text-subdued">{price(getPriceForSlug(product.slug))}</span>
+        </div>
+        <ul className="flex gap-2" aria-label={t.colorLegend}>
+          {colors.map((c) => (
+            <li key={c}>
+              <span
+                title={common.colors[c] ?? c}
+                className="block h-4 w-4 rounded-full border border-line-strong"
+                style={{ backgroundColor: swatchColors[c] ?? c }}
+              />
+              <span className="sr-only">{common.colors[c] ?? c}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }

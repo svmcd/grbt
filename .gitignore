@@ -39,3 +39,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Memleket shirt images are generated from designs/ (npm run mockups)
+/public/products/collections/memleket/*/siyah/front.png
+/public/products/collections/memleket/*/siyah/back.png
+/public/products/collections/memleket/*/beyaz/front.png
+/public/products/collections/memleket/*/beyaz/back.png
+/public/products/collections/memleket/*/*/hoodie_*.png
+/public/products/collections/memleket/*/*/sweater_*.png

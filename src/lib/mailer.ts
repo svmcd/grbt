@@ -19,11 +19,11 @@ export async function sendOrderConfirmationEmail(to: string, data: {
     orderId: string;
     amountTotal: number;
 }) {
-    const fromName = process.env.SMTP_FROM_NAME || "grbt.";
-    const fromEmail = process.env.SMTP_FROM_EMAIL || "studio.grbt@gmail.com";
+    const fromName = process.env.SMTP_FROM_NAME || "eğrikuyu";
+    const fromEmail = process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER;
     const transport = getTransport();
 
-    const subject = `Your grbt. order ${data.orderId}`;
+    const subject = `Your eğrikuyu order ${data.orderId}`;
     const html = `
     <div style="font-family:Inter,system-ui,sans-serif;line-height:1.6">
       <h2 style="margin:0 0 8px 0">Order confirmed</h2>
@@ -31,7 +31,7 @@ export async function sendOrderConfirmationEmail(to: string, data: {
       <p style="margin:0 0 8px 0">Order ID: <strong>${data.orderId}</strong></p>
       <p style="margin:0 0 8px 0">Total: <strong>€${(data.amountTotal / 100).toFixed(2)}</strong></p>
       <p style="margin:16px 0 0 0">You will receive shipping updates when your order is dispatched.</p>
-      <p style="margin:16px 0 0 0">— grbt.</p>
+      <p style="margin:16px 0 0 0">— eğrikuyu</p>
     </div>
   `;
 

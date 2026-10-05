@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { adminAuth } from "@/lib/firebase-admin";
+import { adminAuth, adminDb } from "@/lib/firebase-admin";
 import nodemailer from "nodemailer";
+import Stripe from "stripe";
+import { isLocale, type Locale } from "@/i18n/config";
+import emails from "@/i18n/messages/emails";
+import { mailFrom, REPLY_TO } from "@/lib/emails/sender";
 
 async function verifyAuth(request: NextRequest) {
     const authHeader = request.headers.get("authorization");
@@ -28,6 +32,31 @@ const transporter = nodemailer.createTransport({
     },
 });
 
+const stripe = process.env.STRIPE_SECRET_KEY
+    ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2025-09-30.clover" })
+    : null;
+
+// Order language: the Firestore order first, then the Stripe session metadata, else Turkish
+// (every order placed before localization came from the Turkish site).
+async function orderLocale(orderId: string): Promise<Locale> {
+    try {
+        const doc = await adminDb.collection("orders").doc(orderId).get();
+        const saved = doc.exists ? doc.data()?.locale : undefined;
+        if (isLocale(saved)) return saved;
+    } catch (error) {
+        console.error("Could not read order locale from Firestore:", error);
+    }
+    if (stripe && orderId.startsWith("cs_")) {
+        try {
+            const session = await stripe.checkout.sessions.retrieve(orderId);
+            if (isLocale(session.metadata?.locale)) return session.metadata.locale;
+        } catch (error) {
+            console.error("Could not read order locale from Stripe:", error);
+        }
+    }
+    return "tr";
+}
+
 export async function POST(request: NextRequest) {
     const user = await verifyAuth(request);
     if (!user) {
@@ -41,18 +70,23 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
         }
 
+        // Customer's language, saved on the order (orders from before localization: Turkish)
+        const locale = await orderLocale(orderId);
+        const s = emails[locale].status;
+        const layout = emails[locale].layout;
+
         let subject = "";
         let html = "";
 
         if (status === "label_created") {
-            subject = "Siparişiniz Paketleniyor - grbt.";
+            subject = s.packing.subject;
             html = `
                 <!DOCTYPE html>
                 <html>
                 <head>
                     <meta charset="utf-8">
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <title>Siparişiniz Paketleniyor - grbt.</title>
+                    <title>${s.packing.subject}</title>
                     <style>
                         * { margin: 0; padding: 0; box-sizing: border-box; }
                         body { 
@@ -134,38 +168,38 @@ export async function POST(request: NextRequest) {
                 <body>
                     <div class="email-container">
                         <div class="header">
-                            <div class="logo">grbt.</div>
-                            <div class="header-subtitle">Memleketinizi Tişörtlerde Taşıyın</div>
+                            <div class="logo">eğrikuyu</div>
+                            <div class="header-subtitle">${layout.tagline}</div>
                         </div>
                         
                         <div class="content">
                             <p style="font-size: 18px; margin-bottom: 20px; color: #2c3e50;">
-                                Merhaba!
+                                ${s.greeting}
                             </p>
                             
                             <div class="order-status">
-                                <div class="status-text">Siparişiniz Paketleniyor!</div>
+                                <div class="status-text">${s.packing.status}</div>
                             </div>
                             
                             <div class="section">
                                 <p style="font-size: 16px; color: #2c3e50; margin-bottom: 15px; font-weight: 500;">
-                                    Harika haber! Siparişinizi paketlemeye başladık ve kargoya hazırlıyoruz.
+                                    ${s.packing.lead}
                                 </p>
                                 <p style="font-size: 14px; color: #6c757d; line-height: 1.6; margin-bottom: 10px;">
-                                    Siparişinizi size en kısa sürede ulaştırmak için çalışıyoruz. Paketiniz kargoya verildiğinde takip bilgileri ile birlikte başka bir e-posta alacaksınız.
+                                    ${s.packing.body}
                                 </p>
                                 <p style="font-size: 14px; color: #6c757d; line-height: 1.6;">
-                                    Sabrınız için teşekkürler!
+                                    ${s.packing.thanks}
                                 </p>
                             </div>
                         </div>
                         
                         <div class="footer">
-                            <div class="footer-brand">grbt.</div>
-                            <div class="footer-tagline">Memleketinizi Tişörtlerde Taşıyın</div>
+                            <div class="footer-brand">eğrikuyu</div>
+                            <div class="footer-tagline">${layout.tagline}</div>
                             <div class="footer-contact">
-                                Bu e-posta otomatik olarak gönderilmiştir.<br>
-                                © 2025 grbt. Tüm hakları saklıdır.
+                                ${layout.autoSent}<br>
+                                ${layout.copyright}
                             </div>
                         </div>
                     </div>
@@ -177,14 +211,14 @@ export async function POST(request: NextRequest) {
                 ? `https://www.dhl.com/content/gb/en/express/tracking.html?AWB=${trackingCode}`
                 : `https://jouw.postnl.nl/track-and-trace/${trackingCode}-${country || "NL"}-${postalCode || ""}`;
 
-            subject = "Siparişiniz Kargoya Verildi - grbt.";
+            subject = s.shipped.subject;
             html = `
                 <!DOCTYPE html>
                 <html>
                 <head>
                     <meta charset="utf-8">
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <title>Siparişiniz Kargoya Verildi - grbt.</title>
+                    <title>${s.shipped.subject}</title>
                     <style>
                         * { margin: 0; padding: 0; box-sizing: border-box; }
                         body { 
@@ -295,59 +329,59 @@ export async function POST(request: NextRequest) {
                 <body>
                     <div class="email-container">
                         <div class="header">
-                            <div class="logo">grbt.</div>
-                            <div class="header-subtitle">Memleketinizi Tişörtlerde Taşıyın</div>
+                            <div class="logo">eğrikuyu</div>
+                            <div class="header-subtitle">${layout.tagline}</div>
                         </div>
                         
                         <div class="content">
                             <p style="font-size: 18px; margin-bottom: 20px; color: #2c3e50;">
-                                Merhaba!
+                                ${s.greeting}
                             </p>
                             
                             <div class="order-status">
-                                <div class="status-text">Siparişiniz Kargoya Verildi!</div>
+                                <div class="status-text">${s.shipped.status}</div>
                             </div>
                             
                             <div class="section">
                                 <p style="font-size: 16px; color: #2c3e50; margin-bottom: 15px; font-weight: 500;">
-                                    Heyecan verici haber! Siparişiniz size doğru yola çıktı.
+                                    ${s.shipped.lead}
                                 </p>
                                 <p style="font-size: 14px; color: #6c757d; line-height: 1.6; margin-bottom: 20px;">
-                                    Aşağıdaki bilgileri kullanarak kargonuzu takip edebilirsiniz.
+                                    ${s.shipped.body}
                                 </p>
                                 
                                 <div class="tracking-info">
                                     <div style="font-size: 14px; color: #6c757d; margin-bottom: 8px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">
-                                        Kargo Firması
+                                        ${s.shipped.carrier}
                                     </div>
                                     <div style="font-size: 18px; color: #2c3e50; font-weight: 600; margin-bottom: 15px;">
                                         ${trackingProvider}
                                     </div>
                                     <div style="font-size: 14px; color: #6c757d; margin-bottom: 8px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">
-                                        Takip Numarası
+                                        ${s.shipped.trackingNumber}
                                     </div>
                                     <div class="tracking-code">
                                         ${trackingCode}
                                     </div>
                                     <div style="text-align: center; margin-top: 20px;">
                                         <a href="${trackingLink}" class="tracking-button" style="display: inline-block; padding: 12px 30px; background: #000000; color: white; text-decoration: none; border-radius: 6px; font-weight: 600;">
-                                            Paketimi Takip Et
+                                            ${s.shipped.button}
                                         </a>
                                     </div>
                                 </div>
                                 
                                 <p style="font-size: 14px; color: #6c757d; line-height: 1.6; margin-top: 20px;">
-                                    grbt. siparişinizi seveceğinizi umuyoruz! Herhangi bir sorunuz varsa, bizimle studio@grbt.studio adresinden iletişime geçebilirsiniz.
+                                    ${s.shipped.closing}
                                 </p>
                             </div>
                         </div>
                         
                         <div class="footer">
-                            <div class="footer-brand">grbt.</div>
-                            <div class="footer-tagline">Memleketinizi Tişörtlerde Taşıyın</div>
+                            <div class="footer-brand">eğrikuyu</div>
+                            <div class="footer-tagline">${layout.tagline}</div>
                             <div class="footer-contact">
-                                Bu e-posta otomatik olarak gönderilmiştir.<br>
-                                © 2025 grbt. Tüm hakları saklıdır.
+                                ${layout.autoSent}<br>
+                                ${layout.copyright}
                             </div>
                         </div>
                     </div>
@@ -359,7 +393,8 @@ export async function POST(request: NextRequest) {
         }
 
         await transporter.sendMail({
-            from: process.env.SMTP_USER,
+            from: mailFrom(),
+            replyTo: REPLY_TO,
             to: email,
             subject,
             html,

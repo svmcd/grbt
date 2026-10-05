@@ -1,26 +1,22 @@
-export default function TermsPage() {
+import { getMessages } from "@/i18n/server";
+import policyMessages from "@/i18n/messages/policies";
+import commonMessages from "@/i18n/messages/common";
+import { TextPage, TextSection } from "@/app/components/pages/TextPage";
+
+export default async function TermsPage() {
+  const t = (await getMessages(policyMessages)).terms;
+  const common = await getMessages(commonMessages);
   return (
-    <div className="min-h-screen flex p-8 flex-col items-center">
-      <div className="w-full max-w-3xl text-left space-y-4">
-        <h1 className="text-3xl font-light">Şartlar ve Koşullar</h1>
-        <p className="text-muted/80">
-          Bu şartlar ve koşullar grbt.studio web sitesini kullanımınızı yönetir.
-        </p>
-        <h2 className="text-xl mt-6">Kullanım</h2>
-        <p className="text-muted/80">
-          Bu siteyi kullanarak bu şartları kabul etmiş sayılırsınız. Siteyi
-          yalnızca yasal amaçlarla kullanabilirsiniz.
-        </p>
-        <h2 className="text-xl mt-6">Siparişler</h2>
-        <p className="text-muted/80">
-          Tüm siparişler stok durumuna tabidir. Fiyatlar değişiklik
-          gösterebilir. Ödeme onaylandıktan sonra sipariş işleme alınır.
-        </p>
-        <h2 className="text-xl mt-6">İletişim</h2>
-        <p className="text-muted/80">
-          Sorularınız için info@grbt.studio adresinden bize ulaşabilirsiniz.
-        </p>
-      </div>
-    </div>
+    <TextPage title={t.title} intro={<p>{t.intro}</p>}>
+      <TextSection title={t.useTitle}>
+        <p>{t.useText}</p>
+      </TextSection>
+      <TextSection title={t.ordersTitle}>
+        <p>{t.ordersText}</p>
+      </TextSection>
+      <TextSection title={common.contact}>
+        <p>{t.contactText}</p>
+      </TextSection>
+    </TextPage>
   );
 }

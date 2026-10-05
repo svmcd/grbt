@@ -4,6 +4,9 @@ import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useCart } from "@/lib/cart-context";
+import { useFormatPrice, useLocale, useMessages } from "@/i18n/LocaleProvider";
+import orderSuccessMessages from "@/i18n/messages/orderSuccess";
+import commonMessages from "@/i18n/messages/common";
 
 function OrderSuccessContent() {
   const searchParams = useSearchParams();
@@ -11,6 +14,11 @@ function OrderSuccessContent() {
   const [orderDetails, setOrderDetails] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const { clearCart } = useCart();
+  const { intlLocale } = useLocale();
+  const t = useMessages(orderSuccessMessages);
+  const common = useMessages(commonMessages);
+  const price = useFormatPrice();
+  const formatEuro = (amount: number) => price(amount, 2);
 
   useEffect(() => {
     if (sessionId) {
@@ -32,247 +40,167 @@ function OrderSuccessContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-white">Sipariş detayları yükleniyor...</p>
+      <div className="flex min-h-[60vh] items-center justify-center bg-paper px-4 text-ink">
+        <p className="sub">{t.loadingDetails}</p>
       </div>
     );
   }
 
+  const orderRef = orderDetails?.id?.slice(-8).toUpperCase() || t.notAvailable;
+  const steps = [
+    { title: t.step1Title, text: t.step1Text },
+    { title: t.step2Title, text: t.step2Text },
+    { title: t.step3Title, text: t.step3Text },
+  ];
+
   return (
-    <div className="min-h-screen bg-black text-white">
-      <div className="max-w-4xl mx-auto px-6 py-16">
-        {/* Header Section */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-white/10 rounded-full mb-6">
-            <svg
-              className="w-8 h-8 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-          </div>
-          <h1 className="text-4xl font-light mb-4">Siparişiniz Onaylandı</h1>
-          <p className="text-white/70 text-lg max-w-2xl mx-auto">
-            Satın aldığınız için teşekkürler. Siparişiniz başarıyla işlendi ve
-            kısa süre içinde kargoya verilecektir.
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-8 mb-12">
-          {/* Order Summary */}
-          <div className="bg-white/5 border border-white/10 rounded-lg p-8">
-            <h2 className="text-2xl font-light mb-6 pb-4 border-b border-white/10">
-              Sipariş Özeti
-            </h2>
-
-            <div className="space-y-4">
-              <div className="flex justify-between items-center py-2">
-                <span className="text-white/70">Sipariş Numarası</span>
-                <span className="font-mono text-sm">
-                  {orderDetails?.id?.slice(-8).toUpperCase() || "N/A"}
-                </span>
-              </div>
-
-              <div className="flex justify-between items-center py-2">
-                <span className="text-white/70">Toplam Tutar</span>
-                <span className="text-xl font-light">
-                  €
-                  {orderDetails?.amount_total
-                    ? (orderDetails.amount_total / 100).toFixed(2)
-                    : "0.00"}
-                </span>
-              </div>
-
-              <div className="flex justify-between items-center py-2">
-                <span className="text-white/70">Ödeme Durumu</span>
-                <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-sm">
-                  Başarılı
-                </span>
-              </div>
-
-              <div className="flex justify-between items-center py-2">
-                <span className="text-white/70">Sipariş Tarihi</span>
-                <span>
-                  {orderDetails?.created
-                    ? new Date(orderDetails.created * 1000).toLocaleDateString(
-                        "tr-TR"
-                      )
-                    : "N/A"}
-                </span>
-              </div>
+    <div className="bg-paper text-ink">
+      <div className="px-4 pb-20 pt-12 md:px-8 md:pt-16 lg:px-12 lg:pt-20">
+        <div className="mx-auto w-full max-w-[1000px]">
+          {/* Header */}
+          <div className="mb-12 text-center md:mb-16">
+            <div className="mx-auto mb-8 flex h-14 w-14 items-center justify-center border border-ink">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} aria-hidden="true">
+                <path d="M4 12.5l5 5L20 6.5" strokeLinecap="square" />
+              </svg>
             </div>
+            <h1 className="h-section">{t.title}</h1>
+            <p className="mx-auto mt-6 max-w-[560px] text-[14px] leading-[1.7]">{t.intro}</p>
           </div>
 
-          {/* Shipping Information */}
-          {orderDetails.shipping_details && (
-            <div className="bg-white/5 border border-white/10 rounded-lg p-8">
-              <h2 className="text-2xl font-light mb-6 pb-4 border-b border-white/10">
-                Teslimat Bilgileri
-              </h2>
-
-              <div className="space-y-4">
-                <div>
-                  <span className="text-white/70 text-sm block mb-1">
-                    Ad Soyad
-                  </span>
-                  <span className="text-white">
-                    {orderDetails.shipping_details.name}
-                  </span>
+          <div className={"mb-6 grid gap-6 " + (orderDetails?.shipping_details ? "md:grid-cols-2" : "")}>
+            {/* Order summary */}
+            <section className="border border-line p-6 md:p-8">
+              <h2 className="sub mb-5 border-b border-line pb-4">{t.summaryTitle}</h2>
+              <dl className="space-y-3 text-[14px]">
+                <div className="flex items-center justify-between gap-4">
+                  <dt className="text-subdued">{t.orderNumber}</dt>
+                  <dd>{orderRef}</dd>
                 </div>
-
-                <div>
-                  <span className="text-white/70 text-sm block mb-1">
-                    Adres
-                  </span>
-                  <div className="text-white">
-                    <div>{orderDetails.shipping_details.address?.line1}</div>
-                    {orderDetails.shipping_details.address?.line2 && (
-                      <div>{orderDetails.shipping_details.address.line2}</div>
-                    )}
-                  </div>
+                <div className="flex items-center justify-between gap-4">
+                  <dt className="text-subdued">{t.totalAmount}</dt>
+                  <dd>
+                    {formatEuro(orderDetails?.amount_total ? orderDetails.amount_total / 100 : 0)}
+                  </dd>
                 </div>
+                <div className="flex items-center justify-between gap-4">
+                  <dt className="text-subdued">{t.paymentStatus}</dt>
+                  <dd className="sub-xs border border-ink px-2 py-1">{t.paymentSuccessful}</dd>
+                </div>
+                <div className="flex items-center justify-between gap-4">
+                  <dt className="text-subdued">{t.orderDate}</dt>
+                  <dd>
+                    {orderDetails?.created
+                      ? new Date(orderDetails.created * 1000).toLocaleDateString(intlLocale)
+                      : t.notAvailable}
+                  </dd>
+                </div>
+              </dl>
+            </section>
 
-                <div className="grid grid-cols-2 gap-4">
+            {/* Shipping information */}
+            {orderDetails?.shipping_details && (
+              <section className="border border-line p-6 md:p-8">
+                <h2 className="sub mb-5 border-b border-line pb-4">{t.deliveryTitle}</h2>
+                <dl className="space-y-4 text-[14px] leading-[1.5]">
                   <div>
-                    <span className="text-white/70 text-sm block mb-1">
-                      Şehir
-                    </span>
-                    <span className="text-white">
-                      {orderDetails.shipping_details.address?.city}
-                    </span>
+                    <dt className="sub-xs mb-1 text-subdued">{t.fullName}</dt>
+                    <dd>{orderDetails.shipping_details.name}</dd>
                   </div>
                   <div>
-                    <span className="text-white/70 text-sm block mb-1">
-                      Posta Kodu
-                    </span>
-                    <span className="text-white">
-                      {orderDetails.shipping_details.address?.postal_code}
-                    </span>
+                    <dt className="sub-xs mb-1 text-subdued">{t.address}</dt>
+                    <dd>
+                      <div>{orderDetails.shipping_details.address?.line1}</div>
+                      {orderDetails.shipping_details.address?.line2 && (
+                        <div>{orderDetails.shipping_details.address.line2}</div>
+                      )}
+                    </dd>
                   </div>
-                </div>
-
-                <div>
-                  <span className="text-white/70 text-sm block mb-1">Ülke</span>
-                  <span className="text-white">
-                    {orderDetails.shipping_details.address?.country}
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Next Steps */}
-        <div className="bg-white/5 border border-white/10 rounded-lg p-8 mb-12">
-          <h2 className="text-2xl font-light mb-6 pb-4 border-b border-white/10">
-            Sonraki Adımlar
-          </h2>
-
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="text-center">
-              <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-xl font-light">1</span>
-              </div>
-              <h3 className="font-light mb-2">Sipariş Hazırlanıyor</h3>
-              <p className="text-white/70 text-sm">
-                Siparişiniz hazırlanıyor ve kalite kontrolünden geçiyor.
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-xl font-light">2</span>
-              </div>
-              <h3 className="font-light mb-2">Kargoya Veriliyor</h3>
-              <p className="text-white/70 text-sm">
-                Siparişiniz kargoya verilecek ve takip numarası gönderilecek.
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-xl font-light">3</span>
-              </div>
-              <h3 className="font-light mb-2">Teslimat</h3>
-              <p className="text-white/70 text-sm">
-                Siparişiniz adresinize teslim edilecek.
-              </p>
-            </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <dt className="sub-xs mb-1 text-subdued">{t.city}</dt>
+                      <dd>{orderDetails.shipping_details.address?.city}</dd>
+                    </div>
+                    <div>
+                      <dt className="sub-xs mb-1 text-subdued">{t.postalCode}</dt>
+                      <dd>{orderDetails.shipping_details.address?.postal_code}</dd>
+                    </div>
+                  </div>
+                  <div>
+                    <dt className="sub-xs mb-1 text-subdued">{t.country}</dt>
+                    <dd>{orderDetails.shipping_details.address?.country}</dd>
+                  </div>
+                </dl>
+              </section>
+            )}
           </div>
-        </div>
 
-        {/* Support Information */}
-        <div className="bg-white/5 border border-white/10 rounded-lg p-8 mb-12">
-          <h2 className="text-2xl font-light mb-6 pb-4 border-b border-white/10">
-            Destek
-          </h2>
-
-          <div className="grid md:grid-cols-2 gap-8">
-            <div>
-              <h3 className="font-light mb-4">Siparişinizle İlgili Sorular</h3>
-              <p className="text-white/70 mb-4">
-                Siparişinizle ilgili herhangi bir sorunuz varsa veya teslimat
-                bilgilerinizde hata olduğunu düşünüyorsanız, bizimle iletişime
-                geçin.
-              </p>
-              <div className="space-y-2">
-                <div className="flex items-center">
-                  <span className="text-white/70 mr-3">E-posta:</span>
-                  <span className="text-white">info@grbt.studio</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="text-white/70 mr-3">Referans:</span>
-                  <span className="font-mono text-sm">
-                    {orderDetails?.id?.slice(-8).toUpperCase() || "N/A"}
+          {/* Next steps */}
+          <section className="mb-6 border border-line p-6 md:p-8">
+            <h2 className="sub mb-6 border-b border-line pb-4">{t.nextStepsTitle}</h2>
+            <ol className="grid gap-8 md:grid-cols-3 md:gap-6">
+              {steps.map((step, i) => (
+                <li key={i}>
+                  <span className="mb-4 flex h-10 w-10 items-center justify-center border border-ink text-[13px]">
+                    {i + 1}
                   </span>
-                </div>
+                  <h3 className="sub mb-2">{step.title}</h3>
+                  <p className="text-[14px] leading-[1.6]">{step.text}</p>
+                </li>
+              ))}
+            </ol>
+          </section>
+
+          {/* Support */}
+          <section className="mb-12 border border-line p-6 md:p-8">
+            <h2 className="sub mb-6 border-b border-line pb-4">{t.supportTitle}</h2>
+            <div className="grid gap-8 md:grid-cols-2">
+              <div>
+                <h3 className="sub mb-3">{t.questionsTitle}</h3>
+                <p className="mb-4 text-[14px] leading-[1.6]">{t.questionsText}</p>
+                <dl className="space-y-1.5 text-[14px]">
+                  <div className="flex flex-wrap gap-x-3">
+                    <dt className="text-subdued">{t.emailLabel}</dt>
+                    <dd>
+                      <a href="mailto:info@egrikuyu.com" className="underline underline-offset-4">
+                        info@egrikuyu.com
+                      </a>
+                    </dd>
+                  </div>
+                  <div className="flex flex-wrap gap-x-3">
+                    <dt className="text-subdued">{t.referenceLabel}</dt>
+                    <dd>{orderRef}</dd>
+                  </div>
+                </dl>
+              </div>
+
+              <div>
+                <h3 className="sub mb-3">{t.faqTitle}</h3>
+                <dl className="space-y-1.5 text-[14px] leading-[1.6]">
+                  <div className="flex flex-wrap gap-x-2">
+                    <dt className="text-subdued">{t.deliveryTimeLabel}</dt>
+                    <dd>{t.deliveryTimeValue}</dd>
+                  </div>
+                  <div className="flex flex-wrap gap-x-2">
+                    <dt className="text-subdued">{t.returnPolicyLabel}</dt>
+                    <dd>{t.returnPolicyValue}</dd>
+                  </div>
+                  <div className="flex flex-wrap gap-x-2">
+                    <dt className="text-subdued">{t.trackingLabel}</dt>
+                    <dd>{t.trackingValue}</dd>
+                  </div>
+                </dl>
               </div>
             </div>
+          </section>
 
-            <div>
-              <h3 className="font-light mb-4">Sık Sorulan Sorular</h3>
-              <div className="space-y-3 text-sm">
-                <div>
-                  <span className="text-white/70">Teslimat süresi:</span>
-                  <span className="text-white ml-2">3-5 iş günü</span>
-                </div>
-                <div>
-                  <span className="text-white/70">İade politikası:</span>
-                  <span className="text-white ml-2">60 gün içinde</span>
-                </div>
-                <div>
-                  <span className="text-white/70">Kargo takibi:</span>
-                  <span className="text-white ml-2">
-                    E-posta ile gönderilir
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="text-center space-y-4">
-          <Link
-            href="/collection"
-            className="inline-block px-8 py-4 bg-black text-white font-medium tracking-wider uppercase text-sm hover:bg-gray-200 transition-colors rounded-lg border border-black shadow-lg"
-          >
-            Alışverişe Devam Et
-          </Link>
-
-          <div className="pt-4">
-            <Link
-              href="/contact"
-              className="text-white/70 hover:text-white underline text-sm"
-            >
-              İletişim
+          {/* Actions */}
+          <div className="flex flex-col items-center gap-5">
+            <Link href="/collection" className="btn btn-ink w-full sm:w-auto sm:min-w-[260px]">
+              {t.continueShopping}
+            </Link>
+            <Link href="/contact" className="sub-xs link-reveal">
+              {common.contact}
             </Link>
           </div>
         </div>
@@ -282,8 +210,15 @@ function OrderSuccessContent() {
 }
 
 export default function OrderSuccessPage() {
+  const common = useMessages(commonMessages);
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense
+      fallback={
+        <div className="flex min-h-[60vh] items-center justify-center bg-paper px-4 text-ink">
+          <p className="sub">{common.loading}</p>
+        </div>
+      }
+    >
       <OrderSuccessContent />
     </Suspense>
   );

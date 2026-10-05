@@ -1,30 +1,23 @@
-export default function ReturnsPage() {
+import { getMessages } from "@/i18n/server";
+import policyMessages from "@/i18n/messages/policies";
+import { TextPage, TextSection } from "@/app/components/pages/TextPage";
+
+export default async function ReturnsPage() {
+  const t = (await getMessages(policyMessages)).returns;
   return (
-    <div className="min-h-screen flex p-8 flex-col items-center">
-      <div className="w-full max-w-3xl text-left space-y-4">
-        <h1 className="text-3xl font-light">İade Politikası</h1>
-        <h2 className="text-xl mt-6">Geri çekme hakkı (AB)</h2>
-        <p className="text-muted/80">
-          Teslimattan itibaren 60 gün içinde sebep göstermeden geri çekme
-          hakkınız vardır. Ürünler giyilmemiş, yıkanmamış ve etiketleriyle
-          birlikte orijinal durumda olmalıdır.
-        </p>
-        <h2 className="text-xl mt-6">Nasıl iade edilir</h2>
-        <p className="text-muted/80">
-          Sipariş numaranızla birlikte Destek sayfası üzerinden destek ekibiyle
-          iletişime geçin. İade talimatları sağlayacağız.
-        </p>
-        <h2 className="text-xl mt-6">İadeler</h2>
-        <p className="text-muted/80">
-          Onaylandıktan sonra, iadeler orijinal ödeme yöntemine iade edilen
-          ürünlerin alınmasından itibaren 60 gün içinde yapılır.
-        </p>
-        <h2 className="text-xl mt-6">İstisnalar</h2>
-        <p className="text-muted/80">
-          Final satış ürünleri veya kişiselleştirilmiş ürünler yasaya izin
-          verdiği ölçüde istisna tutulabilir.
-        </p>
-      </div>
-    </div>
+    <TextPage title={t.title}>
+      <TextSection title={t.withdrawalTitle}>
+        <p>{t.withdrawalText}</p>
+      </TextSection>
+      <TextSection title={t.howTitle}>
+        <p>{t.howText}</p>
+      </TextSection>
+      <TextSection title={t.refundsTitle}>
+        <p>{t.refundsText}</p>
+      </TextSection>
+      <TextSection title={t.exceptionsTitle}>
+        <p>{t.exceptionsText}</p>
+      </TextSection>
+    </TextPage>
   );
 }

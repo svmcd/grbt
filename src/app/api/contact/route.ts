@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import nodemailer from "nodemailer";
+import { isLocale } from "@/i18n/config";
+import { getLocale } from "@/i18n/server";
+import emails from "@/i18n/messages/emails";
+import { mailFrom, REPLY_TO } from "@/lib/emails/sender";
 
 export async function POST(request: NextRequest) {
     try {
-        const { name, email, message } = await request.json();
+        const { name, email, message, locale: requestedLocale } = await request.json();
+        // Visitor's language for the auto-reply (the notification to the shop stays Turkish)
+        const locale = isLocale(requestedLocale) ? requestedLocale : await getLocale();
+        const reply = emails[locale].contact;
 
         if (!name || !email || !message) {
             return NextResponse.json(
@@ -22,8 +29,10 @@ export async function POST(request: NextRequest) {
 
         // Email to you (admin)
         const adminEmail = {
-            from: `GRBT <${process.env.EMAIL_USER}>`,
-            to: "studio.grbt@gmail.com", // Your email address
+            from: mailFrom(),
+            // Straight to the inbox: Gmail hides mail that forwards back to the sending account
+            to: process.env.EMAIL_USER,
+            replyTo: email,
             subject: `Yeni İletişim Mesajı - ${name}`,
             html: `
         <h2>Yeni İletişim Mesajı</h2>
@@ -33,25 +42,26 @@ export async function POST(request: NextRequest) {
         <p>${message.replace(/\n/g, '<br>')}</p>
         
         <hr>
-        <p><em>Bu mesaj GRBT web sitesi iletişim formundan gönderilmiştir.</em></p>
+        <p><em>Bu mesaj eğrikuyu web sitesi iletişim formundan gönderilmiştir.</em></p>
       `,
         };
 
         // Confirmation email to user
         const userEmail = {
-            from: `GRBT <${process.env.EMAIL_USER}>`,
+            from: mailFrom(),
+            replyTo: REPLY_TO,
             to: email,
-            subject: "Mesajınız Alındı - GRBT",
+            subject: reply.subject,
             html: `
-        <h2>Merhaba ${name},</h2>
-        <p>Mesajınızı aldık ve en kısa sürede size dönüş yapacağız.</p>
+        <h2>${reply.greeting(name)}</h2>
+        <p>${reply.received}</p>
         
-        <h3>Mesajınız:</h3>
+        <h3>${reply.yourMessage}</h3>
         <p>${message.replace(/\n/g, '<br>')}</p>
         
         <hr>
-        <p><em>GRBT Ekibi</em></p>
-        <p><em>Bu e-posta otomatik olarak gönderilmiştir.</em></p>
+        <p><em>${reply.team}</em></p>
+        <p><em>${emails[locale].layout.autoSent}</em></p>
       `,
         };
 

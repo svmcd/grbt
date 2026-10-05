@@ -1,19 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { CollectionTiles } from "@/app/components/home/CollectionTiles";
+import { useMessages } from "@/i18n/LocaleProvider";
+import collectionMessages from "@/i18n/messages/collections";
 
-export default function CollectionPage() {
-  const router = useRouter();
-
-  useEffect(() => {
-    // Redirect to memleket collection by default
-    router.replace("/collection/memleket");
-  }, [router]);
-
-  return (
-    <div className="min-h-screen bg-black flex items-center justify-center">
-      <div className="text-white/60">Yönlendiriliyor...</div>
-    </div>
-  );
+// All collections as image tiles. The "continue shopping" links in the cart,
+// checkout, product and order pages land here.
+export default function CollectionIndexPage() {
+  const t = useMessages(collectionMessages);
+  return <CollectionTiles title={t.indexTitle} as="h1" />;
 }

@@ -1,7 +1,17 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { LOCALE_COOKIE, isLocale, matchLocale } from "@/i18n/config";
+
+const OLD_HOSTS = new Set(["grbt.studio", "www.grbt.studio"]);
 
 export function middleware(request: NextRequest) {
+    // Rebrand: old domain pages move to egrikuyu.com. API routes are not matched,
+    // so webhooks that still call grbt.studio keep working.
+    if (OLD_HOSTS.has(request.headers.get("host") ?? "")) {
+        const url = new URL(request.nextUrl.pathname + request.nextUrl.search, "https://egrikuyu.com");
+        return NextResponse.redirect(url, 308);
+    }
+
     // Protect admin routes
     if (request.nextUrl.pathname.startsWith('/admin')) {
         // Check if user is authenticated (you'll need to implement this)
@@ -10,6 +20,15 @@ export function middleware(request: NextRequest) {
     }
 
     const response = NextResponse.next();
+
+    // First visit: remember the browser's language so server and client render the same locale
+    if (!isLocale(request.cookies.get(LOCALE_COOKIE)?.value)) {
+        response.cookies.set(LOCALE_COOKIE, matchLocale(request.headers.get("accept-language")), {
+            path: "/",
+            maxAge: 60 * 60 * 24 * 365,
+            sameSite: "lax",
+        });
+    }
 
     // Security headers
     response.headers.set("X-Frame-Options", "DENY");

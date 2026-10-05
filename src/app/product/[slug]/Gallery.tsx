@@ -1,101 +1,144 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import { useMessages } from "@/i18n/LocaleProvider";
+import productPageMessages from "@/i18n/messages/productPage";
+import { ImageZoom } from "@/app/components/ImageZoom";
 
+// Product image slider: square slides on white, swipe/scroll-snap on touch,
+// dash indicators, "+" button that opens the full-screen zoom view.
 export function Gallery({ images, city }: { images: string[]; city: string }) {
+  const t = useMessages(productPageMessages).gallery;
   const [validImages, setValidImages] = useState<string[]>([]);
-  const [active, setActive] = useState<string>("");
+  const [index, setIndex] = useState(0);
+  const [zoomOpen, setZoomOpen] = useState(false);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const key = images.join("|");
 
-  // Check which images actually exist
+  // Only show images that exist (product folders differ in what they contain).
   useEffect(() => {
-    const checkImages = async () => {
-      const existingImages: string[] = [];
-
-      for (const imageSrc of images) {
-        if (!imageSrc) continue;
-
+    let cancelled = false;
+    Promise.all(
+      images.filter(Boolean).map(async (src) => {
         try {
-          const response = await fetch(imageSrc, { method: "HEAD" });
-          if (response.ok) {
-            existingImages.push(imageSrc);
-          }
+          const res = await fetch(src, { method: "HEAD" });
+          return res.ok ? src : null;
         } catch {
-          // Image doesn't exist, skip it
+          return null;
         }
-      }
-
-      setValidImages(existingImages);
-      if (existingImages.length > 0 && !active) {
-        setActive(existingImages[0]);
-      }
+      })
+    ).then((found) => {
+      if (cancelled) return;
+      setValidImages(found.filter((s): s is string => !!s));
+      setIndex(0);
+      trackRef.current?.scrollTo({ left: 0 });
+    });
+    return () => {
+      cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
 
-    checkImages();
-  }, [images, active]);
+  const goTo = (i: number) => {
+    const track = trackRef.current;
+    if (!track) return;
+    track.scrollTo({ left: i * track.clientWidth, behavior: "smooth" });
+  };
 
-  // Update active image when images prop changes (color selection)
-  useEffect(() => {
-    if (validImages.length > 0) {
-      // Only update if the current active image is not in the new images array
-      if (!validImages.includes(active)) {
-        setActive(validImages[0]);
-      }
-    }
-  }, [validImages, active]);
+  const onScroll = () => {
+    const track = trackRef.current;
+    if (!track || !track.clientWidth) return;
+    const i = Math.round(track.scrollLeft / track.clientWidth);
+    if (i !== index) setIndex(i);
+  };
+
+  const altFor = (i: number) => t.thumbAlt(city, (validImages[i] ?? "").includes("back"));
 
   return (
-    <div className="w-full">
-      {/* Main image */}
-      <div className="relative w-full aspect-square">
-        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-white/10 rounded-none blur-sm" />
-        {active && (
-          <Image
-            src={active}
-            alt={`Memleket ${city}`}
-            fill
-            className="object-contain relative z-10"
-          />
-        )}
+    <div className="relative w-full bg-paper lg:border lg:border-line">
+      <div
+        ref={trackRef}
+        onScroll={onScroll}
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "ArrowRight" && index < validImages.length - 1) goTo(index + 1);
+          if (e.key === "ArrowLeft" && index > 0) goTo(index - 1);
+        }}
+        className="flex aspect-square w-full snap-x snap-mandatory overflow-x-auto overscroll-x-contain outline-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        {validImages.map((src, i) => (
+          <button
+            key={src}
+            type="button"
+            onClick={() => {
+              setIndex(i);
+              setZoomOpen(true);
+            }}
+            className="relative aspect-square w-full shrink-0 snap-center cursor-zoom-in"
+            aria-label={t.zoom}
+          >
+            <Image
+              src={src}
+              alt={altFor(i)}
+              fill
+              priority={i === 0}
+              sizes="(max-width: 1023px) 100vw, 50vw"
+              className="object-contain px-[6%] pt-[5%] pb-[10%]"
+            />
+          </button>
+        ))}
       </div>
 
-      {/* Thumbnails */}
-      <div className="mt-2 grid grid-cols-5 gap-1">
-        {validImages.map((src) => {
-          const isBack = src.includes("back.png");
-          const isFront = src.includes("front.png");
-          const isActive = active === src;
-          const showLabel = isBack || isFront;
-
-          return (
+      {validImages.length > 1 && (
+        <div className="absolute inset-x-0 bottom-5 flex justify-center gap-2 sm:bottom-8">
+          {validImages.map((src, i) => (
             <button
               key={src}
               type="button"
-              onClick={() => setActive(src)}
-              className={
-                "relative aspect-square border rounded-none overflow-hidden transition-all " +
-                (isActive
-                  ? "border-white/80 bg-white/5"
-                  : "border-white/20 hover:border-white/40")
-              }
-              aria-label={`View ${city} ${isBack ? "back" : "front"} image`}
+              onClick={() => goTo(i)}
+              aria-label={t.goTo(i + 1)}
+              aria-current={i === index}
+              className="flex h-6 items-center"
             >
-              <Image
-                src={src}
-                alt={`${city} ${isBack ? "back" : "front"}`}
-                fill
-                className="object-contain p-0.5"
+              <span
+                className={
+                  "block h-[2px] transition-all duration-300 " +
+                  (i === index ? "w-5 bg-ink" : "w-3 bg-line-strong")
+                }
               />
-              {/* Image label - only for front/back/shirt images */}
-              {showLabel && (
-                <div className="absolute bottom-0.5 left-0.5 bg-black/70 text-white text-[8px] px-1 py-0.5 rounded-none">
-                  {isBack ? "Arka" : "Ön"}
-                </div>
-              )}
             </button>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
+
+      {validImages.length > 0 && (
+        <button
+          type="button"
+          onClick={() => setZoomOpen(true)}
+          aria-label={t.zoom}
+          className="absolute right-3 bottom-3 flex h-11 w-11 items-center justify-center text-ink sm:right-6 sm:bottom-6 lg:right-10 lg:bottom-8"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2">
+            <path d="M12 3v18M3 12h18" />
+          </svg>
+        </button>
+      )}
+
+      {zoomOpen && validImages.length > 0 && (
+        <ImageZoom
+          images={validImages}
+          index={Math.min(index, validImages.length - 1)}
+          alt={altFor}
+          onIndexChange={(i) => {
+            setIndex(i);
+            const track = trackRef.current;
+            if (track) track.scrollTo({ left: i * track.clientWidth });
+          }}
+          onClose={() => setZoomOpen(false)}
+          labels={{ close: t.close, prev: t.prev, next: t.next }}
+        />
+      )}
     </div>
   );
 }

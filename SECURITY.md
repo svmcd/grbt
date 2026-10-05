@@ -1,7 +1,7 @@
-# Security Implementation for GRBT Admin
+# Security Implementation for eğrikuyu admin
 
 ## Overview
-This document outlines the security measures implemented for the GRBT admin authentication system.
+This document outlines the security measures implemented for the eğrikuyu admin authentication system.
 
 ## Security Features
 
@@ -50,7 +50,7 @@ FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@your_project.iam.gserviceaccount.c
 FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYour private key here\n-----END PRIVATE KEY-----\n"
 
 # Security
-ADMIN_EMAIL=admin@grbt.studio
+ADMIN_EMAIL=info@egrikuyu.com
 ```
 
 ## Production Deployment Checklist

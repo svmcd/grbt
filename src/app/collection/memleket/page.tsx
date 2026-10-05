@@ -1,56 +1,14 @@
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
-import { memleketSlugs, getProductBySlug } from "@/lib/catalog";
-import { ProductCard } from "@/app/components/ProductCard";
-import { SearchBar } from "@/app/components/SearchBar";
+import { memleketSlugs } from "@/lib/catalog";
+import { CollectionView } from "@/app/components/home/CollectionView";
+import { useMessages } from "@/i18n/LocaleProvider";
+import commonMessages from "@/i18n/messages/common";
+import collectionMessages from "@/i18n/messages/collections";
 
 export default function MemleketCollectionPage() {
-  return (
-    <div className="min-h-screen bg-black">
-      {/* Hero Section */}
-      <div className="relative py-16 sm:py-24">
-        <div className="max-w-6xl mx-auto px-4 sm:px-8">
-          <div className="text-center">
-            <h1 className="text-4xl sm:text-6xl font-light text-white mb-6 font-serif">
-              Memleket Koleksiyonu
-            </h1>
-            <p className="text-white/60 text-lg max-w-2xl mx-auto mb-8">
-              Memleketinizi temsil eden tişörtler.
-            </p>
-            <div className="text-white/40 text-sm">
-              {memleketSlugs.length} şehir • Her biri özel tasarım
-            </div>
-          </div>
-        </div>
-      </div>
+  const common = useMessages(commonMessages);
+  const t = useMessages(collectionMessages);
 
-      {/* Search Bar */}
-      <div className="px-4 sm:px-8 pb-8">
-        <div className="max-w-6xl mx-auto">
-          <div className="max-w-md mx-auto">
-            <SearchBar />
-          </div>
-        </div>
-      </div>
-
-      {/* Collection Grid */}
-      <div className="py-20 px-4 sm:px-8">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            {memleketSlugs
-              .map((slug) => getProductBySlug(slug))
-              .filter(
-                (p): p is NonNullable<ReturnType<typeof getProductBySlug>> =>
-                  !!p
-              )
-              .map((p) => (
-                <ProductCard key={p.slug} product={p} />
-              ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  return <CollectionView title={common.collections.memleket} text={t.memleketSubtitle} slugs={memleketSlugs} />;
 }

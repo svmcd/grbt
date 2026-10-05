@@ -1003,11 +1003,11 @@ export default function AdminDashboard() {
       <div className="items-center flex flex-col gap-2">
         <div className="flex justify-center">
           <Image
-            src="/grbt.svg"
-            alt="grbt."
-            width={400}
-            height={172}
-            className="w-auto h-20 sm:h-24 lg:h-28"
+            src="/egrikuyu.svg"
+            alt="eğrikuyu"
+            width={1983}
+            height={644}
+            className="w-auto h-14 sm:h-16 lg:h-20"
             priority
           />
         </div>

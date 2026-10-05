@@ -1,8 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { useLocale, useMessages } from "@/i18n/LocaleProvider";
+import contactMessages from "@/i18n/messages/contactPage";
+import commonMessages from "@/i18n/messages/common";
+import { TextPage } from "@/app/components/pages/TextPage";
 
 export default function ContactPage() {
+  const { locale } = useLocale();
+  const t = useMessages(contactMessages);
+  const common = useMessages(commonMessages);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
@@ -21,7 +28,7 @@ export default function ContactPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ name, email, message }),
+        body: JSON.stringify({ name, email, message, locale }),
       });
 
       if (response.ok) {
@@ -30,69 +37,80 @@ export default function ContactPage() {
         setEmail("");
         setMessage("");
       } else {
-        setError("Mesaj gönderilemedi. Lütfen tekrar deneyin.");
+        setError(t.sendFailed);
       }
     } catch {
-      setError("Bir hata oluştu. Lütfen tekrar deneyin.");
+      setError(t.genericError);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const fieldClass = "storefront-input placeholder:text-subdued focus:outline-none disabled:opacity-60";
+
   return (
-    <div className="min-h-screen flex p-8 flex-col items-center">
-      <div className="w-full max-w-2xl text-left">
-        <h1 className="text-3xl font-light mb-6">İletişim</h1>
-        {!sent ? (
-          <form onSubmit={onSubmit} className="space-y-4">
-            {error && (
-              <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 text-sm">
-                {error}
-              </div>
-            )}
-            <input
-              className="w-full px-4 py-3 bg-transparent border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-white/40 rounded-none"
-              placeholder="Ad Soyad"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              disabled={isLoading}
-            />
-            <input
-              type="email"
-              className="w-full px-4 py-3 bg-transparent border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-white/40 rounded-none"
-              placeholder="E-posta"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              disabled={isLoading}
-            />
+    <TextPage title={common.contact} intro={<p>{t.intro}</p>}>
+      {!sent ? (
+        <form onSubmit={onSubmit} className="space-y-3">
+          {error && (
+            <p role="alert" className="border border-sale px-4 py-3 text-[14px] leading-[1.5] text-sale">
+              {error}
+            </p>
+          )}
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="block">
+              <span className="sr-only">{t.namePlaceholder}</span>
+              <input
+                className={fieldClass}
+                placeholder={t.namePlaceholder}
+                autoComplete="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                disabled={isLoading}
+              />
+            </label>
+            <label className="block">
+              <span className="sr-only">{t.emailPlaceholder}</span>
+              <input
+                type="email"
+                className={fieldClass}
+                placeholder={t.emailPlaceholder}
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                disabled={isLoading}
+              />
+            </label>
+          </div>
+          <label className="block">
+            <span className="sr-only">{t.messagePlaceholder}</span>
             <textarea
-              className="w-full px-4 py-3 bg-transparent border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-white/40 min-h-[140px] rounded-none"
-              placeholder="Mesaj"
+              className={`${fieldClass} !h-auto min-h-[180px] resize-y`}
+              placeholder={t.messagePlaceholder}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               required
               disabled={isLoading}
             />
+          </label>
+          <div className="pt-3">
             <button
               type="submit"
               disabled={isLoading}
-              className="px-6 py-3 bg-white text-black text-sm uppercase tracking-wide rounded-none disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn btn-ink w-full sm:w-auto sm:min-w-[200px] disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {isLoading ? "Gönderiliyor..." : "Gönder"}
+              {isLoading ? t.sending : t.send}
             </button>
-          </form>
-        ) : (
-          <div className="text-center py-8">
-            <div className="text-white text-sm mb-2">✓</div>
-            <p className="text-white/80">
-              Teşekkürler — mesajınız gönderildi ve en kısa sürede size dönüş
-              yapacağız.
-            </p>
           </div>
-        )}
-      </div>
-    </div>
+        </form>
+      ) : (
+        <div className="border border-line px-6 py-10 text-center" role="status">
+          <p className="sub">{t.sentTitle}</p>
+          <p className="mx-auto mt-3 max-w-[480px] text-[14px] leading-[1.7] text-ink">{t.sent}</p>
+        </div>
+      )}
+    </TextPage>
   );
 }

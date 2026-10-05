@@ -1,15 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useCart } from "@/lib/cart-context";
-import { getProductBySlug } from "@/lib/catalog";
-import { getPriceForSlug } from "@/lib/pricing";
 import { useRouter } from "next/navigation";
+import { useFormatPrice, useLocale, useMessages } from "@/i18n/LocaleProvider";
+import commonMessages from "@/i18n/messages/common";
+import checkoutMessages from "@/i18n/messages/checkout";
 
 export default function CheckoutPage() {
   const { state } = useCart();
   const router = useRouter();
   const [isProcessing, setIsProcessing] = useState(false);
+  const { locale } = useLocale();
+  const common = useMessages(commonMessages);
+  const t = useMessages(checkoutMessages);
+  const price = useFormatPrice();
+  // The cart is read from localStorage, so render it only after mount to avoid a hydration mismatch
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const handleCheckout = async () => {
     if (state.items.length === 0) return;
@@ -19,7 +27,7 @@ export default function CheckoutPage() {
       const response = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items: state.items }),
+        body: JSON.stringify({ items: state.items, locale }),
       });
       const contentType = response.headers.get("content-type") || "";
       if (!contentType.includes("application/json")) {
@@ -37,89 +45,85 @@ export default function CheckoutPage() {
       }
     } catch (error) {
       console.error("Checkout error:", error);
-      alert(
-        "Checkout failed. Please check payment configuration and try again."
-      );
+      alert(t.checkoutFailed);
     } finally {
       setIsProcessing(false);
     }
   };
 
+  if (!mounted) {
+    return <div className="min-h-[60vh] bg-paper" />;
+  }
+
   if (state.items.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-light mb-4">Your cart is empty</h1>
-          <button
-            onClick={() => router.push("/collection")}
-            className="px-6 py-3 bg-white text-black font-medium tracking-wider uppercase text-sm hover:bg-white/90 transition-colors"
-          >
-            Browse Collection
-          </button>
-        </div>
+      <div className="bg-paper px-4 py-24 text-center text-ink md:px-8 md:py-32 lg:px-12">
+        <h1 className="h-section">{t.empty}</h1>
+        <button onClick={() => router.push("/collection")} className="btn btn-ink mt-8">
+          {t.browse}
+        </button>
       </div>
     );
   }
 
-  const total = state.items.reduce((sum, item) => sum + item.price, 0);
+  // Cart prices are stored in cents
+  const total = state.items.reduce((sum, item) => sum + item.price * item.quantity, 0) / 100;
 
   return (
-    <div className="min-h-screen flex p-4 sm:p-8 flex-col items-center">
-      <div className="w-full max-w-4xl">
-        <h1 className="text-3xl font-light mb-8">Checkout</h1>
+    <div className="bg-paper text-ink">
+      <div className="px-4 pb-20 pt-12 md:px-8 md:pt-16 lg:px-12 lg:pt-20">
+        <div className="mx-auto w-full max-w-[1100px]">
+          <h1 className="h-section mb-10 md:mb-14">{t.title}</h1>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Order Summary s*/}
-          <div>
-            <h2 className="text-xl font-light mb-4">Order Summary</h2>
-            <div className="space-y-4">
-              {state.items.map((item, index) => (
-                <div
-                  key={`${item.slug}-${item.color}-${item.size}-${index}`}
-                  className="flex gap-4 border-b border-white/10 pb-4"
-                >
-                  <div className="relative w-20 h-20 bg-white/5 rounded border border-white/10">
-                    <img
-                      src={item.image}
-                      alt={item.city}
-                      className="w-full h-full object-contain p-2"
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-white font-light">{item.city}</h3>
-                    <p className="text-white/70 text-sm">
-                      <span className="font-bold uppercase tracking-wider text-[10px]">
-                        {item.color}
-                      </span>{" "}
-                      •{" "}
-                      <span className="font-bold text-[10px]">{item.size}</span>
-                    </p>
-                    <p className="text-white mt-1">€{item.price}</p>
-                  </div>
+          <div className="grid grid-cols-1 gap-10 md:grid-cols-[1fr_380px] md:gap-12">
+            {/* Order summary */}
+            <section>
+              <h2 className="sub border-b border-line pb-4">{t.orderSummary}</h2>
+              <ul>
+                {state.items.map((item, index) => (
+                  <li
+                    key={`${item.slug}-${item.color}-${item.size}-${index}`}
+                    className="flex gap-4 border-b border-line py-5"
+                  >
+                    <div className="relative h-20 w-20 shrink-0 border border-line bg-paper">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={item.image} alt={item.city} className="h-full w-full object-contain p-1.5" />
+                    </div>
+                    <div className="flex min-w-0 flex-1 items-start justify-between gap-4">
+                      <div className="min-w-0">
+                        <h3 className="sub break-words">{item.city}</h3>
+                        <p className="sub-xs mt-1 text-subdued">
+                          {common.colors[item.color] ?? item.color} / {item.size}
+                          {item.quantity > 1 && ` / ${common.quantity}: ${item.quantity}`}
+                        </p>
+                      </div>
+                      <p className="sub-xs shrink-0 text-subdued">{price((item.price * item.quantity) / 100)}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </section>
+
+            {/* Payment */}
+            <section>
+              <h2 className="sub border-b border-line pb-4">{t.payment}</h2>
+              <div className="mt-5 border border-line p-6">
+                <div className="sub flex items-center justify-between">
+                  <span>{common.total}</span>
+                  <span>{price(total)}</span>
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Checkout Form */}
-          <div>
-            <h2 className="text-xl font-light mb-4">Payment</h2>
-            <div className="bg-white/5 border border-white/10 rounded-none p-6">
-              <div className="flex justify-between items-center mb-4">
-                <span className="text-white font-light">Total</span>
-                <span className="text-white text-2xl">€{total}</span>
+                <button
+                  onClick={handleCheckout}
+                  disabled={isProcessing}
+                  className="btn btn-ink mt-6 w-full disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isProcessing ? t.processing : t.payWithStripe}
+                </button>
+                <p className="mt-3 text-center text-[12px] leading-[1.5] tracking-[0.04em] text-subdued">
+                  {t.securePayment}
+                </p>
               </div>
-              <button
-                onClick={handleCheckout}
-                disabled={isProcessing}
-                className="w-full px-6 py-3 bg-white text-black font-medium tracking-wider uppercase text-sm hover:bg-white/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isProcessing ? "Processing..." : "Pay with Stripe"}
-              </button>
-              <p className="text-white/70 text-xs mt-2 text-center">
-                Secure payment powered by Stripe
-              </p>
-            </div>
+            </section>
           </div>
         </div>
       </div>

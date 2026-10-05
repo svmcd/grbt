@@ -8,14 +8,13 @@ import {
   ReactNode,
 } from "react";
 import { memleketSlugs } from "./catalog";
-import { getTotalBundleDiscount } from "./bundle-pricing";
 
 export type CartItem = {
   slug: string;
   city: string;
   color: string;
   size: string;
-  productType: "tshirt" | "hoodie" | "sweater" | "phonecase";
+  productType: "tshirt" | "hoodie" | "sweater";
   price: number;
   image: string;
   quantity: number;
@@ -32,9 +31,6 @@ export type CartItem = {
     cost: number;
     message?: string;
   };
-  // Phone case specific fields
-  phoneModel?: string;
-  customPhoneModel?: string;
 };
 
 type CartState = {
@@ -51,7 +47,7 @@ type CartAction =
         slug: string;
         color: string;
         size: string;
-        productType: "tshirt" | "hoodie" | "sweater" | "phonecase";
+        productType: "tshirt" | "hoodie" | "sweater";
         personalization?: any;
         giftPackage?: any;
       };
@@ -62,7 +58,7 @@ type CartAction =
         slug: string;
         color: string;
         size: string;
-        productType: "tshirt" | "hoodie" | "sweater" | "phonecase";
+        productType: "tshirt" | "hoodie" | "sweater";
         quantity: number;
         personalization?: any;
         giftPackage?: any;
@@ -83,10 +79,13 @@ const loadCartFromStorage = (): CartState => {
     if (stored) {
       const parsed = JSON.parse(stored);
       // Migrate old cart items that don't have productType
-      const migratedItems = (parsed.items || []).map((item: any) => ({
-        ...item,
-        productType: item.productType || "tshirt", // Default to tshirt for old items
-      }));
+      const migratedItems = (parsed.items || [])
+        // Drop items whose product type no longer exists
+        .filter((item: any) => item.productType !== "phonecase")
+        .map((item: any) => ({
+          ...item,
+          productType: item.productType || "tshirt", // Default to tshirt for old items
+        }));
       return {
         items: migratedItems,
         isOpen: false,
@@ -216,7 +215,7 @@ type CartContextType = {
     slug: string,
     color: string,
     size: string,
-    productType: "tshirt" | "hoodie" | "sweater" | "phonecase",
+    productType: "tshirt" | "hoodie" | "sweater",
     personalization?: any,
     giftPackage?: any
   ) => void;
@@ -224,7 +223,7 @@ type CartContextType = {
     slug: string,
     color: string,
     size: string,
-    productType: "tshirt" | "hoodie" | "sweater" | "phonecase",
+    productType: "tshirt" | "hoodie" | "sweater",
     quantity: number,
     personalization?: any,
     giftPackage?: any
@@ -261,7 +260,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     slug: string,
     color: string,
     size: string,
-    productType: "tshirt" | "hoodie" | "sweater" | "phonecase",
+    productType: "tshirt" | "hoodie" | "sweater",
     personalization?: any,
     giftPackage?: any
   ) =>
@@ -273,7 +272,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     slug: string,
     color: string,
     size: string,
-    productType: "tshirt" | "hoodie" | "sweater" | "phonecase",
+    productType: "tshirt" | "hoodie" | "sweater",
     quantity: number,
     personalization?: any,
     giftPackage?: any
@@ -330,10 +329,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       familyDiscount = 5 * 100; // Convert to cents
     }
 
-    // Calculate bundle discount (phone case + shirt = €5 discount)
-    const bundleDiscount = getTotalBundleDiscount(state.items);
-
-    const total = allItemsTotal - familyDiscount - bundleDiscount;
+    const total = allItemsTotal - familyDiscount;
     return total;
   };
   const getItemCount = () =>
