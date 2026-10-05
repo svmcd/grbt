@@ -89,7 +89,8 @@ export async function POST(request: Request) {
                 "card",
                 "paypal",
                 "bancontact",
-                "ideal"
+                "ideal",
+                "klarna"
             ],
             line_items: lineItems,
             shipping_options: [{
