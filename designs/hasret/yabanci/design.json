@@ -1,0 +1,34 @@
+{
+  "collection": "hasret",
+  "slug": "yabanci",
+  "units": "pixels of the source mockup",
+  "front": {
+    "source": "source/siyah/front.png",
+    "garment": "black (white ink)",
+    "area": {
+      "left": 665,
+      "top": 556,
+      "width": 463,
+      "height": 37
+    },
+    "layers": [
+      {
+        "kind": "mask",
+        "box": {
+          "left": 0,
+          "top": 0,
+          "width": 463,
+          "height": 37
+        },
+        "file": "caption.png",
+        "text": true
+      }
+    ],
+    "centerX": 897,
+    "reference": {
+      "logoHeight": 46,
+      "logoGap": 35
+    }
+  },
+  "back": null
+}

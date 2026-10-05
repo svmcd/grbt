@@ -114,7 +114,7 @@ const colorLabelFor = (typeLabelText: string | undefined, c: string) => {
 };
 
 // garments.ts colour key for an admin item ("Hoodie" + "Midnight Navy" → "gece-mavisi"); legacy
-// "White" is "beyaz" (Hasret/Sinema). Undefined for phone cases and unknown colours.
+// "White" is "beyaz" (Hasret/Sinema hoodies and sweaters ordered before they came in every colour). Undefined for phone cases and unknown colours.
 export function itemColorKey(item: Pick<AdminOrderItem, "productType" | "color">): { type: ProductType; key: string } | undefined {
     const type = PRODUCT_TYPE_BY_LABEL[item.productType || "T-shirt"];
     if (!type || !item.color) return undefined;

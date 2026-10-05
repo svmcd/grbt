@@ -2,7 +2,8 @@
 
 import Link from "@/i18n/LocaleLink";
 import { getImageProps } from "next/image";
-import { memleketSlugs, hasretSlugs, recepIvedikSlugs } from "@/lib/catalog";
+import Image from "next/image";
+import { memleketSlugs, hasretSlugs, recepIvedikSlugs, getImagesForSlug } from "@/lib/catalog";
 import { FamilyOffer } from "@/app/components/FamilyOffer";
 import { ProductGrid } from "@/app/components/home/ProductGrid";
 import { SectionHeading } from "@/app/components/home/SectionHeading";
@@ -27,6 +28,7 @@ export default function Home() {
   const common = useMessages(commonMessages);
   const family = useMessages(sectionMessages).family;
   const eur = useFormatPrice();
+  const featuredHref = "/product/turkish-time-kurt?type=longsleeve&color=kirmizi";
   const heroImage = { alt: t.heroAlt, fill: true, sizes: "100vw", loading: "eager", fetchPriority: "high" } as const;
   const heroDesktop = getImageProps({ ...heroImage, src: "/media/hero-desktop.png" }).props.srcSet;
   const heroMobile = getImageProps({ ...heroImage, src: "/media/hero-mobile.png" }).props;
@@ -58,6 +60,33 @@ export default function Home() {
           <p className="sub-xs mt-8 max-w-xl font-semibold text-balance">
             {t.offers.freeShipping(eur(100))} • {t.offers.family(eur(5), eur(10))}
           </p>
+        </div>
+      </section>
+
+      {/* Featured: Turkish Time, the red long sleeve */}
+      <section className="border-b border-line px-4 py-14 sm:px-8 lg:px-12 lg:py-20">
+        <div className="grid items-center gap-10 min-[1000px]:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-16">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
+            <Link href={featuredHref} className="relative col-span-2 aspect-square overflow-hidden bg-paper sm:col-span-1">
+              <Image src={getImagesForSlug("turkish-time-kurt", "kirmizi", "longsleeve")[0]} alt={t.featured.altMain} fill sizes="(min-width: 1000px) 30vw, (min-width: 640px) 50vw, 100vw" className="object-contain" />
+            </Link>
+            <Link href="/product/turkish-time-cay?type=longsleeve&color=kirmizi" className="relative col-span-2 aspect-square overflow-hidden bg-paper sm:col-span-1">
+              <Image src={getImagesForSlug("turkish-time-cay", "kirmizi", "longsleeve")[0]} alt={t.featured.altSecond} fill sizes="(min-width: 1000px) 30vw, (min-width: 640px) 50vw, 100vw" className="object-contain" />
+            </Link>
+          </div>
+          <div>
+            <p className="sub-xs">{t.featured.badge}</p>
+            <h2 className="h-section mt-4">{t.featured.title}</h2>
+            <p className="mt-5 max-w-md text-[15px] italic leading-[1.6]">“{t.featured.quote}”</p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Link href={featuredHref} className="btn btn-ink">
+                {t.featured.productCta}
+              </Link>
+              <Link href="/collection/turkish-time" className="btn btn-paper">
+                {t.featured.collectionCta}
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
 

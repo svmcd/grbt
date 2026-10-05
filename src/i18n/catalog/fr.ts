@@ -239,6 +239,17 @@ const products: CatalogTranslations = {
         donationText: donationGeneric,
         designOrigin: "Le cinéma turc",
     },
+    // Turkish Time Collection
+    "turkish-time-cay": {
+        description: "Impression au dos : un verre à thé fumant en forme de tulipe, avec sa cuillère, sur une soucoupe décorée. En dessous, la phrase « You met me at a very Turkish time in my life. »",
+        donationText: donationGeneric,
+        designOrigin: "Le verre à thé turc",
+    },
+    "turkish-time-kurt": {
+        description: "Impression au dos : un loup qui court. En dessous, la phrase « You met me at a very Turkish time in my life. »",
+        donationText: donationGeneric,
+        designOrigin: "Un loup qui court",
+    },
     // New cities
     denizli: {
         description: richHeritage("de Denizli"),

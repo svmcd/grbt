@@ -11,8 +11,7 @@ import {
   isLightColor,
   memleketSlugs,
   productTypesFor,
-  hasretSlugs,
-  recepIvedikSlugs,
+  collectionOfSlug,
 } from "@/lib/catalog";
 import { getPriceForSlug } from "@/lib/pricing";
 import { getTestPrice } from "@/lib/dev-mode";
@@ -24,7 +23,7 @@ import { Gallery } from "./Gallery";
 import { ProductDetails } from "./ProductDetails";
 import { ImageBand, RelatedProducts } from "./RelatedProducts";
 import { formatRating, ProductReviews, Stars, type ReviewData } from "./ProductReviews";
-import { CheckSquare, FieldLabel, OptionBox, OptionLabel, Panel, Swatch } from "./ProductOptions";
+import { FieldLabel, OptionBox, OptionLabel, Panel, Swatch } from "./ProductOptions";
 import { variantKey, type ProductType } from "./gallery-images";
 import { SizeGuide } from "./SizeGuide";
 import { DeliveryTimeline, useDeliveryEstimate } from "./DeliveryTimeline";
@@ -89,8 +88,9 @@ export function ProductView({
   const [personalizationMethod, setPersonalizationMethod] = useState<PersonalizationMethod>("none");
   const [personalizationFont, setPersonalizationFont] = useState<string>("Normal");
   const [personalizationColor, setPersonalizationColor] = useState<string>("#000000");
-  const [giftPackage, setGiftPackage] = useState<boolean>(false);
-  const [giftMessage, setGiftMessage] = useState<string>("");
+  // Gift packaging is no longer offered (production partner ships directly)
+  const giftPackage = false;
+  const giftMessage = "";
   const [personalizationOpen, setPersonalizationOpen] = useState(false);
   const [showStickyButton, setShowStickyButton] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -150,18 +150,9 @@ export function ProductView({
   };
 
   const isMemleket = memleketSlugs.includes(product.slug);
-  const isHasret = hasretSlugs.includes(product.slug);
-  const isSinema = recepIvedikSlugs.includes(product.slug);
-  const collectionName = isHasret
-    ? common.collections.hasret
-    : isSinema
-    ? common.collections.sinema
-    : common.collections.memleket;
-  const collectionHref = isHasret
-    ? "/collection/hasret"
-    : isSinema
-    ? "/collection/sinema"
-    : "/collection/memleket";
+  const collection = collectionOfSlug(product.slug);
+  const collectionName = common.collections[collection];
+  const collectionHref = `/collection/${collection}`;
 
   const images =
     galleryImages[variantKey(selectedProductType, selectedColor)] ??
@@ -486,50 +477,8 @@ export function ProductView({
                   </div>
                 </Panel>
 
-                {/* Gift package */}
-                <Panel
-                  active={giftPackage}
-                  open={giftPackage}
-                  header={
-                    <label htmlFor="giftPackage" className="flex cursor-pointer items-center gap-3">
-                      <input
-                        type="checkbox"
-                        id="giftPackage"
-                        checked={giftPackage}
-                        onChange={(e) => setGiftPackage(e.target.checked)}
-                        className="peer sr-only"
-                      />
-                      <CheckSquare checked={giftPackage} />
-                      <span className="sub flex-1 text-ink">{t.giftCheckbox}</span>
-                      <span className="sub-xs text-subdued">+{price(5)}</span>
-                    </label>
-                  }
-                >
-                  <p className="sub-xs mb-2 text-subdued">{t.giftContentsTitle}</p>
-                  <ul className="list-disc space-y-1 pl-4 text-[12px] leading-relaxed text-ink">
-                    {t.giftContents.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
-                  <p className="mt-3 text-[12px] text-subdued">{t.giftPrepared}</p>
-                  <div className="mt-4">
-                    <FieldLabel htmlFor="pdp-gift-message">{t.giftMessageLabel}</FieldLabel>
-                    <textarea
-                      id="pdp-gift-message"
-                      value={giftMessage}
-                      onChange={(e) => setGiftMessage(e.target.value)}
-                      placeholder={t.giftMessagePlaceholder}
-                      className="storefront-input resize-none text-[14px] outline-none placeholder:text-subdued"
-                      style={{ height: "auto" }}
-                      rows={3}
-                      maxLength={100}
-                    />
-                    <p className="mt-1 text-[12px] text-subdued">{t.charCount(giftMessage.length, 100)}</p>
-                  </div>
-                </Panel>
-
-                {/* Memleket family discount (real cart rule: 2 items -€5, 3+ items -€10) */}
-                {isMemleket && (
+                {/* Bundle discount on every design (real cart rule: 2 items -€5, 3+ items -€10) */}
+                {(
                   <div>
                     <div className="flex items-center gap-4">
                       <span className="h-px flex-1 bg-ink" />

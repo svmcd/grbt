@@ -1,18 +1,17 @@
 import { isLocale, type Locale } from "@/i18n/config";
 import common from "@/i18n/messages/common";
-import { BRAND, SITE_URL, absolute, allProductSlugs, collectionOf, seoProduct } from "@/lib/seo/products";
-import { getImagesForSlug } from "@/lib/catalog";
+import { BRAND, SITE_URL, absolute, allProductSlugs, seoProduct } from "@/lib/seo/products";
+import { getImagesForSlug, printedOnFront } from "@/lib/catalog";
 import { GARMENT_SURCHARGE_EUR, PRODUCT_TYPES, type ProductType } from "@/lib/cart-pricing";
 import { colorName } from "@/lib/garments";
 
-// Google Merchant Center product feed (RSS 2.0). Memleket: one item per garment type, colour
-// and size; Hasret and Sinema: one item per T-shirt colour (siyah, beyaz) and size. All variants
-// of a design share one item_group_id. Language with ?lang=en|de|fr|tr (default en); links go to
+// Google Merchant Center product feed (RSS 2.0). One item per design, garment type, colour and
+// size (Memleket, Hasret and Sinema alike). All variants of a design share one item_group_id. Language with ?lang=en|de|fr|tr (default en); links go to
 // the page in that language (/de/product/…) with type, colour and size preselected.
 // Add in Merchant Center as a scheduled fetch of https://egrikuyu.com/feed.xml?lang=…
 //
-// IDs: T-shirts keep "<slug>-<colour>-<size>" (the ids Merchant Center already has for siyah and
-// beyaz); long sleeves, hoodies and sweaters are "<slug>-<type>-<colour>-<size>".
+// IDs: T-shirts keep "<slug>-<colour>-<size>" (the ids Merchant Center already has, e.g. siyah and
+// beyaz of every design); long sleeves, hoodies and sweaters are "<slug>-<type>-<colour>-<size>".
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
@@ -28,11 +27,9 @@ export async function GET(request: Request) {
     for (const slug of allProductSlugs()) {
         const p = seoProduct(slug, locale);
         if (!p) continue;
-        const collection = collectionOf(slug);
-        const types: readonly ProductType[] = collection === "memleket" ? PRODUCT_TYPES : ["tshirt"];
         // Sinema and Yabancı prints are on the front, the others on the back
-        const printSide = collection === "sinema" || slug === "yabanci" ? (src: string) => !src.endsWith("back.png") : (src: string) => src.endsWith("back.png");
-        for (const type of types) {
+        const printSide = printedOnFront(slug) ? (src: string) => !src.endsWith("back.png") : (src: string) => src.endsWith("back.png");
+        for (const type of PRODUCT_TYPES) {
             const typeName = c.productTypes[type];
             const price = p.price + GARMENT_SURCHARGE_EUR[type];
             for (const color of p.colorsByType[type]) {

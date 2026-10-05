@@ -80,6 +80,30 @@ export const recepIvedikSlugs: string[] = [
     "sibel_to_my_recep",
 ];
 
+// Turkish Time: the artwork is in designs/turkish-time/<slug without "turkish-time-">/
+export const turkishTimeSlugs: string[] = [
+    "turkish-time-cay",
+    "turkish-time-kurt",
+];
+
+// The collections in shop order, with the key used in URLs (/collection/<key>) and messages
+export type CollectionKey = "memleket" | "hasret" | "sinema" | "turkish-time";
+export const COLLECTION_KEYS: readonly CollectionKey[] = ["memleket", "hasret", "sinema", "turkish-time"];
+export const collectionSlugs: Record<CollectionKey, string[]> = {
+    memleket: memleketSlugs,
+    hasret: hasretSlugs,
+    sinema: recepIvedikSlugs,
+    "turkish-time": turkishTimeSlugs,
+};
+export const allCatalogSlugs = (): string[] => COLLECTION_KEYS.flatMap((key) => collectionSlugs[key]);
+
+export function collectionOfSlug(slug: string): CollectionKey {
+    if (hasretSlugs.includes(slug)) return "hasret";
+    if (recepIvedikSlugs.includes(slug)) return "sinema";
+    if (turkishTimeSlugs.includes(slug)) return "turkish-time";
+    return "memleket";
+}
+
 export function titleCaseCity(slug: string): string {
     if (!slug) return "";
 
@@ -124,7 +148,10 @@ export function titleCaseCity(slug: string): string {
         "devam": "Devam",
         "recep_to_my_sibel": "Recep To My Sibel",
         "sensiz_olmaz": "Sensiz Olmaz",
-        "sibel_to_my_recep": "Sibel To My Recep"
+        "sibel_to_my_recep": "Sibel To My Recep",
+        // Turkish Time collection (Turkish names, the same in every language)
+        "turkish-time-cay": "Çay",
+        "turkish-time-kurt": "Kurt"
     };
 
     return cityNames[slug] || slug.charAt(0).toUpperCase() + slug.slice(1);
@@ -132,47 +159,50 @@ export function titleCaseCity(slug: string): string {
 
 // Reverse of titleCaseCity: "Şanlıurfa" -> "sanliurfa"
 export function slugForCity(city: string): string | undefined {
-    return [...memleketSlugs, ...hasretSlugs, ...recepIvedikSlugs].find((slug) => titleCaseCity(slug) === city);
+    return allCatalogSlugs().find((slug) => titleCaseCity(slug) === city);
 }
+
+// URL folder of a design's images under /products/collections/ (rendered on demand by
+// src/app/api/mockup/ from designs/, see designs/README.md)
+export function collectionFolderFor(slug: string): "memleket" | "hasret" | "recep_ivedik" | "turkish-time" {
+    if (recepIvedikSlugs.includes(slug)) return "recep_ivedik";
+    if (hasretSlugs.includes(slug)) return "hasret";
+    if (turkishTimeSlugs.includes(slug)) return "turkish-time";
+    return "memleket";
+}
+
+// Designs printed on the front (the back is blank): Sinema and Yabancı
+export function printedOnFront(slug: string): boolean {
+    return recepIvedikSlugs.includes(slug) || slug === "yabanci" || slug.startsWith("turkish-time-");
+}
+
+// Rendered product images are cached for a year (immutable). Raise this after changing the
+// templates, the brand icon or print placements so browsers and the CDN fetch the new renders.
+export const MOCKUP_VERSION = "14";
+export const versioned = (url: string) => `${url}?v=${MOCKUP_VERSION}`;
 
 export function getPrimaryImageForSlug(slug: string): string {
-    // Determine collection based on slug
-    if (recepIvedikSlugs.includes(slug)) {
-        return `/products/collections/recep_ivedik/${slug}/front_black.png`;
-    }
-    const collection = hasretSlugs.includes(slug) ? "hasret" : "memleket";
-    const base = `/products/collections/${collection}/${slug}/siyah`;
-
-    // Special case for yabanci - use front.png as primary image
-    if (slug === "yabanci") {
-        return `${base}/front.png`;
-    }
-
-    // Both collections use back.png as primary image
-    return `${base}/back.png`;
+    // The printed side of the black T-shirt
+    const base = `/products/collections/${collectionFolderFor(slug)}/${slug}/siyah`;
+    return versioned(printedOnFront(slug) ? `${base}/front.png` : `${base}/back.png`);
 }
 
-// Hasret and Sinema designs only have black and white product photos, so they keep
-// "siyah" and "beyaz" on every garment type. On a hoodie or sweater their "beyaz" is
-// produced as Cloprod Cream White ("krem" in garments.ts); see cloprodColorFor.
-const LEGACY_COLORS = ["siyah", "beyaz"];
-const isLegacyColorSlug = (slug: string) => hasretSlugs.includes(slug) || recepIvedikSlugs.includes(slug);
-
-// Garment types in shop order. Hasret and Sinema have no long-sleeve artwork, so they are
-// not sold as a long sleeve (no colours for it; the checkout rejects it).
+// Garment types in shop order. Memleket, Hasret and Sinema are sold on all of them, Turkish Time
+// only as a T-shirt and long sleeve (its renders exist for those two only, see
+// designs/turkish-time/*/design.json "garments").
 export const ALL_PRODUCT_TYPES: readonly ProductType[] = ["tshirt", "longsleeve", "hoodie", "sweater"];
-const LEGACY_TYPES: readonly ProductType[] = ["tshirt", "hoodie", "sweater"];
+const TSHIRT_AND_LONGSLEEVE: readonly ProductType[] = ["tshirt", "longsleeve"];
 
 export function productTypesFor(slug: string): readonly ProductType[] {
-    return isLegacyColorSlug(slug) ? LEGACY_TYPES : ALL_PRODUCT_TYPES;
+    return turkishTimeSlugs.includes(slug) ? TSHIRT_AND_LONGSLEEVE : ALL_PRODUCT_TYPES;
 }
 
 // Colour keys sold for a design on a garment type; the first one is the default.
-// Memleket designs come in every colour of garments.ts for that type. Empty when the design
+// Every design comes in every colour of garments.ts for that type. Empty when the design
 // is not sold on that type.
 export function colorsFor(slug: string, type: ProductType): string[] {
     if (!productTypesFor(slug).includes(type)) return [];
-    return isLegacyColorSlug(slug) ? LEGACY_COLORS : garmentColors(type).map((c) => c.key);
+    return garmentColors(type).map((c) => c.key);
 }
 
 // The colour key when this design is sold in it on this type, otherwise the type's default
@@ -182,8 +212,8 @@ export function validColorFor(slug: string, type: ProductType, color: string | u
     return color && colors.includes(color) ? color : colors[0] ?? "siyah";
 }
 
-// Swatch colour for a key on a garment type (legacy "beyaz" on a hoodie/sweater shows as white,
-// like its product photos)
+// Swatch colour for a key on a garment type (legacy "beyaz" on a hoodie/sweater of an old order
+// shows as white)
 export function colorHex(type: ProductType, key: string): string {
     return garmentColor(type, key)?.hex ?? garmentColor("tshirt", key)?.hex ?? "#000000";
 }
@@ -193,8 +223,8 @@ export function isLightColor(type: ProductType, key: string): boolean {
     return (garmentColor(type, key) ?? garmentColor("tshirt", key))?.ink === "black";
 }
 
-// What Cloprod produces for a colour key on a garment type. Legacy "beyaz" on a hoodie or
-// sweater (Hasret, Sinema) is Cloprod Cream White.
+// What Cloprod produces for a colour key on a garment type. "beyaz" on a hoodie or sweater
+// (Hasret and Sinema orders from before they came in every colour) is Cloprod Cream White.
 export function cloprodColorFor(type: ProductType, key: string): { spu: string; colorId: number; name: string } | null {
     const resolved = type !== "tshirt" && key === "beyaz" ? "krem" : key;
     const col = garmentColor(type, resolved);
@@ -202,61 +232,17 @@ export function cloprodColorFor(type: ProductType, key: string): { spu: string; 
 }
 
 export function getImagesForSlug(slug: string, color: string = "siyah", productType: ProductType = "tshirt"): string[] {
-    // Sinema collection - uses front images from product folder and default back images from yabanci
-    if (recepIvedikSlugs.includes(slug)) {
-        const colorKey = color === "beyaz" ? "white" : "black";
+    // One folder per colour key, rendered per design (mockup renderer)
+    const folder = collectionFolderFor(slug);
+    const base = `/products/collections/${folder}/${slug}/${validColorFor(slug, productType, color)}`;
+    const prefix = productType === "tshirt" ? "" : `${productType}_`;
+    const sides = [versioned(`${base}/${prefix}front.png`), versioned(`${base}/${prefix}back.png`)];
+    if (folder !== "memleket" || productType !== "tshirt") return sides;
 
-        if (productType === "hoodie" || productType === "sweater") {
-            const productKey = productType === "hoodie" ? "hoodie" : "sweater";
-            // Use front from product folder, back from yabanci defaults
-            return [
-                `/products/collections/recep_ivedik/${slug}/${productKey}_${colorKey}_front.png`,
-                `/products/collections/hasret/yabanci/${productKey}_${colorKey}_back.png`,
-            ];
-        }
-
-        // T-shirt: use front from product folder, back from yabanci defaults
-        // Handle both front_white.png and front-white.png naming patterns
-        const colorFolder = color === "beyaz" ? "beyaz" : "siyah";
-        const frontFileName = slug === "recep_to_my_sibel" && colorKey === "white"
-            ? "front-white.png"  // This file uses hyphen
-            : `front_${colorKey}.png`;  // Others use underscore
-        return [
-            `/products/collections/recep_ivedik/${slug}/${frontFileName}`,
-            `/products/collections/hasret/yabanci/${colorFolder}/back.png`,
-        ];
-    }
-
-    if (hasretSlugs.includes(slug)) {
-        const colorFolder = color === "beyaz" ? "beyaz" : "siyah";
-        // Hoodie and sweater images are in the product folder
-        if (productType === "hoodie" || productType === "sweater") {
-            const colorKey = colorFolder === "beyaz" ? "white" : "black";
-            return [
-                `/products/collections/hasret/${slug}/${productType}_${colorKey}_front.png`,
-                `/products/collections/hasret/${slug}/${productType}_${colorKey}_back.png`,
-            ];
-        }
-        const base = `/products/collections/hasret/${slug}/${colorFolder}`;
-        return [`${base}/front.png`, `${base}/back.png`];
-    }
-
-    // Memleket: one folder per colour key, rendered per design (mockup renderer)
-    const base = `/products/collections/memleket/${slug}/${validColorFor(slug, productType, color)}`;
-    if (productType === "hoodie" || productType === "sweater" || productType === "longsleeve") {
-        return [`${base}/${productType}_front.png`, `${base}/${productType}_back.png`];
-    }
-
-    // T-shirt: front and back, then the design's photos (kept in the siyah folder; the
-    // product page only shows the ones that exist)
+    // Memleket T-shirt: then the design's photos (kept in the siyah folder; the product page
+    // only shows the ones that exist)
     const commonBase = `/products/collections/memleket/${slug}/siyah`;
-    return [
-        `${base}/front.png`,
-        `${base}/back.png`,
-        `${commonBase}/common1.png`,
-        `${commonBase}/common2.png`,
-        `${commonBase}/common3.png`,
-    ];
+    return [...sides, `${commonBase}/common1.png`, `${commonBase}/common2.png`, `${commonBase}/common3.png`];
 }
 
 // Product data configuration
@@ -586,6 +572,23 @@ const productData: Record<string, {
         },
         designOrigin: "Türk sineması"
     },
+    // Turkish Time Collection
+    "turkish-time-cay": {
+        description: "Sırt baskısı: buharı tüten, içinde kaşığıyla ince belli bir çay bardağı ve desenli tabağı. Altında İngilizce “You met me at a very Turkish time in my life.” sözü yer alır.",
+        donation: {
+            percentage: 5,
+            organization: "Bu tişörtten elde edilen kârın %5'i bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@egrikuyu.com"
+        },
+        designOrigin: "Türk çay bardağı"
+    },
+    "turkish-time-kurt": {
+        description: "Sırt baskısı: koşan bir kurt. Altında İngilizce “You met me at a very Turkish time in my life.” sözü yer alır.",
+        donation: {
+            percentage: 5,
+            organization: "Bu tişörtten elde edilen kârın %5'i bir hayvan bakım organizasyonuna bağışlanacaktır. Yerel bir organizasyon bulacağız - ancak iyi bir organizasyon biliyorsanız bize bildirin: info@egrikuyu.com"
+        },
+        designOrigin: "Koşan kurt"
+    },
     // New cities
     denizli: {
         description: "Denizli'nin zengin tarihi ve kültürel mirasını yansıtan tasarım.",
@@ -672,7 +675,7 @@ const productData: Record<string, {
 export function getProductBySlug(slug: string, locale: Locale = "tr"): Product | undefined {
     // Decode URL-encoded slug
     const decodedSlug = decodeURIComponent(slug);
-    if (!memleketSlugs.includes(decodedSlug) && !hasretSlugs.includes(decodedSlug) && !recepIvedikSlugs.includes(decodedSlug)) return undefined;
+    if (!allCatalogSlugs().includes(decodedSlug)) return undefined;
     const city = titleCaseCity(decodedSlug);
     const image = getPrimaryImageForSlug(decodedSlug);
     const images = getImagesForSlug(decodedSlug);

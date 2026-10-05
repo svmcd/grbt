@@ -1,0 +1,39 @@
+{
+  "collection": "turkish-time",
+  "slug": "turkish-time-cay",
+  "units": "pixels of source.png",
+  "garments": [
+    "tshirt",
+    "longsleeve"
+  ],
+  "front": {
+    "source": "source.png",
+    "area": {
+      "left": 0,
+      "top": 23,
+      "width": 1023,
+      "height": 934
+    },
+    "layers": [
+      {
+        "kind": "art-text",
+        "box": {
+          "left": 0,
+          "top": 0,
+          "width": 1023,
+          "height": 934
+        },
+        "art": "art.png",
+        "text": "text.png",
+        "color": "#8a192d",
+        "minContrast": 1.7
+      }
+    ],
+    "centerX": 511.5,
+    "reference": {
+      "logoHeight": 73,
+      "logoGap": 0
+    }
+  },
+  "back": null
+}

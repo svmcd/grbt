@@ -1,4 +1,4 @@
-import { getProductBySlug, memleketSlugs } from "./catalog";
+import { getProductBySlug } from "./catalog";
 import { getPriceForSlug } from "./pricing";
 import { getTestPrice } from "./dev-mode";
 
@@ -47,9 +47,9 @@ export function unitPriceCents(line: Omit<PricedLine, "quantity">): number | nul
     return Math.round(getTestPrice(getPriceForSlug(line.slug) + garment + personalization + gift) * 100);
 }
 
-// Memleket family discount in cents: 2 Memleket items €5, 3 or more €10.
+// Bundle discount in cents, on every collection: 2 items €5, 3 or more €10.
 export function memleketDiscountCents(lines: { slug: string; quantity: number }[]): number {
-    const quantity = lines.filter((l) => memleketSlugs.includes(l.slug)).reduce((sum, l) => sum + l.quantity, 0);
+    const quantity = lines.reduce((sum, l) => sum + l.quantity, 0);
     if (quantity >= 3) return 1000;
     if (quantity >= 2) return 500;
     return 0;

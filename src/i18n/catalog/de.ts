@@ -238,6 +238,17 @@ const products: CatalogTranslations = {
         donationText: donationGeneric,
         designOrigin: "Türkisches Kino",
     },
+    // Turkish Time Collection
+    "turkish-time-cay": {
+        description: "Rückendruck: ein dampfendes, tulpenförmiges Teeglas mit Löffel auf einer verzierten Untertasse. Darunter der Satz „You met me at a very Turkish time in my life.“",
+        donationText: donationGeneric,
+        designOrigin: "Das türkische Teeglas",
+    },
+    "turkish-time-kurt": {
+        description: "Rückendruck: ein laufender Wolf. Darunter der Satz „You met me at a very Turkish time in my life.“",
+        donationText: donationGeneric,
+        designOrigin: "Ein laufender Wolf",
+    },
     // New cities
     denizli: {
         description: richHeritage("Denizli"),

@@ -1,0 +1,45 @@
+{
+  "collection": "sinema",
+  "slug": "devam",
+  "units": "pixels of the source mockup",
+  "front": {
+    "source": "source/front_black.png",
+    "garment": "black (white ink)",
+    "area": {
+      "left": 592,
+      "top": 458,
+      "width": 610,
+      "height": 310
+    },
+    "layers": [
+      {
+        "kind": "photo",
+        "box": {
+          "left": 0,
+          "top": 0,
+          "width": 610,
+          "height": 254
+        },
+        "file": "photo.png",
+        "measuredOn": "source/front_black.png"
+      },
+      {
+        "kind": "mask",
+        "box": {
+          "left": 253,
+          "top": 280,
+          "width": 104,
+          "height": 30
+        },
+        "file": "caption.png",
+        "text": true
+      }
+    ],
+    "centerX": 897,
+    "reference": {
+      "logoHeight": 46,
+      "logoGap": 37
+    }
+  },
+  "back": null
+}

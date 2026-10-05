@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { memleketSlugs, hasretSlugs, recepIvedikSlugs, getProductBySlug, getPrimaryImageForSlug } from "@/lib/catalog";
+import { COLLECTION_KEYS, allCatalogSlugs, collectionOfSlug, getProductBySlug, getPrimaryImageForSlug, type CollectionKey } from "@/lib/catalog";
 import { getPriceForSlug } from "@/lib/pricing";
 import Link from "@/i18n/LocaleLink";
 import Image from "next/image";
@@ -47,7 +47,7 @@ function useProductSearch(limit: number) {
     setQuery(value);
     if (value.length > 0) {
       const searchTerm = normalizeForSearch(value);
-      const allSlugs = [...memleketSlugs, ...hasretSlugs, ...recepIvedikSlugs];
+      const allSlugs = allCatalogSlugs();
       const filtered = allSlugs
         .map((slug) => getProductBySlug(slug, locale))
         .filter(
@@ -64,12 +64,15 @@ function useProductSearch(limit: number) {
   return { query, results, search, reset: () => search("") };
 }
 
+const COLLECTION_LABELS: Record<CollectionKey, string> = {
+  memleket: "Memleket",
+  hasret: "Hasret",
+  sinema: "Sinema",
+  "turkish-time": "Turkish Time",
+};
+
 function collectionName(slug: string) {
-  return hasretSlugs.includes(slug)
-    ? "Hasret"
-    : recepIvedikSlugs.includes(slug)
-    ? "Sinema"
-    : "Memleket";
+  return COLLECTION_LABELS[collectionOfSlug(slug)];
 }
 
 function SearchIcon({ size = 20 }: { size?: number }) {
@@ -186,7 +189,7 @@ export function SearchDrawer({ open, onClose }: { open: boolean; onClose: () => 
             <div>
               <div className="sub-xs mb-4 text-subdued">{t.collections}</div>
               <ul className="flex flex-col gap-3">
-                {(["memleket", "hasret", "sinema"] as const).map((key) => (
+                {COLLECTION_KEYS.map((key) => (
                   <li key={key}>
                     <Link
                       href={`/collection/${key}`}

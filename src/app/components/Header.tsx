@@ -106,6 +106,7 @@ export function Header() {
     { href: "/collection/memleket", label: "Memleket" },
     { href: "/collection/hasret", label: "Hasret" },
     { href: "/collection/sinema", label: "Sinema" },
+    { href: "/collection/turkish-time", label: "Turkish Time" },
     { href: "/contact", label: common.contact },
   ];
   const isActive = (href: string) =>

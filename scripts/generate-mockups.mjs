@@ -1,11 +1,14 @@
-// Local check tool for the Memleket product images. The site renders them on demand
-// (src/app/api/mockup/, behind /products/collections/memleket/<slug>/<colorKey>/<file>);
+// Local check tool for the product images (Memleket, Hasret, Sinema, Turkish Time). The site renders them on
+// demand (src/app/api/mockup/, behind /products/collections/<folder>/<slug>/<colorKey>/<file>);
 // this script renders the same images to a cache folder so you can look at them.
 //
 //   npm run mockups                      every design, every colour, every garment
 //   npm run mockups -- konya rize        only these designs
+//   npm run mockups -- hasret sinema     every design of these collections
 //   npm run mockups -- konya --sheet     also a contact sheet per design and garment
 //   npm run mockups -- --garment hoodie  only one garment
+//   npm run mockups -- --all-garments    also garments a design is not sold on (Turkish Time
+//                                        is only a T-shirt and long sleeve)
 //
 // Output: .mockups/<slug>/<colorKey>/<file>.webp (exactly what the site serves) and, with
 // --sheet, .mockups/<slug>-<garment>.jpg (every colour, front and back). .mockups is gitignored.
@@ -21,7 +24,7 @@ process.chdir(ROOT); // render.ts finds designs/ from the working directory
 
 const { default: sharp } = await import("sharp");
 const { GARMENTS } = await import("../src/lib/garments.ts");
-const { MOCKUP_FILES, listDesigns, renderMockup } = await import("../src/lib/mockups/render.ts");
+const { MOCKUP_FILES, designHasGarment, listAllDesigns, renderMockup } = await import("../src/lib/mockups/render.ts");
 
 const args = process.argv.slice(2);
 const flag = (name) => args.includes(name);
@@ -32,21 +35,22 @@ const option = (name) => {
 const OUT = path.resolve(option("--out") ?? path.join(ROOT, ".mockups"));
 const onlyGarment = option("--garment");
 const named = args.filter((a, i) => !a.startsWith("--") && !["--out", "--garment"].includes(args[i - 1]));
-const designs = listDesigns();
-const slugs = named.length ? named : designs;
-const unknown = slugs.filter((s) => !designs.includes(s));
+const designs = listAllDesigns();
+const wanted = named.length ? designs.filter((d) => named.includes(d.slug) || named.includes(d.collection)) : designs;
+const unknown = named.filter((n) => !designs.some((d) => d.slug === n || d.collection === n));
 if (unknown.length) {
-  console.error(`unknown design(s): ${unknown.join(", ")} (designs/memleket/<slug>/ needs photo, name and plate)`);
+  console.error(`unknown design(s): ${unknown.join(", ")} (designs/memleket/<slug>/ needs photo, name and plate; designs/hasret|sinema|turkish-time/<slug>/ needs design.json)`);
   process.exit(1);
 }
 
-const files = Object.entries(MOCKUP_FILES).filter(([, f]) => !onlyGarment || f.garment === onlyGarment);
+const allFiles = Object.entries(MOCKUP_FILES).filter(([, f]) => !onlyGarment || f.garment === onlyGarment);
 const started = Date.now();
 let count = 0;
-for (const slug of slugs) {
+for (const { collection, slug } of wanted) {
+  const files = allFiles.filter(([, f]) => flag("--all-garments") || designHasGarment(collection, slug, f.garment));
   for (const [file, { garment, side }] of files) {
     for (const color of GARMENTS[garment].colors) {
-      const webp = await renderMockup({ slug, garment, side, colorKey: color.key, ink: color.ink });
+      const webp = await renderMockup({ collection, slug, garment, side, colorKey: color.key, ink: color.printInk ?? color.ink, garmentHex: color.hex });
       const out = path.join(OUT, slug, color.key, file.replace(/\.png$/, ".webp"));
       fs.mkdirSync(path.dirname(out), { recursive: true });
       fs.writeFileSync(out, webp);
@@ -74,4 +78,4 @@ for (const slug of slugs) {
     }
   }
 }
-console.log(`mockups: ${count} images for ${slugs.length} design(s) in ${((Date.now() - started) / 1000).toFixed(1)} s -> ${path.relative(ROOT, OUT)}/`);
+console.log(`mockups: ${count} images for ${wanted.length} design(s) in ${((Date.now() - started) / 1000).toFixed(1)} s -> ${path.relative(ROOT, OUT)}/`);

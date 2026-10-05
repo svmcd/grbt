@@ -1,5 +1,6 @@
 "use client";
 
+import { versioned } from "@/lib/catalog";
 import Link from "@/i18n/LocaleLink";
 import Image from "next/image";
 import { useMessages } from "@/i18n/LocaleProvider";
@@ -11,24 +12,30 @@ const tiles = [
     key: "memleket",
     name: "Memleket",
     href: "/collection/memleket",
-    image: "/products/collections/memleket/nevsehir/siyah/back.png",
+    image: versioned("/products/collections/memleket/nevsehir/siyah/back.png"),
   },
   {
     key: "hasret",
     name: "Hasret",
     href: "/collection/hasret",
-    image: "/products/collections/hasret/gurbetten-memlekete/siyah/back.png",
+    image: versioned("/products/collections/hasret/gurbetten-memlekete/siyah/back.png"),
   },
   {
     key: "sinema",
     name: "Sinema",
     href: "/collection/sinema",
-    image: "/products/collections/recep_ivedik/sensiz_olmaz/front_black.png",
+    image: versioned("/products/collections/recep_ivedik/sensiz_olmaz/siyah/front.png"),
+  },
+  {
+    key: "turkish-time",
+    name: "Turkish Time",
+    href: "/collection/turkish-time",
+    image: versioned("/products/collections/turkish-time/turkish-time-cay/siyah/back.png"),
   },
 ] as const;
 
 // Heading, one line of text and a big image tile per collection with a white button in the middle.
-// Phones get a horizontal scroller, larger screens three tiles side by side.
+// Phones get a horizontal scroller, tablets two tiles per row, large screens four side by side.
 export function CollectionTiles({ title, as = "h2" }: { title?: string; as?: "h1" | "h2" }) {
   const t = useMessages(collectionMessages);
   const common = useMessages(commonMessages);
@@ -41,7 +48,7 @@ export function CollectionTiles({ title, as = "h2" }: { title?: string; as?: "h1
         <p className="sub mt-6">{t.tiles.text}</p>
       </div>
 
-      <ul className="mt-10 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 [scrollbar-width:none] sm:grid sm:grid-cols-3 sm:gap-6 sm:overflow-visible sm:px-8 lg:mt-12 lg:gap-12 lg:px-12 [&::-webkit-scrollbar]:hidden">
+      <ul className="mt-10 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 [scrollbar-width:none] sm:grid sm:grid-cols-2 sm:gap-6 lg:grid-cols-4 sm:overflow-visible sm:px-8 lg:mt-12 lg:gap-12 lg:px-12 [&::-webkit-scrollbar]:hidden">
         {tiles.map((tile) => (
           <li key={tile.key} className="w-[80%] shrink-0 snap-start scroll-ml-4 sm:w-auto">
             <Link
@@ -53,7 +60,7 @@ export function CollectionTiles({ title, as = "h2" }: { title?: string; as?: "h1
                 src={tile.image}
                 alt=""
                 fill
-                sizes="(max-width: 639px) 80vw, 33vw"
+                sizes="(max-width: 639px) 80vw, (max-width: 1023px) 50vw, 25vw"
                 className="object-contain p-[10%] transition-transform duration-700 ease-out group-hover:scale-105"
               />
               <span className="absolute inset-0 flex items-center justify-center">

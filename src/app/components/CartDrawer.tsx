@@ -14,7 +14,7 @@ import {
   shippingCents,
 } from "@/lib/shipping";
 import { fetchGeo, readStoredCountry, storeCountry } from "@/lib/use-shipping-country";
-import { colorsFor, memleketSlugs } from "@/lib/catalog";
+import { colorsFor } from "@/lib/catalog";
 import { colorName } from "@/lib/garments";
 import { MAX_QUANTITY, memleketDiscountCents } from "@/lib/cart-pricing";
 import { useFormatPrice, useLocale, useMessages } from "@/i18n/LocaleProvider";
@@ -34,11 +34,10 @@ const sameLine = (a: CartItem, b: CartItem) =>
   JSON.stringify(a.personalization) === JSON.stringify(b.personalization) &&
   JSON.stringify(a.giftPackage) === JSON.stringify(b.giftPackage);
 
-// Memleket family discount shown on a line: the whole discount sits on the first
-// Memleket line in the cart (2 items: €5, 3+ items: €10), as /api/checkout charges it. Returns cents.
+// Bundle discount shown on a line: the whole discount sits on the first line in the cart
+// (2 items: €5, 3+ items: €10, every collection), as /api/checkout charges it. Returns cents.
 function memleketLineDiscountCents(item: CartItem, items: CartItem[]): number {
-  if (!memleketSlugs.includes(item.slug)) return 0;
-  const first = items.find((i) => memleketSlugs.includes(i.slug));
+  const first = items[0];
   if (!first || !sameLine(first, item)) return 0;
   return memleketDiscountCents(items);
 }

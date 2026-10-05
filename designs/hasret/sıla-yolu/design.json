@@ -1,0 +1,43 @@
+{
+  "collection": "hasret",
+  "slug": "sıla-yolu",
+  "units": "pixels of the source mockup",
+  "front": null,
+  "back": {
+    "source": "source/beyaz/back.png",
+    "garment": "white (black ink)",
+    "area": {
+      "left": 466,
+      "top": 230,
+      "width": 833,
+      "height": 588
+    },
+    "layers": [
+      {
+        "kind": "mask",
+        "box": {
+          "left": 0,
+          "top": 0,
+          "width": 833,
+          "height": 588
+        },
+        "file": "art.png"
+      },
+      {
+        "kind": "color-mask",
+        "box": {
+          "left": 818,
+          "top": 519,
+          "width": 15,
+          "height": 15
+        },
+        "file": "dot.png",
+        "color": "#ff0000"
+      }
+    ],
+    "centerX": 867.5,
+    "reference": {
+      "memleketFrameWidth": 775
+    }
+  }
+}

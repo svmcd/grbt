@@ -1,18 +1,14 @@
 import { localizePath, type Locale } from "@/i18n/config";
 import common from "@/i18n/messages/common";
-import { getImagesForSlug, getPrimaryImageForSlug, getProductBySlug, hasretSlugs, memleketSlugs, recepIvedikSlugs } from "@/lib/catalog";
+import { allCatalogSlugs, collectionOfSlug, getImagesForSlug, getPrimaryImageForSlug, getProductBySlug, type CollectionKey } from "@/lib/catalog";
 import { getPriceForSlug, isAvailable } from "@/lib/pricing";
 
 export const SITE_URL = "https://egrikuyu.com";
 export const BRAND = "eğrikuyu";
 
-export const allProductSlugs = () => [...memleketSlugs, ...hasretSlugs, ...recepIvedikSlugs];
+export const allProductSlugs = allCatalogSlugs;
 
-export function collectionOf(slug: string): "memleket" | "hasret" | "sinema" {
-    if (hasretSlugs.includes(slug)) return "hasret";
-    if (recepIvedikSlugs.includes(slug)) return "sinema";
-    return "memleket";
-}
+export const collectionOf = (slug: string): CollectionKey => collectionOfSlug(slug);
 
 export const absolute = (path: string) => `${SITE_URL}${encodeURI(path)}`;
 export const productPath = (slug: string) => `/product/${encodeURIComponent(slug)}`;

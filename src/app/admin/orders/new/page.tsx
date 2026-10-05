@@ -6,7 +6,7 @@ import { useAdmin } from "../../_components/AdminProvider";
 import { Button, Card, Field, PageHeader, PlusIcon, inputClass, selectClass, textareaClass } from "../../_components/ui";
 import { adminFetch } from "@/lib/admin/client";
 import { countryName, money } from "@/lib/admin/format";
-import { cloprodColorFor, colorsFor, hasretSlugs, memleketSlugs, productTypesFor, recepIvedikSlugs, titleCaseCity } from "@/lib/catalog";
+import { cloprodColorFor, colorsFor, hasretSlugs, memleketSlugs, productTypesFor, recepIvedikSlugs, titleCaseCity, turkishTimeSlugs } from "@/lib/catalog";
 import { GARMENT_SURCHARGE_EUR } from "@/lib/cart-pricing";
 import { colorName } from "@/lib/garments";
 import { getPriceForSlug } from "@/lib/pricing";
@@ -21,6 +21,7 @@ const DESIGNS = [
     { label: "Memleket", slugs: memleketSlugs },
     { label: "Hasret", slugs: hasretSlugs },
     { label: "Sinema", slugs: recepIvedikSlugs },
+    { label: "Turkish Time", slugs: turkishTimeSlugs },
 ];
 const TYPES: { value: ProductType; label: string }[] = [
     { value: "tshirt", label: "T-shirt" },
@@ -31,7 +32,7 @@ const TYPES: { value: ProductType; label: string }[] = [
 const SIZES = ["S", "M", "L", "XL", "XXL"];
 // Same prices as the shop: the design's price plus the garment surcharge (cart-pricing.ts)
 const shopPrice = (slug: string, type: ProductType) => (slug ? getPriceForSlug(slug) + GARMENT_SURCHARGE_EUR[type] : 0);
-// Types sold for the design (no long sleeve for Hasret/Sinema); every type before a design is picked
+// Types sold for the design (Turkish Time: T-shirt and long sleeve only); every type before a design is picked
 const typesFor = (slug: string) => TYPES.filter((t) => !slug || productTypesFor(slug).includes(t.value));
 const euros = (v: string) => Number(v.replace(",", "."));
 const newLine = (): Line => ({ slug: "", productType: "tshirt", color: "siyah", size: "M", quantity: "1", unitPrice: "" });

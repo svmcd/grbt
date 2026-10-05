@@ -12,6 +12,10 @@ export type GarmentColor = {
     key: string;
     hex: string; // swatch colour (Cloprod's value)
     ink: "white" | "black"; // print colour on this garment (logo, name, number, frame)
+    // Owner's choice per colour: print everything (text, frame, icon, sleeve number, line art) in
+    // this ink instead of `ink`, on every collection; one print colour per garment. `ink` still
+    // decides swatch outlines. (White on pink and light blue was unreadable, 1.4:1.)
+    printInk?: "white" | "black";
     cloprodColorId: number;
     names: Record<Locale4, string>;
 };
@@ -70,10 +74,10 @@ export const GARMENTS: Record<GarmentType, Garment> = {
             c("siyah", "#202020", "white", 5, "Washed Black", "Washed Black", "Noir délavé", "Yıkamalı Siyah"),
             c("kirmizi", "#AD3D53", "white", 2, "Red", "Rot", "Rouge", "Kırmızı"),
             c("lacivert", "#2B3149", "white", 8, "Navy", "Marineblau", "Bleu marine", "Lacivert"),
-            c("haki", "#A69782", "black", 6, "Khaki", "Khaki", "Kaki", "Haki"),
+            { ...c("haki", "#A69782", "black", 6, "Khaki", "Khaki", "Kaki", "Haki"), printInk: "white" },
             c("kahverengi", "#736052", "white", 7, "Brown", "Braun", "Marron", "Kahverengi"),
             c("pembe", "#FCD3E5", "black", 1, "Pink", "Rosa", "Rose", "Pembe"),
-            c("gri", "#9A9A98", "black", 3, "Gray", "Grau", "Gris", "Gri"),
+            { ...c("gri", "#9A9A98", "black", 3, "Gray", "Grau", "Gris", "Gri"), printInk: "white" },
             c("antrasit", "#434341", "white", 4, "Charcoal", "Anthrazit", "Anthracite", "Antrasit"),
         ],
     },

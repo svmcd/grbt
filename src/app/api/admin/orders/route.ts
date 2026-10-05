@@ -4,7 +4,7 @@ import { adminDb } from "@/lib/firebase-admin";
 import { requireAdmin } from "@/lib/admin/auth";
 import { addressTooLong, normalizeOrder, type AdminActivity } from "@/lib/admin/orders";
 import { lastSync } from "@/lib/admin/stripe-sync";
-import { colorsFor, hasretSlugs, memleketSlugs, recepIvedikSlugs, titleCaseCity, type ProductType } from "@/lib/catalog";
+import { allCatalogSlugs, colorsFor, titleCaseCity, type ProductType } from "@/lib/catalog";
 import { describeCheckoutItem } from "@/lib/emails/line-items";
 import { isLocale } from "@/i18n/config";
 import { orderNumber } from "@/lib/order-number";
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
 // Fields the admin may edit directly on an order
 const EDITABLE = new Set(["notes", "custom_flag", "customer_name", "customer_phone", "customer_email", "archived"]);
 
-const CATALOG_SLUGS = new Set([...memleketSlugs, ...hasretSlugs, ...recepIvedikSlugs]);
+const CATALOG_SLUGS = new Set(allCatalogSlugs());
 const PRODUCT_TYPES = new Set(["tshirt", "longsleeve", "hoodie", "sweater"]);
 const SIZES = new Set(["XS", "S", "M", "L", "XL", "XXL", "3XL"]);
 const MAX_BULK = 200;

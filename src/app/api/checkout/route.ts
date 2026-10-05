@@ -6,10 +6,9 @@ import common from "@/i18n/messages/common";
 import emails from "@/i18n/messages/emails";
 import { checkoutItemMetadata, colorLabel, describeCheckoutItem, truncate, type CheckoutItemInput } from "@/lib/emails/line-items";
 import { recordEvent, visitorFromRequest } from "@/lib/traffic";
-import { colorsFor, getProductBySlug, memleketSlugs, productTypesFor } from "@/lib/catalog";
+import { colorsFor, getProductBySlug, productTypesFor } from "@/lib/catalog";
 import { isAvailable } from "@/lib/pricing";
 import {
-    MAX_GIFT_MESSAGE,
     MAX_PERSONALIZATION_PLACEMENT,
     MAX_PERSONALIZATION_TEXT,
     MAX_QUANTITY,
@@ -56,9 +55,9 @@ function parseLine(raw: unknown): CheckoutLine {
     if (typeof productType !== "string" || !(PRODUCT_TYPES as readonly string[]).includes(productType)) {
         throw new BadRequest("Unknown product type");
     }
-    // Hasret and Sinema are not sold as a long sleeve
+    // Turkish Time is sold only as a T-shirt and long sleeve
     if (!productTypesFor(slug).includes(productType as ProductType)) throw new BadRequest("Product type not available");
-    // Colours are per design and garment type (Memleket: garments.ts; Hasret/Sinema: siyah/beyaz)
+    // Colours are per design and garment type (garments.ts; none on a type the design is not sold on)
     if (typeof item.color !== "string" || !colorsFor(slug, productType as ProductType).includes(item.color)) {
         throw new BadRequest("Unknown color");
     }
@@ -88,11 +87,8 @@ function parseLine(raw: unknown): CheckoutLine {
         personalization = { method: method as PersonalizationMethod, text, placement, font, color };
     }
 
-    let giftPackage: CheckoutLine["giftPackage"];
-    if (item.giftPackage && (item.giftPackage as Record<string, unknown>).included === true) {
-        const message = truncate(cleanText((item.giftPackage as Record<string, unknown>).message), MAX_GIFT_MESSAGE);
-        giftPackage = { included: true, ...(message ? { message } : {}) };
-    }
+    // Gift packaging is no longer offered; old carts that still carry it are not charged for it
+    const giftPackage: CheckoutLine["giftPackage"] = undefined;
 
     const unitCents = unitPriceCents({ slug, productType, personalization, giftPackage });
     if (unitCents === null) throw new BadRequest("Unknown product");
@@ -154,16 +150,16 @@ export async function POST(request: Request) {
             }
         }
 
-        // Same rules as the cart: Memleket family discount on the first Memleket line,
+        // Same rules as the cart: bundle discount (every collection) on the first line,
         // free shipping measured on the items subtotal before discounts.
         const subtotalCents = lines.reduce((sum, l) => sum + l.unitCents * l.quantity, 0);
         const discountCents = memleketDiscountCents(lines);
         const shippingAmountCents = shippingCents(subtotalCents);
 
-        // Stripe takes unit prices, so the discount goes on one unit of the first Memleket line
+        // Stripe takes unit prices, so the discount goes on one unit of the first line
         // (split off when that line has more than one unit). Unit prices are at least €30,
         // so the discounted unit never drops below zero.
-        const discountIndex = discountCents > 0 ? lines.findIndex((l) => memleketSlugs.includes(l.slug)) : -1;
+        const discountIndex = discountCents > 0 ? 0 : -1;
         const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
         lines.forEach((line, index) => {
             const text = describeCheckoutItem(line, locale);

@@ -94,6 +94,7 @@ const loadCartFromStorage = (): CartState => {
           ...item,
           productType: item.productType || "tshirt", // Default to tshirt for old items
           quantity: clampQuantity(item.quantity || 1),
+          giftPackage: undefined, // gift packaging is no longer offered
         }));
       return {
         items: migratedItems,

@@ -1,13 +1,13 @@
 import { getTestPrice } from "./dev-mode";
 
-export const defaultPriceEur = 45;
+export const defaultPriceEur = 40;
 
 // Optional: manage per-product overrides here
 const perProductOverrides: Record<string, { price?: number; available?: boolean }> = {
     // Hasret collection pricing
     "gurbetten-memlekete": { price: 35 },
     "sıla-yolu": { price: 35 },
-    "yabanci": { price: 30 },
+    "yabanci": { price: 35 },
     // Sinema collection pricing
     "devam": { price: 35 },
     "recep_to_my_sibel": { price: 35 },

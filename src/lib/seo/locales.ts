@@ -27,6 +27,7 @@ export const STATIC_PAGES = [
     "/collection/memleket",
     "/collection/hasret",
     "/collection/sinema",
+    "/collection/turkish-time",
     "/contact",
     "/shipping",
     "/returns",
